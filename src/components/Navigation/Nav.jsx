@@ -15,14 +15,13 @@ import {
   People,
   TravelExplore,
 } from "@mui/icons-material";
-//import { Link, useLocation, Router } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Nav() {
-  // Instantiate link for navigation
-  //const location = useLocation();
-
+  // Get the current path
+  const location = useLocation();
   // Function to check which navigation link is active
-  //const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
 
   return (
     <>
@@ -47,17 +46,22 @@ export default function Nav() {
             alignItems: "center",
           }}
         >
-          <img src="src/assets/temp_logo.png" alt="LOGO" height={140} />
+          <Link to="/" style={{ textDecoration: "none" }}>
+            <img src="src/assets/temp_logo.png" alt="LOGO" height={140} />
+          </Link>
         </Box>
         <List>
           <ListItem disablePadding>
             <ListItemButton
+              component={Link}
+              to="/status"
               sx={{
                 height: "14vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                bgcolor: isActive("/status") ? "#1c2b48" : "transparent",
                 "&:hover": {
                   backgroundColor: "#1c2b48",
                 },
@@ -73,12 +77,15 @@ export default function Nav() {
 
           <ListItem disablePadding>
             <ListItemButton
+              component={Link}
+              to="/files"
               sx={{
                 height: "14vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                bgcolor: isActive("/files") ? "#1c2b48" : "transparent",
                 "&:hover": {
                   backgroundColor: "#1c2b48",
                 },
@@ -94,12 +101,15 @@ export default function Nav() {
 
           <ListItem disablePadding>
             <ListItemButton
+              component={Link}
+              to="/explore"
               sx={{
                 height: "14vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                bgcolor: isActive("/explore") ? "#1c2b48" : "transparent",
                 "&:hover": {
                   backgroundColor: "#1c2b48",
                 },
@@ -115,12 +125,15 @@ export default function Nav() {
 
           <ListItem disablePadding>
             <ListItemButton
+              component={Link}
+              to="/peers"
               sx={{
                 height: "14vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                bgcolor: isActive("/peers") ? "#1c2b48" : "transparent",
                 "&:hover": {
                   backgroundColor: "#1c2b48",
                 },
@@ -136,12 +149,15 @@ export default function Nav() {
 
           <ListItem disablePadding>
             <ListItemButton
+              component={Link}
+              to="/settings"
               sx={{
                 height: "14vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                bgcolor: isActive("/settings") ? "#1c2b48" : "transparent",
                 "&:hover": {
                   backgroundColor: "#1c2b48",
                 },

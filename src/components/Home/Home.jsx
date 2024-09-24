@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-export default function Status() {
+export default function Home() {
   return (
     <Box
       sx={{
@@ -11,7 +11,7 @@ export default function Status() {
         alignItems: "center",
       }}
     >
-      <Typography>Status</Typography>
+      <Typography>Home</Typography>
     </Box>
   );
 }
