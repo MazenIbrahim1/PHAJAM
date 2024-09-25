@@ -31,9 +31,11 @@ export default function Nav() {
         sx={{
           "& .MuiDrawer-paper": {
             width: "13vw",
+            height: "100vh",
             boxSizing: "border-box",
             backgroundColor: "#0b3a53",
             color: "white",
+            overflow: "hidden",
           },
         }}
       >
