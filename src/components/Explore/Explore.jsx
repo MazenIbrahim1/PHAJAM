@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { Box, Typography } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  Container,
+  TextField,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
 export default function Explore() {
   const columns = [
-    { field: "id", headerName: "ID", width: 90 },
     {
       field: "name",
       headerName: "Name",
@@ -13,13 +19,15 @@ export default function Explore() {
     {
       field: "size",
       headerName: "Size",
-      width: 150,
+      width: 100,
     },
     {
       field: "type",
       headerName: "Type",
       type: "number",
-      width: 110,
+      align: "center",
+      headerAlign: "center",
+      width: 120,
     },
     {
       field: "date",
@@ -29,7 +37,7 @@ export default function Explore() {
     {
       field: "hash",
       headerName: "Hash",
-      width: 200,
+      width: 250,
     },
   ];
 
@@ -201,31 +209,30 @@ export default function Explore() {
   // Function to fetch all files from DHT database from libp2p
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        width: "87vw",
-        marginLeft: "13vw",
-      }}
-    >
-      <Typography>Explore</Typography>
+    <>
       <Box
         sx={{
-          height: "90vh",
-          width: "60vw",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-          padding: 2,
+          height: "100vh",
+          width: "87vw",
+          marginLeft: "13vw",
         }}
       >
-        <DataGrid
-          rows={files}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[5, 10, 20]}
-        />
+        <Box
+          sx={{
+            height: "95vh",
+            width: { xs: "30vw", md: "50vw" },
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "flex-start",
+            gap: 2,
+            padding: 2,
+          }}
+        >
+          <Typography variant="h3">Explore Files in the Network</Typography>
+          <DataGrid rows={files} columns={columns} />
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 }
