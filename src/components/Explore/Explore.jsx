@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { AppBar, Box, TextField, Toolbar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  Button,
+  TextField,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { Help, QuestionMark } from "@mui/icons-material";
 
 // Function to render single files
 function RenderFileInfo(props) {
@@ -217,9 +225,29 @@ export default function Explore() {
           bgcolor: "#115980",
         }}
       >
-        <Toolbar>
-          <Typography variant="h3">HELLO</Typography>
-          <TextField label="Search" />
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <TextField
+            label="Search by hash or name"
+            variant="outlined"
+            sx={{
+              width: "400px",
+              bgcolor: "white",
+              borderRadius: "4px",
+            }}
+          />
+          <Button
+            href="https://github.com/MazenIbrahim1/PHAJAM"
+            target="_blank"
+            variant="contained"
+          >
+            <Help />
+          </Button>
         </Toolbar>
       </AppBar>
       <Box
