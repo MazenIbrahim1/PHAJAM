@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  AppBar,
-  Box,
-  Container,
-  TextField,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import React from "react";
+import { AppBar, Box, TextField, Toolbar, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+
+// Function to render single files
+function RenderFileInfo(props) {
+  // IMPLEMENT SOON
+}
 
 export default function Explore() {
   const columns = [
@@ -210,11 +209,25 @@ export default function Explore() {
 
   return (
     <>
+      <AppBar
+        position="absolute"
+        sx={{
+          width: "87vw",
+          marginLeft: "13vw",
+          bgcolor: "#115980",
+        }}
+      >
+        <Toolbar>
+          <Typography variant="h3">HELLO</Typography>
+          <TextField label="Search" />
+        </Toolbar>
+      </AppBar>
       <Box
         sx={{
           height: "100vh",
           width: "87vw",
           marginLeft: "13vw",
+          marginTop: "64px",
         }}
       >
         <Box
