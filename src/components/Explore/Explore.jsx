@@ -5,11 +5,12 @@ import {
   Box,
   Button,
   TextField,
+  InputAdornment,
   Toolbar,
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Help, QuestionMark } from "@mui/icons-material";
+import { Help, Search } from "@mui/icons-material";
 
 // Function to render single files
 function RenderFileInfo(props) {
@@ -212,6 +213,10 @@ export default function Explore() {
   ];
 
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
+  const [search, setSearch] = useState("");
+  const filteredRows = mockData.filter((data) =>
+    data.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   // Function to fetch all files from DHT database from libp2p
 
@@ -233,13 +238,23 @@ export default function Explore() {
           }}
         >
           <TextField
-            label="Search by hash or name"
             variant="outlined"
+            placeholder="Search Files..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             sx={{
-              width: "400px",
+              width: "50vw",
               bgcolor: "white",
               borderRadius: "4px",
             }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+            fullWidth
           />
           <Button
             href="https://github.com/MazenIbrahim1/PHAJAM"
@@ -271,7 +286,21 @@ export default function Explore() {
           }}
         >
           <Typography variant="h3">Explore Files in the Network</Typography>
-          <DataGrid rows={files} columns={columns} />
+          <DataGrid
+            rows={filteredRows}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            pageSizeOptions={[10]}
+            autoHeight
+            disableColumnMenu
+            disableColumnResize
+          />
         </Box>
       </Box>
     </>
