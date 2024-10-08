@@ -9,10 +9,11 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 
 export default function Home() {
 	return (
-    	<Container
+    	<Box
         	sx={{
           		ml:"13vw",
-          		width: "100%",
+              pl:"5vw",
+              pr:"5vw",
           		height: "100vh",
           		display: "flex",
           		flexDirection: "column",
@@ -26,7 +27,6 @@ export default function Home() {
             		flexDirection:"column",
             		alignItems: "center",
             		justifyContent: "center",
-            		width: "97.5%",
             		bgcolor: "#e0f7fa", // Light teal background color
             		padding: "16px",
             		borderRadius: "8px", // Rounded corners
@@ -126,6 +126,6 @@ export default function Home() {
 
     		<Typography>Home Page by Amelia and Arpitha :DDD</Typography>
 
-		</Container>
+		</Box>
   );
 }
