@@ -3,8 +3,8 @@ const path = require("path");
 
 const createWindow = () => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, "./electron/preload.cjs"),
       nodeIntegration: true,
