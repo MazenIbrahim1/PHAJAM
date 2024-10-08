@@ -13,8 +13,31 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Help, Search } from "@mui/icons-material";
 
 // Function to render single files
-function RenderFileInfo(props) {
-  // IMPLEMENT SOON
+function RenderFileInfo({ selectedFile }) {
+  if (!selectedFile) {
+    return <Typography variant="h5">Select a file to view details</Typography>;
+  }
+
+  return (
+    <Box sx={{ padding: 2 }}>
+      <Typography variant="h5">File Details</Typography>
+      <Typography variant="body1">
+        <strong>Name:</strong> {selectedFile.name}
+      </Typography>
+      <Typography variant="body1">
+        <strong>Size:</strong> {selectedFile.size}
+      </Typography>
+      <Typography variant="body1">
+        <strong>Type:</strong> {selectedFile.type}
+      </Typography>
+      <Typography variant="body1">
+        <strong>Date:</strong> {selectedFile.date}
+      </Typography>
+      <Typography variant="body1">
+        <strong>Hash:</strong> {selectedFile.hash}
+      </Typography>
+    </Box>
+  );
 }
 
 export default function Explore() {
@@ -214,9 +237,14 @@ export default function Explore() {
 
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
   const filteredRows = mockData.filter((data) =>
     data.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleRowClick = (params) => {
+    setSelected(params.row);
+  };
 
   // Function to fetch all files from DHT database from libp2p
 
@@ -271,6 +299,8 @@ export default function Explore() {
           width: "87vw",
           marginLeft: "13vw",
           marginTop: "64px",
+          display: "flex",
+          flexDirection: "row",
         }}
       >
         <Box
@@ -300,7 +330,23 @@ export default function Explore() {
             autoHeight
             disableColumnMenu
             disableColumnResize
+            onRowClick={handleRowClick}
           />
+        </Box>
+        <Box
+          sx={{
+            width: { xs: "30vw", md: "50vw" },
+            marginTop: "64px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "#f5f5f5",
+            gap: 2,
+            padding: 2,
+          }}
+        >
+          <RenderFileInfo selectedFile={selected} />
         </Box>
       </Box>
     </>
