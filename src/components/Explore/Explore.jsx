@@ -10,33 +10,42 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Help, Search } from "@mui/icons-material";
+import { Download, Help, Search } from "@mui/icons-material";
 
 // Function to render single files
 function RenderFileInfo({ selectedFile }) {
   if (!selectedFile) {
-    return <Typography variant="h5">Select a file to view details</Typography>;
+    return <Typography variant="h4">Select a file to view details</Typography>;
   }
 
   return (
-    <Box sx={{ padding: 2 }}>
+    <>
       <Typography variant="h5">File Details</Typography>
-      <Typography variant="body1">
-        <strong>Name:</strong> {selectedFile.name}
-      </Typography>
-      <Typography variant="body1">
-        <strong>Size:</strong> {selectedFile.size}
-      </Typography>
-      <Typography variant="body1">
-        <strong>Type:</strong> {selectedFile.type}
-      </Typography>
-      <Typography variant="body1">
-        <strong>Date:</strong> {selectedFile.date}
-      </Typography>
-      <Typography variant="body1">
-        <strong>Hash:</strong> {selectedFile.hash}
-      </Typography>
-    </Box>
+      <Box sx={{ padding: 2 }}>
+        <Typography variant="body1">
+          <strong>Name:</strong> {selectedFile.name}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Size:</strong> {selectedFile.size}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Type:</strong> {selectedFile.type}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Date Posted:</strong> {selectedFile.date}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Hash:</strong> {selectedFile.hash}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Price:</strong>{" "}
+          {selectedFile.price ? selectedFile.price : "tbd"}
+        </Typography>
+      </Box>
+      <Button startIcon={<Download />} variant="contained">
+        Download
+      </Button>
+    </>
   );
 }
 
@@ -53,22 +62,9 @@ export default function Explore() {
       width: 100,
     },
     {
-      field: "type",
-      headerName: "Type",
-      type: "number",
-      align: "center",
-      headerAlign: "center",
-      width: 120,
-    },
-    {
-      field: "date",
-      headerName: "Date",
-      width: 110,
-    },
-    {
       field: "hash",
       headerName: "Hash",
-      width: 250,
+      width: 420,
     },
   ];
 
@@ -80,6 +76,7 @@ export default function Explore() {
       type: "Text",
       date: "2024-09-15",
       hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
+      price: "20 Dolphin Coin",
     },
     {
       id: 2,
@@ -301,12 +298,13 @@ export default function Explore() {
           marginTop: "64px",
           display: "flex",
           flexDirection: "row",
+          overflow: "auto",
         }}
       >
         <Box
           sx={{
             height: "95vh",
-            width: { xs: "30vw", md: "50vw" },
+            width: { xs: "25vw", md: "46vw" },
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-start",
@@ -335,11 +333,9 @@ export default function Explore() {
         </Box>
         <Box
           sx={{
-            width: { xs: "30vw", md: "50vw" },
-            marginTop: "64px",
+            width: { xs: "25vw", md: "37vw" },
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
+            flexDirection: selected ? "column" : "center",
             alignItems: "center",
             bgcolor: "#f5f5f5",
             gap: 2,
