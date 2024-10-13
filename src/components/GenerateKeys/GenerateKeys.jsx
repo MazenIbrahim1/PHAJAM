@@ -45,7 +45,7 @@ export default function GenerateKeys() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        background: "linear-gradient(135deg, #f0f4f8, #e1e9f1)", // Background gradient
+        backgroundColor: "#ffffff", 
         color: "#333",
         padding: "20px",
       }}
