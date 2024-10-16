@@ -48,7 +48,7 @@ export default function Nav() {
           alignItems: "center",
         }}
       >
-        <Link to="/" style={{ textDecoration: "none" }}>
+        <Link to="/home" style={{ textDecoration: "none" }}>
           <img src="src/assets/logo.png" alt="LOGO" height={140} />
         </Link>
       </Box>
@@ -69,14 +69,12 @@ export default function Nav() {
               "&:hover": {
                 backgroundColor: theme.palette.primary.light,
               },
-              color:"white",
+              color: "white",
             }}
             divider
           >
             <ListItemIcon>
-              <NetworkCheck
-                sx={{ color:"white", fontSize: "3rem" }}
-              />
+              <NetworkCheck sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
             <ListItemText primary="STATUS" />
           </ListItemButton>
@@ -98,17 +96,14 @@ export default function Nav() {
               "&:hover": {
                 backgroundColor: theme.palette.primary.light,
               },
-              color:"white",
-
+              color: "white",
             }}
             divider
           >
             <ListItemIcon>
-              <Description
-                sx={{ color: "white", fontSize: "3rem" }}
-              />
+              <Description sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
-            <ListItemText primary="FILES" sx={{fontSize:"10rem"}}/>
+            <ListItemText primary="FILES" sx={{ fontSize: "10rem" }} />
           </ListItemButton>
         </ListItem>
 
@@ -121,22 +116,19 @@ export default function Nav() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-             // flexDirection: "column",
+              // flexDirection: "column",
               bgcolor: isActive("/explore")
                 ? theme.palette.primary.light
                 : "transparent",
               "&:hover": {
                 backgroundColor: theme.palette.primary.light,
               },
-              color:"white",
+              color: "white",
             }}
             divider
           >
             <ListItemIcon>
-              <TravelExplore
-                sx={{ color: "white", fontSize: "3rem" }}
-            
-              />
+              <TravelExplore sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
             <ListItemText primary="EXPLORE" />
           </ListItemButton>
@@ -151,21 +143,19 @@ export default function Nav() {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-             // flexDirection: "column",
+              // flexDirection: "column",
               bgcolor: isActive("/peers")
                 ? theme.palette.primary.light
                 : "transparent",
               "&:hover": {
                 backgroundColor: theme.palette.primary.light,
               },
-              color:"white",
+              color: "white",
             }}
             divider
           >
             <ListItemIcon>
-              <People
-                sx={{ color: "white", fontSize: "3rem" }}
-              />
+              <People sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
             <ListItemText primary="PEERS" />
           </ListItemButton>
@@ -187,14 +177,12 @@ export default function Nav() {
               "&:hover": {
                 backgroundColor: theme.palette.primary.light,
               },
-              color:"white",
+              color: "white",
             }}
             divider
           >
             <ListItemIcon>
-              <Settings
-                sx={{ color: "white", fontSize: "3rem" }}
-              />
+              <Settings sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
             <ListItemText primary="SETTINGS" />
           </ListItemButton>
