@@ -48,7 +48,7 @@ export default function Nav() {
             alignItems: "center",
           }}
         >
-          <Link to="/" style={{ textDecoration: "none" }}>
+          <Link to="/home" style={{ textDecoration: "none" }}>
             <img src="src/assets/temp_logo.png" alt="LOGO" height={140} />
           </Link>
         </Box>
