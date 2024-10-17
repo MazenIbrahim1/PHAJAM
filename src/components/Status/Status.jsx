@@ -11,7 +11,7 @@ export default function Status() {
         alignItems: "center",
       }}
     >
-      <Typography>Status</Typography>
+      <Typography>Profile</Typography>
     </Box>
   );
 }

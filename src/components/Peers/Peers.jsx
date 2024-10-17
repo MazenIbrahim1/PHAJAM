@@ -11,7 +11,7 @@ export default function Peers() {
         alignItems: "center",
       }}
     >
-      <Typography>Peers</Typography>
+      <Typography>Proxy</Typography>
     </Box>
   );
 }

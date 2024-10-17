@@ -27,10 +27,10 @@ function App() {
         <Route path="/generate-keys" element={<GenerateKeys />} />
 
         <Route path="/home" element={<Home />} />
-        <Route path="/status" element={<Status />} />
+        <Route path="/profile" element={<Status />} />
         <Route path="/files" element={<Files />} />
         <Route path="/explore" element={<Explore />} />
-        <Route path="/peers" element={<Peers />} />
+        <Route path="/proxy" element={<Peers />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </ThemeProvider>

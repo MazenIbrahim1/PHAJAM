@@ -56,14 +56,14 @@ export default function Nav() {
         <ListItem disablePadding>
           <ListItemButton
             component={Link}
-            to="/status"
+            to="/profile"
             sx={{
               height: "14vh",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               //flexDirection: "column",
-              bgcolor: isActive("/status")
+              bgcolor: isActive("/profile")
                 ? theme.palette.primary.light
                 : "transparent",
               "&:hover": {
@@ -76,7 +76,7 @@ export default function Nav() {
             <ListItemIcon>
               <NetworkCheck sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
-            <ListItemText primary="STATUS" />
+            <ListItemText primary="PROFILE" />
           </ListItemButton>
         </ListItem>
 
@@ -137,14 +137,14 @@ export default function Nav() {
         <ListItem disablePadding>
           <ListItemButton
             component={Link}
-            to="/peers"
+            to="/proxy"
             sx={{
               height: "14vh",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               // flexDirection: "column",
-              bgcolor: isActive("/peers")
+              bgcolor: isActive("/proxy")
                 ? theme.palette.primary.light
                 : "transparent",
               "&:hover": {
@@ -157,7 +157,7 @@ export default function Nav() {
             <ListItemIcon>
               <People sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
-            <ListItemText primary="PEERS" />
+            <ListItemText primary="PROXY" />
           </ListItemButton>
         </ListItem>
 
