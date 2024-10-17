@@ -11,9 +11,9 @@ import {
 import {
   Settings,
   Description,
-  NetworkCheck,
   People,
   TravelExplore,
+  SentimentSatisfiedAlt,
 } from "@mui/icons-material";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
@@ -53,32 +53,7 @@ export default function Nav() {
         </Link>
       </Box>
       <List>
-        <ListItem disablePadding>
-          <ListItemButton
-            component={Link}
-            to="/profile"
-            sx={{
-              height: "14vh",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              //flexDirection: "column",
-              bgcolor: isActive("/profile")
-                ? theme.palette.primary.light
-                : "transparent",
-              "&:hover": {
-                backgroundColor: theme.palette.primary.light,
-              },
-              color: "white",
-            }}
-            divider
-          >
-            <ListItemIcon>
-              <NetworkCheck sx={{ color: "white", fontSize: "3rem" }} />
-            </ListItemIcon>
-            <ListItemText primary="PROFILE" />
-          </ListItemButton>
-        </ListItem>
+        
 
         <ListItem disablePadding>
           <ListItemButton
@@ -158,6 +133,33 @@ export default function Nav() {
               <People sx={{ color: "white", fontSize: "3rem" }} />
             </ListItemIcon>
             <ListItemText primary="PROXY" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton
+            component={Link}
+            to="/profile"
+            sx={{
+              height: "14vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              //flexDirection: "column",
+              bgcolor: isActive("/profile")
+                ? theme.palette.primary.light
+                : "transparent",
+              "&:hover": {
+                backgroundColor: theme.palette.primary.light,
+              },
+              color: "white",
+            }}
+            divider
+          >
+            <ListItemIcon>
+              <SentimentSatisfiedAlt sx={{ color: "white", fontSize: "3rem" }} />
+            </ListItemIcon>
+            <ListItemText primary="PROFILE" />
           </ListItemButton>
         </ListItem>
 
