@@ -35,7 +35,7 @@ export default function Home() {
         	>
         		<Box sx={{ display: "flex" }}>
             		<CheckCircleIcon sx={{ fontSize:50, color:"green", mr:".5vw"}} />
-            		<Typography variant="h3" sx={{color:"green"}}>Connected to Demure Data Sharing</Typography>
+            		<Typography variant="h3" sx={{color:"green"}}>Connected to Dolphin Data Sharing</Typography>
           		</Box>
           		<Typography variant="h5" > Have a fabulous file sharing frenzy! </Typography>
         	</Box>

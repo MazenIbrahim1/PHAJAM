@@ -39,7 +39,7 @@ export default function LoginPage() {
           fontWeight: "bold", // Make the text bold
         }}
       >
-        Welcome to Demure Data Sharing! (DDS)
+        Welcome to Dolphin Data Sharing! (DDS)
       </Typography>
       <TextField
         label="Dolphincoin Address"
