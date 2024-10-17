@@ -75,7 +75,7 @@ export default function LoginPage() {
         Generate Keys
       </Button>
       <Typography variant="body2">
-        Not sure about Demure Data Sharing?{" "}
+        Not sure about Dolphin Data Sharing?{" "}
         <Link onClick={handleLearnMore} underline="always" style={{ cursor: "pointer" }}>
           Learn more
         </Link>
