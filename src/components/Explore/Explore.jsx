@@ -8,9 +8,33 @@ import {
   InputAdornment,
   Toolbar,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { Download, Help, Search } from "@mui/icons-material";
+
+// Function to handle download of a file
+function handleDownload(selectedFile) {
+  if (!selectedFile) {
+    return;
+  }
+
+  // Create a Blob from the file's data (assuming selectedFile.data contains raw data)
+  const fileBlob = new Blob([selectedFile.data], { type: selectedFile.type });
+
+  // Create a temporary download link and trigger it
+  const url = URL.createObjectURL(fileBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = selectedFile.name; // Use the file's name for the download
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a); // Clean up the link element after clicking
+  URL.revokeObjectURL(url); // Clean up the object URL
+}
 
 // Function to render single files
 function RenderFileInfo({ selectedFile }) {
@@ -42,7 +66,11 @@ function RenderFileInfo({ selectedFile }) {
           {selectedFile.price ? selectedFile.price : "tbd"}
         </Typography>
       </Box>
-      <Button startIcon={<Download />} variant="contained">
+      <Button
+        startIcon={<Download />}
+        onClick={() => handleDownload(selectedFile)}
+        variant="contained"
+      >
         Download
       </Button>
     </>
@@ -100,7 +128,7 @@ export default function Explore() {
       size: "1 MB",
       type: "PDF",
       date: "2024-09-18",
-      hash: "QmTkj7k1vPRFPocjD3CPZVJNZGPtFmLhdWaf2pTTgDXTP7",
+      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
     },
     {
       id: 5,
@@ -180,7 +208,7 @@ export default function Explore() {
       size: "15 KB",
       type: "Text",
       date: "2024-09-28",
-      hash: "QmdAKqRuU8KbySfhLsmFTNcmyMWmDHjP78WBZhRGD5bf5x",
+      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
     },
     {
       id: 15,
@@ -235,15 +263,24 @@ export default function Explore() {
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
-  const filteredRows = mockData.filter((data) =>
-    data.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // State for dialog visibility
+  const [open, setOpen] = useState(false);
+  const searchResults = mockData.filter((data) => data.hash === search);
 
+  // Function to select a file in the market
   const handleRowClick = (params) => {
     setSelected(params.row);
   };
 
-  // Function to fetch all files from DHT database from libp2p
+  // Open the dialog
+  const handleOpenDialog = () => {
+    setOpen(true);
+  };
+
+  // Close the dialog
+  const handleCloseDialog = () => {
+    setOpen(false);
+  };
 
   return (
     <>
@@ -252,7 +289,7 @@ export default function Explore() {
         sx={{
           width: "87vw",
           marginLeft: "13vw",
-          bgcolor: "#115980",
+          bgcolor: "#7a99d9",
         }}
       >
         <Toolbar
@@ -264,12 +301,12 @@ export default function Explore() {
         >
           <TextField
             variant="outlined"
-            placeholder="Search Files..."
+            placeholder="Search by Hash..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             sx={{
               width: "50vw",
-              bgcolor: "white",
+              bgcolor: "#f0f4f8",
               borderRadius: "4px",
             }}
             InputProps={{
@@ -280,6 +317,11 @@ export default function Explore() {
               ),
             }}
             fullWidth
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleOpenDialog();
+              }
+            }}
           />
           <Button
             href="https://github.com/MazenIbrahim1/PHAJAM"
@@ -290,6 +332,66 @@ export default function Explore() {
           </Button>
         </Toolbar>
       </AppBar>
+
+      <Dialog
+        open={open}
+        onClose={handleCloseDialog}
+        aria-labelledby="hash-search-result-title"
+        aria-describedby="hash-search-result-description"
+      >
+        <DialogTitle id="hash-search-result-title">{"Results:"}</DialogTitle>
+        <DialogContent>
+          {searchResults.length > 0 ? (
+            searchResults.map((result) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  bgcolor: "#f5f5f5",
+                  gap: 1,
+                  padding: 2,
+                  margin: 2,
+                }}
+              >
+                <Typography key={result.id} variant="body1">
+                  {"Name: " + result.name}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Hash: " + result.hash.substring(0, 20) + "..."}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Size: " + result.size}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Price: " + (result.price ? result.price : "tbd")}
+                </Typography>
+                <Button
+                  key={result.id}
+                  startIcon={<Download />}
+                  onClick={() => handleDownload(result)}
+                  variant="contained"
+                >
+                  Download
+                </Button>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body1">No results found.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button variant="contained" onClick={handleCloseDialog}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box
         sx={{
           height: "100vh",
@@ -297,7 +399,7 @@ export default function Explore() {
           marginLeft: "13vw",
           marginTop: "64px",
           display: "flex",
-          flexDirection: "row",
+          flexDirection: { sm: "column", md: "row" },
           overflow: "auto",
         }}
       >
@@ -315,19 +417,8 @@ export default function Explore() {
         >
           <Typography variant="h3">Explore Files in the Network</Typography>
           <DataGrid
-            rows={filteredRows}
+            rows={mockData}
             columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 10,
-                },
-              },
-            }}
-            pageSizeOptions={[10]}
-            autoHeight
-            disableColumnMenu
-            disableColumnResize
             onRowClick={handleRowClick}
           />
         </Box>
