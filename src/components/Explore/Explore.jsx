@@ -17,7 +17,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Download, Help, Search } from "@mui/icons-material";
 
 // Function to handle download of a file
-function handleDownload(selectedFile) {
+function handlePurchase(selectedFile) {
   if (!selectedFile) {
     return;
   }
@@ -37,7 +37,7 @@ function handleDownload(selectedFile) {
 }
 
 // Function to render single files
-function RenderFileInfo({ selectedFile }) {
+function RenderFileInfo({ selectedFile, func }) {
   if (!selectedFile) {
     return <Typography variant="h4">Select a file to view details</Typography>;
   }
@@ -66,11 +66,7 @@ function RenderFileInfo({ selectedFile }) {
           {selectedFile.price ? selectedFile.price : "tbd"}
         </Typography>
       </Box>
-      <Button
-        startIcon={<Download />}
-        onClick={() => handleDownload(selectedFile)}
-        variant="contained"
-      >
+      <Button startIcon={<Download />} onClick={func} variant="contained">
         Download
       </Button>
     </>
@@ -104,7 +100,7 @@ export default function Explore() {
       type: "Text",
       date: "2024-09-15",
       hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: "20 Dolphin Coin",
+      price: "20 DC",
     },
     {
       id: 2,
@@ -264,7 +260,8 @@ export default function Explore() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   // State for dialog visibility
-  const [open, setOpen] = useState(false);
+  const [openHash, setOpenHash] = useState(false);
+  const [openPurchase, setOpenPurchase] = useState(false);
   const searchResults = mockData.filter((data) => data.hash === search);
 
   // Function to select a file in the market
@@ -272,14 +269,24 @@ export default function Explore() {
     setSelected(params.row);
   };
 
-  // Open the dialog
-  const handleOpenDialog = () => {
-    setOpen(true);
+  // Open the dialog for hash results
+  const handleOpenDialogHash = () => {
+    setOpenHash(true);
   };
 
-  // Close the dialog
-  const handleCloseDialog = () => {
-    setOpen(false);
+  // Close the hash results
+  const handleCloseDialogHash = () => {
+    setOpenHash(false);
+  };
+
+  // Open the dialog for hash results
+  const handleOpenDialogPurchase = () => {
+    setOpenPurchase(true);
+  };
+
+  // Close the hash results
+  const handleCloseDialogPurchase = () => {
+    setOpenPurchase(false);
   };
 
   return (
@@ -319,7 +326,7 @@ export default function Explore() {
             fullWidth
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleOpenDialog();
+                handleOpenDialogHash();
               }
             }}
           />
@@ -333,9 +340,10 @@ export default function Explore() {
         </Toolbar>
       </AppBar>
 
+      {/* Pop up to show hash search results */}
       <Dialog
-        open={open}
-        onClose={handleCloseDialog}
+        open={openHash}
+        onClose={handleCloseDialogHash}
         aria-labelledby="hash-search-result-title"
         aria-describedby="hash-search-result-description"
       >
@@ -369,7 +377,7 @@ export default function Explore() {
                 <Button
                   key={result.id}
                   startIcon={<Download />}
-                  onClick={() => handleDownload(result)}
+                  onClick={handleOpenDialogPurchase}
                   variant="contained"
                 >
                   Download
@@ -386,8 +394,47 @@ export default function Explore() {
             justifyContent: "center",
           }}
         >
-          <Button variant="contained" onClick={handleCloseDialog}>
+          <Button variant="contained" onClick={handleCloseDialogHash}>
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Pop up to confirm purchase */}
+      <Dialog
+        open={openPurchase}
+        onClose={handleCloseDialogPurchase}
+        aria-labelledby="purchase-title"
+        aria-describedby="purchase-description"
+      >
+        <DialogTitle id="purchase-title">{"Confirm Purchase"}</DialogTitle>
+        <DialogContent>
+          <Typography>Current Balance: 300 DC</Typography>
+          {selected ? (
+            <Typography>
+              Price: {selected.price ? selected.price : "tbd"}
+            </Typography>
+          ) : (
+            <Typography>Select a File</Typography>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button variant="contained" onClick={handleCloseDialogPurchase}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              handlePurchase(selected);
+              handleCloseDialogPurchase();
+            }}
+          >
+            Purchase
           </Button>
         </DialogActions>
       </Dialog>
@@ -433,7 +480,10 @@ export default function Explore() {
             padding: 2,
           }}
         >
-          <RenderFileInfo selectedFile={selected} />
+          <RenderFileInfo
+            selectedFile={selected}
+            func={handleOpenDialogPurchase}
+          />
         </Box>
       </Box>
     </>
