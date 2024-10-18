@@ -206,6 +206,7 @@ export default function Explore() {
 
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
   const [balance, setBalance] = useState(500); // TEMP BALANCE
+  const [bid, setBid] = useState(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   // State for dialog visibility
@@ -321,7 +322,7 @@ export default function Explore() {
               </Typography>
             </>
           ) : (
-            <Typography>Select a File</Typography>
+            <Typography>No file selected</Typography>
           )}
         </DialogContent>
         <DialogActions
@@ -330,7 +331,31 @@ export default function Explore() {
             justifyContent: "center",
           }}
         >
-          <Button variant="contained" onClick={handleCloseDialogPurchase}>
+          <TextField
+            variant="outlined"
+            placeholder="Set Bid Price"
+            autoComplete="off"
+            value={bid}
+            onChange={(event) => setBid(event.target.value)}
+          />
+          <Button
+            variant="contained"
+            onClick={() => console.log("Requesting...")}
+          >
+            Request
+          </Button>
+        </DialogActions>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleCloseDialogPurchase}
+          >
             Cancel
           </Button>
           <Button
@@ -374,6 +399,7 @@ export default function Explore() {
             ),
           }}
           fullWidth
+          autoComplete="off"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleOpenDialogHash();
