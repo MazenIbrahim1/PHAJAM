@@ -353,7 +353,7 @@ export default function Explore() {
         >
           <Button
             variant="contained"
-            color="secondary"
+            color="error"
             onClick={handleCloseDialogPurchase}
           >
             Cancel
