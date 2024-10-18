@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-export default function Status() {
+export default function Profile() {
   return (
     <Box
       sx={{
