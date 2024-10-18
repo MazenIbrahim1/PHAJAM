@@ -49,7 +49,7 @@ export default function LearnMore() {
         </Typography>
         <Button
           variant="contained"
-          color="primary"
+          color="secondary"
           onClick={handleBackToLogin}
           sx={{
             padding: "10px 20px",

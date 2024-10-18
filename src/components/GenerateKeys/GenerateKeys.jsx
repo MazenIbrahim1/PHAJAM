@@ -236,6 +236,12 @@ export default function GenerateKeys() {
             required
             error={!passwordMatch && confirmPassword !== ""}
           />
+          <Typography
+            variant="body2"
+            sx={{ color: passwordMatch ? "green" : "red" }}
+          >
+            {passwordMatch ? "Passwords match" : "Passwords do not match"}
+          </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: 1 }}>
             <Typography variant="body2" sx={{ color: passwordValidations.length ? "green" : "#555" }}>
               {passwordValidations.length ? "✓ Length (8-15 characters)" : "✗ Length (8-15 characters)"}
@@ -260,12 +266,6 @@ export default function GenerateKeys() {
           >
             Save Password
           </Button>
-          <Typography
-            variant="body2"
-            sx={{ color: passwordMatch ? "green" : "red" }}
-          >
-            {passwordMatch ? "Passwords match" : "Passwords do not match"}
-          </Typography>
         </Box>
       </Box>
 
@@ -280,6 +280,7 @@ export default function GenerateKeys() {
       <Button
         variant="outlined"
         onClick={handleBackToLogin}
+        color="secondary"
         sx={{
           marginTop: "20px",
           alignSelf: "center",
