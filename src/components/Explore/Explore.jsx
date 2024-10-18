@@ -1,19 +1,41 @@
 import { useState, useEffect } from "react";
 import React from "react";
 import {
-  AppBar,
   Box,
   Button,
   TextField,
   InputAdornment,
-  Toolbar,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { Download, Help, Search } from "@mui/icons-material";
 
+// Function to handle download of a file
+function handlePurchase(selectedFile) {
+  if (!selectedFile) {
+    return;
+  }
+
+  // Create a Blob from the file's data (assuming selectedFile.data contains raw data)
+  const fileBlob = new Blob([selectedFile.data], { type: selectedFile.type });
+
+  // Create a temporary download link and trigger it
+  const url = URL.createObjectURL(fileBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = selectedFile.name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // Function to render single files
-function RenderFileInfo({ selectedFile }) {
+function RenderFileInfo({ selectedFile, func }) {
   if (!selectedFile) {
     return <Typography variant="h4">Select a file to view details</Typography>;
   }
@@ -39,10 +61,10 @@ function RenderFileInfo({ selectedFile }) {
         </Typography>
         <Typography variant="body1">
           <strong>Price:</strong>{" "}
-          {selectedFile.price ? selectedFile.price : "tbd"}
+          {selectedFile.price ? selectedFile.price + " DC" : "tbd"}
         </Typography>
       </Box>
-      <Button startIcon={<Download />} variant="contained">
+      <Button startIcon={<Download />} onClick={func} variant="contained">
         Download
       </Button>
     </>
@@ -55,16 +77,19 @@ export default function Explore() {
       field: "name",
       headerName: "Name",
       width: 150,
+      resizable: false,
     },
     {
       field: "size",
       headerName: "Size",
       width: 100,
+      resizable: false,
     },
     {
       field: "hash",
       headerName: "Hash",
-      width: 420,
+      width: 423,
+      resizable: false,
     },
   ];
 
@@ -76,7 +101,7 @@ export default function Explore() {
       type: "Text",
       date: "2024-09-15",
       hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: "20 Dolphin Coin",
+      price: 20,
     },
     {
       id: 2,
@@ -85,6 +110,7 @@ export default function Explore() {
       type: "Image",
       date: "2024-09-16",
       hash: "Qmd3W5ty4UkFgP6AvjyzbdzFcfZy3KRfrbLVH5MNvSR1qy",
+      price: 50,
     },
     {
       id: 3,
@@ -93,6 +119,7 @@ export default function Explore() {
       type: "Video",
       date: "2024-09-17",
       hash: "Qmc9shFA7RohHKDJYb6V2PSwiyV8XoL3vRU3nsi47hM6Rb",
+      price: 100,
     },
     {
       id: 4,
@@ -100,7 +127,8 @@ export default function Explore() {
       size: "1 MB",
       type: "PDF",
       date: "2024-09-18",
-      hash: "QmTkj7k1vPRFPocjD3CPZVJNZGPtFmLhdWaf2pTTgDXTP7",
+      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
+      price: 20,
     },
     {
       id: 5,
@@ -109,6 +137,7 @@ export default function Explore() {
       type: "Audio",
       date: "2024-09-19",
       hash: "QmeT4GfdwT5fZJfjsGaU1MPmX4r2KYbw8WjXxsyuKfmpwD",
+      price: 75,
     },
     {
       id: 6,
@@ -117,6 +146,7 @@ export default function Explore() {
       type: "Presentation",
       date: "2024-09-20",
       hash: "QmdTVqv8Uu64yZDS5KYsWfUbqTSqY6v3RhWE74ZdMka7vQ",
+      price: 35,
     },
     {
       id: 7,
@@ -125,6 +155,7 @@ export default function Explore() {
       type: "Spreadsheet",
       date: "2024-09-21",
       hash: "QmPKM6V4Swj7L8T1wVoWFAh5EuhwNz3avJ8MDphgdKFm2N",
+      price: 40,
     },
     {
       id: 8,
@@ -133,6 +164,7 @@ export default function Explore() {
       type: "Ebook",
       date: "2024-09-22",
       hash: "QmS9D7djG9Fwmg9RC8nN9dkm6MC77Vi52JZpVjfZ4qxA4K",
+      price: 55,
     },
     {
       id: 9,
@@ -141,6 +173,7 @@ export default function Explore() {
       type: "Archive",
       date: "2024-09-23",
       hash: "QmRvZbWG56HdT9yqwfboEJdVjqAgcMG95R7jE8VfVFxmB5",
+      price: 150,
     },
     {
       id: 10,
@@ -148,7 +181,8 @@ export default function Explore() {
       size: "1.5 MB",
       type: "Document",
       date: "2024-09-24",
-      hash: "QmULHkg4vTXsB9y5FrwSBKcnJgsKbG82ZX4FvgNLchBgGy",
+      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
+      price: 20,
     },
     {
       id: 11,
@@ -157,6 +191,7 @@ export default function Explore() {
       type: "Image",
       date: "2024-09-25",
       hash: "QmN2TkfiXuwbyvYn4cJZ2dqPKFJXNg9i7VuCdYQwFw1XKP",
+      price: 60,
     },
     {
       id: 12,
@@ -165,145 +200,240 @@ export default function Explore() {
       type: "Archive",
       date: "2024-09-26",
       hash: "QmRTdCB6gjq4Y1EdDZ8SaFZy5jNvnM7tLdPhmYGy7YRs5X",
-    },
-    {
-      id: 13,
-      name: "music_album.flac",
-      size: "500 MB",
-      type: "Audio",
-      date: "2024-09-27",
-      hash: "QmcKj7bqZzTH5uXZn9HtVBz5J7qZwec6hS2LVRLbkA2EKC",
-    },
-    {
-      id: 14,
-      name: "notes.txt",
-      size: "15 KB",
-      type: "Text",
-      date: "2024-09-28",
-      hash: "QmdAKqRuU8KbySfhLsmFTNcmyMWmDHjP78WBZhRGD5bf5x",
-    },
-    {
-      id: 15,
-      name: "game.iso",
-      size: "4 GB",
-      type: "ISO",
-      date: "2024-09-29",
-      hash: "QmdMn5XeYKbPgrz1exMqQjPp2UdVcPNEvvTgKdG78YGpNG",
-    },
-    {
-      id: 16,
-      name: "database.sql",
-      size: "25 MB",
-      type: "Database",
-      date: "2024-09-30",
-      hash: "QmQybnbmKuFKk74DkxLzodtHzXZwFw8nRZtvv4zRfWaAVF",
-    },
-    {
-      id: 17,
-      name: "design.sketch",
-      size: "12 MB",
-      type: "Design",
-      date: "2024-10-01",
-      hash: "QmPfWe9fGKgA6rPFEhMb9cdWsLvcEhrkyoCb3BoqSMqjvS",
-    },
-    {
-      id: 18,
-      name: "animation.gif",
-      size: "8 MB",
-      type: "Animation",
-      date: "2024-10-02",
-      hash: "QmTsfzFyG9nL3EFcCxpfjEzAnCJqudVMy7AQs3LzRs1NRh",
-    },
-    {
-      id: 19,
-      name: "source_code.zip",
-      size: "100 MB",
-      type: "Archive",
-      date: "2024-10-03",
-      hash: "QmVuRnPNeLZ6AK8FskAv4fU6rqYmNU8fFL2PAEZgkQm36G",
-    },
-    {
-      id: 20,
-      name: "project_plan.docx",
-      size: "3 MB",
-      type: "Document",
-      date: "2024-10-04",
-      hash: "QmSm3zjeD7HkFktK5pS9pFgB7uFbYbnMJP3mWsD4jFLQU5",
+      price: 200,
     },
   ];
 
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
+  const [balance, setBalance] = useState(500); // TEMP BALANCE
+  const [bid, setBid] = useState(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
-  const filteredRows = mockData.filter((data) =>
-    data.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // State for dialog visibility
+  const [openHash, setOpenHash] = useState(false);
+  const [openPurchase, setOpenPurchase] = useState(false);
+  const searchResults = mockData.filter((data) => data.hash === search);
 
+  // Function to select a file in the market
   const handleRowClick = (params) => {
     setSelected(params.row);
   };
 
-  // Function to fetch all files from DHT database from libp2p
+  // Open the dialog for hash results
+  const handleOpenDialogHash = () => {
+    setOpenHash(true);
+  };
+
+  // Close the hash results
+  const handleCloseDialogHash = () => {
+    setOpenHash(false);
+  };
+
+  // Open the dialog for hash results
+  const handleOpenDialogPurchase = () => {
+    setOpenPurchase(true);
+  };
+
+  // Close the hash results
+  const handleCloseDialogPurchase = () => {
+    setOpenPurchase(false);
+  };
 
   return (
     <>
-      <AppBar
-        position="absolute"
-        sx={{
-          width: "87vw",
-          marginLeft: "13vw",
-          bgcolor: "#115980",
-        }}
+      {/* Pop up to show hash search results */}
+      <Dialog
+        open={openHash}
+        onClose={handleCloseDialogHash}
+        aria-labelledby="hash-search-result-title"
+        aria-describedby="hash-search-result-description"
       >
-        <Toolbar
+        <DialogTitle id="hash-search-result-title">{"Results:"}</DialogTitle>
+        <DialogContent>
+          {searchResults.length > 0 ? (
+            searchResults.map((result) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  bgcolor: "#f5f5f5",
+                  gap: 1,
+                  padding: 2,
+                  margin: 2,
+                  borderRadius: "4px",
+                  boxShadow: 3,
+                }}
+              >
+                <Typography key={result.id} variant="body1">
+                  {"Name: " + result.name}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Hash: " + result.hash.substring(0, 20) + "..."}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Size: " + result.size}
+                </Typography>
+                <Typography key={result.id} variant="body1">
+                  {"Price: " + (result.price ? result.price : "tbd")}
+                </Typography>
+                <Button
+                  key={result.id}
+                  startIcon={<Download />}
+                  onClick={handleOpenDialogPurchase}
+                  variant="contained"
+                >
+                  Download
+                </Button>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body1">No results found.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions
           sx={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Button variant="contained" onClick={handleCloseDialogHash}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Pop up to confirm purchase */}
+      <Dialog
+        open={openPurchase}
+        onClose={handleCloseDialogPurchase}
+        aria-labelledby="purchase-title"
+        aria-describedby="purchase-description"
+      >
+        <DialogTitle id="purchase-title">{"Confirm Purchase"}</DialogTitle>
+        <DialogContent>
+          {selected ? (
+            <>
+              <Typography>
+                Price: {selected.price ? selected.price + " DC" : "tbd"}
+              </Typography>
+              <Typography>
+                Balance After: {balance - selected.price} DC
+              </Typography>
+            </>
+          ) : (
+            <Typography>No file selected</Typography>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
           }}
         >
           <TextField
             variant="outlined"
-            placeholder="Search Files..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            sx={{
-              width: "50vw",
-              bgcolor: "white",
-              borderRadius: "4px",
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
+            placeholder="Set Bid Price"
+            autoComplete="off"
+            value={bid}
+            onChange={(event) => setBid(event.target.value)}
           />
           <Button
-            href="https://github.com/MazenIbrahim1/PHAJAM"
-            target="_blank"
             variant="contained"
+            onClick={() => console.log("Requesting...")}
           >
-            <Help />
+            Request
           </Button>
-        </Toolbar>
-      </AppBar>
+        </DialogActions>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleCloseDialogPurchase}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              handlePurchase(selected);
+              setBalance(balance - selected.price);
+              handleCloseDialogPurchase();
+            }}
+          >
+            Purchase
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box
         sx={{
-          height: "100vh",
-          width: "87vw",
-          marginLeft: "13vw",
-          marginTop: "64px",
+          marginLeft: "14vw",
+          width: "86vw",
           display: "flex",
           flexDirection: "row",
-          overflow: "auto",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <TextField
+          variant="outlined"
+          placeholder="Search by Hash..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          sx={{
+            width: "47vw",
+            bgcolor: "#f0f4f8",
+            borderRadius: "4px",
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          fullWidth
+          autoComplete="off"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleOpenDialogHash();
+            }
+          }}
+        />
+        <Box
+          sx={{
+            width: "37vw",
+            height: "55px",
+            bgcolor: "#f0f4f8",
+            borderRadius: "4px",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid #bdc3c9",
+          }}
+        >
+          <Typography variant="h4">Wallet Balance: {balance} DC</Typography>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          height: "85vh",
+          width: "87vw",
+          marginLeft: "13vw",
+          display: "flex",
+          flexDirection: { sm: "column", md: "row" },
+          gap: 1,
         }}
       >
         <Box
           sx={{
-            height: "95vh",
             width: { xs: "25vw", md: "46vw" },
             display: "flex",
             flexDirection: "column",
@@ -311,38 +441,38 @@ export default function Explore() {
             alignItems: "flex-start",
             gap: 2,
             padding: 2,
+            height: "100%",
           }}
         >
-          <Typography variant="h3">Explore Files in the Network</Typography>
           <DataGrid
-            rows={filteredRows}
+            rows={mockData}
             columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 10,
-                },
-              },
-            }}
-            pageSizeOptions={[10]}
-            autoHeight
-            disableColumnMenu
-            disableColumnResize
             onRowClick={handleRowClick}
+            sx={{
+              border: "1px solid #bdc3c9",
+            }}
           />
         </Box>
         <Box
           sx={{
-            width: { xs: "25vw", md: "37vw" },
+            width: { xs: "87vw", md: "35vw" },
             display: "flex",
             flexDirection: selected ? "column" : "center",
+            justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#f0f4f8",
             gap: 2,
+            borderRadius: "4px",
             padding: 2,
+            marginTop: 2,
+            height: "95%",
+            border: "1px solid #bdc3c9",
           }}
         >
-          <RenderFileInfo selectedFile={selected} />
+          <RenderFileInfo
+            selectedFile={selected}
+            func={handleOpenDialogPurchase}
+          />
         </Box>
       </Box>
     </>
