@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import React from "react";
 import {
-  AppBar,
   Box,
   Button,
   TextField,
   InputAdornment,
-  Toolbar,
   Typography,
   Dialog,
   DialogTitle,
@@ -29,11 +27,11 @@ function handlePurchase(selectedFile) {
   const url = URL.createObjectURL(fileBlob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = selectedFile.name; // Use the file's name for the download
+  a.download = selectedFile.name;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a); // Clean up the link element after clicking
-  URL.revokeObjectURL(url); // Clean up the object URL
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Function to render single files
@@ -63,7 +61,7 @@ function RenderFileInfo({ selectedFile, func }) {
         </Typography>
         <Typography variant="body1">
           <strong>Price:</strong>{" "}
-          {selectedFile.price ? selectedFile.price : "tbd"}
+          {selectedFile.price ? selectedFile.price + " DC" : "tbd"}
         </Typography>
       </Box>
       <Button startIcon={<Download />} onClick={func} variant="contained">
@@ -79,16 +77,19 @@ export default function Explore() {
       field: "name",
       headerName: "Name",
       width: 150,
+      resizable: false,
     },
     {
       field: "size",
       headerName: "Size",
       width: 100,
+      resizable: false,
     },
     {
       field: "hash",
       headerName: "Hash",
-      width: 420,
+      width: 423,
+      resizable: false,
     },
   ];
 
@@ -100,7 +101,7 @@ export default function Explore() {
       type: "Text",
       date: "2024-09-15",
       hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: "20 DC",
+      price: 20,
     },
     {
       id: 2,
@@ -109,6 +110,7 @@ export default function Explore() {
       type: "Image",
       date: "2024-09-16",
       hash: "Qmd3W5ty4UkFgP6AvjyzbdzFcfZy3KRfrbLVH5MNvSR1qy",
+      price: 50,
     },
     {
       id: 3,
@@ -117,6 +119,7 @@ export default function Explore() {
       type: "Video",
       date: "2024-09-17",
       hash: "Qmc9shFA7RohHKDJYb6V2PSwiyV8XoL3vRU3nsi47hM6Rb",
+      price: 100,
     },
     {
       id: 4,
@@ -125,6 +128,7 @@ export default function Explore() {
       type: "PDF",
       date: "2024-09-18",
       hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
+      price: 20,
     },
     {
       id: 5,
@@ -133,6 +137,7 @@ export default function Explore() {
       type: "Audio",
       date: "2024-09-19",
       hash: "QmeT4GfdwT5fZJfjsGaU1MPmX4r2KYbw8WjXxsyuKfmpwD",
+      price: 75,
     },
     {
       id: 6,
@@ -141,6 +146,7 @@ export default function Explore() {
       type: "Presentation",
       date: "2024-09-20",
       hash: "QmdTVqv8Uu64yZDS5KYsWfUbqTSqY6v3RhWE74ZdMka7vQ",
+      price: 35,
     },
     {
       id: 7,
@@ -149,6 +155,7 @@ export default function Explore() {
       type: "Spreadsheet",
       date: "2024-09-21",
       hash: "QmPKM6V4Swj7L8T1wVoWFAh5EuhwNz3avJ8MDphgdKFm2N",
+      price: 40,
     },
     {
       id: 8,
@@ -157,6 +164,7 @@ export default function Explore() {
       type: "Ebook",
       date: "2024-09-22",
       hash: "QmS9D7djG9Fwmg9RC8nN9dkm6MC77Vi52JZpVjfZ4qxA4K",
+      price: 55,
     },
     {
       id: 9,
@@ -165,6 +173,7 @@ export default function Explore() {
       type: "Archive",
       date: "2024-09-23",
       hash: "QmRvZbWG56HdT9yqwfboEJdVjqAgcMG95R7jE8VfVFxmB5",
+      price: 150,
     },
     {
       id: 10,
@@ -172,7 +181,8 @@ export default function Explore() {
       size: "1.5 MB",
       type: "Document",
       date: "2024-09-24",
-      hash: "QmULHkg4vTXsB9y5FrwSBKcnJgsKbG82ZX4FvgNLchBgGy",
+      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
+      price: 20,
     },
     {
       id: 11,
@@ -181,6 +191,7 @@ export default function Explore() {
       type: "Image",
       date: "2024-09-25",
       hash: "QmN2TkfiXuwbyvYn4cJZ2dqPKFJXNg9i7VuCdYQwFw1XKP",
+      price: 60,
     },
     {
       id: 12,
@@ -189,74 +200,12 @@ export default function Explore() {
       type: "Archive",
       date: "2024-09-26",
       hash: "QmRTdCB6gjq4Y1EdDZ8SaFZy5jNvnM7tLdPhmYGy7YRs5X",
-    },
-    {
-      id: 13,
-      name: "music_album.flac",
-      size: "500 MB",
-      type: "Audio",
-      date: "2024-09-27",
-      hash: "QmcKj7bqZzTH5uXZn9HtVBz5J7qZwec6hS2LVRLbkA2EKC",
-    },
-    {
-      id: 14,
-      name: "notes.txt",
-      size: "15 KB",
-      type: "Text",
-      date: "2024-09-28",
-      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-    },
-    {
-      id: 15,
-      name: "game.iso",
-      size: "4 GB",
-      type: "ISO",
-      date: "2024-09-29",
-      hash: "QmdMn5XeYKbPgrz1exMqQjPp2UdVcPNEvvTgKdG78YGpNG",
-    },
-    {
-      id: 16,
-      name: "database.sql",
-      size: "25 MB",
-      type: "Database",
-      date: "2024-09-30",
-      hash: "QmQybnbmKuFKk74DkxLzodtHzXZwFw8nRZtvv4zRfWaAVF",
-    },
-    {
-      id: 17,
-      name: "design.sketch",
-      size: "12 MB",
-      type: "Design",
-      date: "2024-10-01",
-      hash: "QmPfWe9fGKgA6rPFEhMb9cdWsLvcEhrkyoCb3BoqSMqjvS",
-    },
-    {
-      id: 18,
-      name: "animation.gif",
-      size: "8 MB",
-      type: "Animation",
-      date: "2024-10-02",
-      hash: "QmTsfzFyG9nL3EFcCxpfjEzAnCJqudVMy7AQs3LzRs1NRh",
-    },
-    {
-      id: 19,
-      name: "source_code.zip",
-      size: "100 MB",
-      type: "Archive",
-      date: "2024-10-03",
-      hash: "QmVuRnPNeLZ6AK8FskAv4fU6rqYmNU8fFL2PAEZgkQm36G",
-    },
-    {
-      id: 20,
-      name: "project_plan.docx",
-      size: "3 MB",
-      type: "Document",
-      date: "2024-10-04",
-      hash: "QmSm3zjeD7HkFktK5pS9pFgB7uFbYbnMJP3mWsD4jFLQU5",
+      price: 200,
     },
   ];
 
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
+  const [balance, setBalance] = useState(500); // TEMP BALANCE
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   // State for dialog visibility
@@ -291,55 +240,6 @@ export default function Explore() {
 
   return (
     <>
-      <AppBar
-        position="absolute"
-        sx={{
-          width: "87vw",
-          marginLeft: "13vw",
-          bgcolor: "#7a99d9",
-        }}
-      >
-        <Toolbar
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <TextField
-            variant="outlined"
-            placeholder="Search by Hash..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            sx={{
-              width: "50vw",
-              bgcolor: "#f0f4f8",
-              borderRadius: "4px",
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleOpenDialogHash();
-              }
-            }}
-          />
-          <Button
-            href="https://github.com/MazenIbrahim1/PHAJAM"
-            target="_blank"
-            variant="contained"
-          >
-            <Help />
-          </Button>
-        </Toolbar>
-      </AppBar>
-
       {/* Pop up to show hash search results */}
       <Dialog
         open={openHash}
@@ -360,6 +260,8 @@ export default function Explore() {
                   gap: 1,
                   padding: 2,
                   margin: 2,
+                  borderRadius: "4px",
+                  boxShadow: 3,
                 }}
               >
                 <Typography key={result.id} variant="body1">
@@ -409,11 +311,15 @@ export default function Explore() {
       >
         <DialogTitle id="purchase-title">{"Confirm Purchase"}</DialogTitle>
         <DialogContent>
-          <Typography>Current Balance: 300 DC</Typography>
           {selected ? (
-            <Typography>
-              Price: {selected.price ? selected.price : "tbd"}
-            </Typography>
+            <>
+              <Typography>
+                Price: {selected.price ? selected.price + " DC" : "tbd"}
+              </Typography>
+              <Typography>
+                Balance After: {balance - selected.price} DC
+              </Typography>
+            </>
           ) : (
             <Typography>Select a File</Typography>
           )}
@@ -431,6 +337,7 @@ export default function Explore() {
             variant="contained"
             onClick={() => {
               handlePurchase(selected);
+              setBalance(balance - selected.price);
               handleCloseDialogPurchase();
             }}
           >
@@ -441,18 +348,66 @@ export default function Explore() {
 
       <Box
         sx={{
-          height: "100vh",
+          marginLeft: "14vw",
+          width: "86vw",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <TextField
+          variant="outlined"
+          placeholder="Search by Hash..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          sx={{
+            width: "47vw",
+            bgcolor: "#f0f4f8",
+            borderRadius: "4px",
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          fullWidth
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleOpenDialogHash();
+            }
+          }}
+        />
+        <Box
+          sx={{
+            width: "37vw",
+            height: "55px",
+            bgcolor: "#f0f4f8",
+            borderRadius: "4px",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid #bdc3c9",
+          }}
+        >
+          <Typography variant="h4">Wallet Balance: {balance} DC</Typography>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          height: "85vh",
           width: "87vw",
           marginLeft: "13vw",
-          marginTop: "64px",
           display: "flex",
           flexDirection: { sm: "column", md: "row" },
-          overflow: "auto",
+          gap: 1,
         }}
       >
         <Box
           sx={{
-            height: "95vh",
             width: { xs: "25vw", md: "46vw" },
             display: "flex",
             flexDirection: "column",
@@ -460,24 +415,32 @@ export default function Explore() {
             alignItems: "flex-start",
             gap: 2,
             padding: 2,
+            height: "100%",
           }}
         >
-          <Typography variant="h3">Explore Files in the Network</Typography>
           <DataGrid
             rows={mockData}
             columns={columns}
             onRowClick={handleRowClick}
+            sx={{
+              border: "1px solid #bdc3c9",
+            }}
           />
         </Box>
         <Box
           sx={{
-            width: { xs: "25vw", md: "37vw" },
+            width: { xs: "87vw", md: "35vw" },
             display: "flex",
             flexDirection: selected ? "column" : "center",
+            justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f5f5f5",
+            bgcolor: "#f0f4f8",
             gap: 2,
+            borderRadius: "4px",
             padding: 2,
+            marginTop: 2,
+            height: "95%",
+            border: "1px solid #bdc3c9",
           }}
         >
           <RenderFileInfo
