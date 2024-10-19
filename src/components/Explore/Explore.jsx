@@ -248,7 +248,9 @@ export default function Explore() {
         aria-labelledby="hash-search-result-title"
         aria-describedby="hash-search-result-description"
       >
-        <DialogTitle id="hash-search-result-title">{"Results:"}</DialogTitle>
+        <DialogTitle alignSelf={"center"} id="hash-search-result-title">
+          {searchResults.length + " Results:"}
+        </DialogTitle>
         <DialogContent>
           {searchResults.length > 0 ? (
             searchResults.map((result) => (
@@ -333,7 +335,7 @@ export default function Explore() {
         >
           <TextField
             variant="outlined"
-            placeholder="Set Bid Price"
+            placeholder="Set Offer Price"
             autoComplete="off"
             value={bid}
             onChange={(event) => setBid(event.target.value)}
