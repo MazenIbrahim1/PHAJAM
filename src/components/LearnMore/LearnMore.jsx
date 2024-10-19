@@ -51,14 +51,14 @@ export default function LearnMore() {
           variant="contained"
           color="secondary"
           onClick={handleBackToLogin}
-          sx={{
-            padding: "10px 20px",
-            fontSize: "1rem",
-            backgroundColor: "#1976d2", // Primary button color
-            "&:hover": {
-              backgroundColor: "#1565c0", // Hover effect
-            },
-          }}
+          // sx={{
+          //   padding: "10px 20px",
+          //   fontSize: "1rem",
+          //   backgroundColor: "#1976d2", // Primary button color
+          //   "&:hover": {
+          //     backgroundColor: "#1565c0", // Hover effect
+          //   },
+          // }}
         >
           Back to Login
         </Button>

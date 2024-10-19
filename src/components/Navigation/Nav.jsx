@@ -17,19 +17,21 @@ import {
   Logout,
 } from "@mui/icons-material"; // Import the Logout icon
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTheme } from "@mui/material/styles";
+import { useTheme as useThemeContext } from "../../ThemeContext"; // Import the ThemeContext
 
 export default function Nav() {
   // Get the current path
   const location = useLocation();
   const navigate = useNavigate(); // Use navigate for programmatic navigation
-  const theme = useTheme(); // Access the theme
+  const { setDarkMode } = useThemeContext(); // Get setDarkMode from ThemeContext
 
   // Function to check which navigation link is active
   const isActive = (path) => location.pathname === path;
 
   // Function to handle logout
   const handleLogout = () => {
+    // Reset the theme to light mode
+    setDarkMode(false); // Set dark mode to false on logout
     // Navigate to the login page (root path)
     navigate("/");
   };
@@ -42,8 +44,8 @@ export default function Nav() {
         "& .MuiDrawer-paper": {
           width: "13vw",
           boxSizing: "border-box",
-          backgroundColor: theme.palette.primary.main, // Use primary color from theme
-          color: theme.palette.text.primary, // Use text color from theme
+          backgroundColor: "#000000", // Set to primary color directly
+          color: "#ffffff", // Set text color directly
         },
       }}
     >
@@ -80,11 +82,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/files")
-                  ? theme.palette.primary.light
-                  : "transparent",
+                bgcolor: isActive("/files") ? "#7a99d9" : "transparent", // Use light blue directly
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}
@@ -109,11 +109,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/explore")
-                  ? theme.palette.primary.light
-                  : "transparent",
+                bgcolor: isActive("/explore") ? "#7a99d9" : "transparent", // Use light blue directly
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}
@@ -138,11 +136,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/proxy")
-                  ? theme.palette.primary.light
-                  : "transparent",
+                bgcolor: isActive("/proxy") ? "#7a99d9" : "transparent", // Use light blue directly
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}
@@ -167,11 +163,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/profile")
-                  ? theme.palette.primary.light
-                  : "transparent",
+                bgcolor: isActive("/profile") ? "#7a99d9" : "transparent", // Use light blue directly
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}
@@ -201,11 +195,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/settings")
-                  ? theme.palette.primary.light
-                  : "transparent",
+                bgcolor: isActive("/settings") ? "#7a99d9" : "transparent", // Use light blue directly
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}
@@ -231,7 +223,7 @@ export default function Nav() {
                 justifyContent: "center",
                 alignItems: "center",
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.light,
+                  backgroundColor: "#7a99d9", // Use light blue directly
                 },
                 color: "white",
               }}

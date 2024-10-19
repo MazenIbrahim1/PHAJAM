@@ -278,13 +278,12 @@ export default function GenerateKeys() {
       />
       {/* Back to Login Button */}
       <Button
-        variant="outlined"
+        variant="contained"
         onClick={handleBackToLogin}
         color="secondary"
         sx={{
           marginTop: "20px",
           alignSelf: "center",
-          borderRadius: "20px",
         }}
       >
         Back to Login
