@@ -7,20 +7,20 @@ import Profile from "./components/Profile/Profile";
 import Home from "./components/Home/Home";
 import Nav from "./components/Navigation/Nav";
 import { ThemeProvider } from "@mui/material/styles";
-import oceanTheme from "./theme"; // Import the theme from the theme.js file
+import oceanTheme from "./theme"; 
 import Login from "./components/Login/Login";
 import LearnMore from "./components/LearnMore/LearnMore";
 import GenerateKeys from "./components/GenerateKeys/GenerateKeys";
-import { ThemeProvider as AppThemeProvider } from "./ThemeContext"; // Import the ThemeContext provider
+import { ThemeProvider as AppThemeProvider } from "./ThemeContext"; 
 
 function App() {
-  const location = useLocation(); // Get the current location
+  const location = useLocation(); 
 
-  // List of paths where the navbar should be hidden
+
   const hideNavPaths = ["/", "/learn-more", "/generate-keys"];
 
   return (
-    <AppThemeProvider> {/* Wrap the whole app with ThemeProvider from ThemeContext */}
+    <AppThemeProvider> 
       <ThemeProvider theme={oceanTheme}>
         {!hideNavPaths.includes(location.pathname) && <Nav />}
         <Routes>

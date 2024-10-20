@@ -15,24 +15,19 @@ import {
   TravelExplore,
   SentimentSatisfiedAlt,
   Logout,
-} from "@mui/icons-material"; // Import the Logout icon
+} from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTheme as useThemeContext } from "../../ThemeContext"; // Import the ThemeContext
+import { useTheme as useThemeContext } from "../../ThemeContext"; 
 
 export default function Nav() {
-  // Get the current path
   const location = useLocation();
-  const navigate = useNavigate(); // Use navigate for programmatic navigation
-  const { setDarkMode } = useThemeContext(); // Get setDarkMode from ThemeContext
+  const navigate = useNavigate(); 
+  const { setDarkMode } = useThemeContext(); 
 
-  // Function to check which navigation link is active
   const isActive = (path) => location.pathname === path;
 
-  // Function to handle logout
   const handleLogout = () => {
-    // Reset the theme to light mode
-    setDarkMode(false); // Set dark mode to false on logout
-    // Navigate to the login page (root path)
+    setDarkMode(false);
     navigate("/");
   };
 
@@ -44,8 +39,8 @@ export default function Nav() {
         "& .MuiDrawer-paper": {
           width: "13vw",
           boxSizing: "border-box",
-          backgroundColor: "#000000", // Set to primary color directly
-          color: "#ffffff", // Set text color directly
+          backgroundColor: "#000000",
+          color: "#ffffff", 
         },
       }}
     >
@@ -68,10 +63,9 @@ export default function Nav() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          height: "100%", // Make the Box take the full height of the Drawer
+          height: "100%", 
         }}
       >
-        {/* Top List Section */}
         <List>
           <ListItem disablePadding>
             <ListItemButton
@@ -82,9 +76,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/files") ? "#7a99d9" : "transparent", // Use light blue directly
+                bgcolor: isActive("/files") ? "#7a99d9" : "transparent", 
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9", 
                 },
                 color: "white",
               }}
@@ -109,9 +103,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/explore") ? "#7a99d9" : "transparent", // Use light blue directly
+                bgcolor: isActive("/explore") ? "#7a99d9" : "transparent", 
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
@@ -136,9 +130,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/proxy") ? "#7a99d9" : "transparent", // Use light blue directly
+                bgcolor: isActive("/proxy") ? "#7a99d9" : "transparent", 
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9", 
                 },
                 color: "white",
               }}
@@ -163,9 +157,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/profile") ? "#7a99d9" : "transparent", // Use light blue directly
+                bgcolor: isActive("/profile") ? "#7a99d9" : "transparent",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9", 
                 },
                 color: "white",
               }}
@@ -184,57 +178,55 @@ export default function Nav() {
           </ListItem>
         </List>
 
-        {/* Bottom List Section */}
         <List>
           <ListItem disablePadding>
             <ListItemButton
               component={Link}
               to="/settings"
               sx={{
-                height: "8vh", // Reduced height
+                height: "8vh", 
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/settings") ? "#7a99d9" : "transparent", // Use light blue directly
+                bgcolor: isActive("/settings") ? "#7a99d9" : "transparent", 
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9", 
                 },
                 color: "white",
               }}
               divider
             >
               <ListItemIcon>
-                <Settings sx={{ color: "white", fontSize: "1.6rem" }} /> {/* Reduced icon size */}
+                <Settings sx={{ color: "white", fontSize: "1.6rem" }} /> 
               </ListItemIcon>
               <ListItemText
                 primary="SETTINGS"
-                primaryTypographyProps={{ fontSize: "0.75rem" }} // Reduced text size
+                primaryTypographyProps={{ fontSize: "0.75rem" }} 
               />
             </ListItemButton>
           </ListItem>
 
-          {/* Logout Button */}
           <ListItem disablePadding>
             <ListItemButton
               onClick={handleLogout}
               sx={{
-                height: "8vh", // Reduced height
+                height: "8vh", 
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", // Use light blue directly
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
               divider
             >
               <ListItemIcon>
-                <Logout sx={{ color: "white", fontSize: "1.6rem" }} /> {/* Reduced icon size */}
+                <Logout sx={{ color: "white", fontSize: "1.6rem" }} /> 
               </ListItemIcon>
               <ListItemText
                 primary="LOGOUT"
-                primaryTypographyProps={{ fontSize: "0.75rem" }} // Reduced text size
+                primaryTypographyProps={{ fontSize: "0.75rem" }} 
               />
             </ListItemButton>
           </ListItem>
