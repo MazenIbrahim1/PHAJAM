@@ -4,6 +4,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 
+// Function to generate a random key
 const generateRandomKey = (length) => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -19,7 +20,7 @@ export default function GenerateKeys() {
   const [privateKey, setPrivateKey] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMatch, setPasswordMatch] = useState(true); 
+  const [passwordMatch, setPasswordMatch] = useState(true); // Initially assume they match
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [passwordValidations, setPasswordValidations] = useState({
@@ -30,25 +31,30 @@ export default function GenerateKeys() {
 
   const navigate = useNavigate();
 
+  // Function to generate keys
   const handleGenerateKeys = () => {
-    setAddress(generateRandomKey(42));
-    setPublicKey(generateRandomKey(66));
-    setPrivateKey(generateRandomKey(64));
+    setAddress(generateRandomKey(42)); // Example length for a Dolphincoin address
+    setPublicKey(generateRandomKey(66)); // Example length for a public key
+    setPrivateKey(generateRandomKey(64)); // Example length for a private key
   };
 
+  // Automatically generate keys when the component mounts
   useEffect(() => {
     handleGenerateKeys();
   }, []);
 
+  // Function to copy text to clipboard
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard!");
   };
 
+  // Function to navigate back to the login page
   const handleBackToLogin = () => {
-    navigate("/");
+    navigate("/"); // Update this route based on your login page path
   };
 
+  // Function to download a specific key as a text file
   const handleDownloadFile = (fileName, content) => {
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
@@ -59,6 +65,7 @@ export default function GenerateKeys() {
     document.body.removeChild(link);
   };
 
+  // Function to handle password validation
   const validatePassword = (password) => {
     const validations = {
       length: password.length >= 8 && password.length <= 15,
@@ -69,20 +76,23 @@ export default function GenerateKeys() {
     return validations.length && validations.number && validations.specialChar;
   };
 
+  // Function to handle password save
   const handleSavePassword = () => {
     if (password === confirmPassword && validatePassword(password)) {
-      setPasswordSaved(true); 
-      setSnackbarOpen(true); 
+      // Save the password logic goes here
+      setPasswordSaved(true); // Show password saved status
+      setSnackbarOpen(true); // Show snackbar
     } else {
-      setPasswordSaved(false); 
+      setPasswordSaved(false); // Indicate passwords do not match
     }
   };
 
+  // Function to handle Snackbar close
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-
+  // Update the password match state based on user input
   useEffect(() => {
     setPasswordMatch(password === confirmPassword);
   }, [password, confirmPassword]);
@@ -94,7 +104,7 @@ export default function GenerateKeys() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "space-between", // Space between elements
         alignItems: "center",
         backgroundColor: "#ffffff",
         color: "#333",
@@ -102,11 +112,13 @@ export default function GenerateKeys() {
         paddingTop: "7%",
       }}
     >
+      {/* Main container to hold both sections */}
       <Box sx={{ display: "flex", width: "100%", maxWidth: "1200px", gap: 3 }}>
+        {/* Generate Keys Section */}
         <Box
           sx={{
             flex: 1,
-            maxWidth: "700px", 
+            maxWidth: "700px", // Increased width for better icon fit
             backgroundColor: "#fff",
             borderRadius: "10px",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -185,6 +197,7 @@ export default function GenerateKeys() {
           </Box>
         </Box>
 
+        {/* Password Input Section */}
         <Box
           sx={{
             flex: 1,
@@ -192,7 +205,7 @@ export default function GenerateKeys() {
             backgroundColor: "#fff",
             borderRadius: "10px",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-            padding: "20px", 
+            padding: "20px", // Adjusted padding to match the Generate Keys section
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -207,7 +220,7 @@ export default function GenerateKeys() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              validatePassword(e.target.value);
+              validatePassword(e.target.value); // Validate on change
             }}
             required
             error={!passwordMatch && confirmPassword !== ""}
@@ -256,13 +269,14 @@ export default function GenerateKeys() {
         </Box>
       </Box>
 
+      {/* Snackbar for success message */}
       <Snackbar
         open={snackbarOpen}
         onClose={handleSnackbarClose}
         message={passwordSaved ? "Password saved successfully!" : "Failed to save password."}
         autoHideDuration={3000}
       />
-
+      {/* Back to Login Button */}
       <Button
         variant="contained"
         onClick={handleBackToLogin}

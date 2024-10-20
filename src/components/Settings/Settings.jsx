@@ -2,30 +2,39 @@ import { Box, Typography, Button, Switch, FormControlLabel, Dialog, DialogAction
 import { useState } from "react";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useTheme } from "../../ThemeContext"; 
+import { useTheme } from "../../ThemeContext"; // Make sure this path is correct
 
 export default function SettingsPage() {
-  const { darkMode, setDarkMode } = useTheme(); 
+  const { darkMode, setDarkMode } = useTheme(); // Use the theme context
 
+  // State for dialog visibility
   const [open, setOpen] = useState(false);
 
+  // Handle dark mode toggle
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
   };
 
+  // Open the dialog
   const handleOpenDialog = () => {
     setOpen(true);
   };
 
+  // Close the dialog
   const handleCloseDialog = () => {
     setOpen(false);
   };
 
+  // Handle account deletion
   const handleDeleteAccount = () => {
+    // Add account deletion logic here
     console.log("Account deleted");
-    setDarkMode(false); 
-    window.location.href = "/"; 
+    // Update dark mode state before redirecting
+    setDarkMode(false); // Reset to light mode
+    // Redirect to login page
+    window.location.href = "/"; // Change to your login page URL if needed
 };
+
 
   return (
     <Box
@@ -43,6 +52,7 @@ export default function SettingsPage() {
         color: darkMode ? "#ffffff" : "#000000",
       }}
     >
+      {/* Other components remain unchanged */}
       <Box
         sx={{
           marginLeft: "13vw",
@@ -52,6 +62,7 @@ export default function SettingsPage() {
           gap: 4,
         }}
       >
+        {/* Light/Dark Mode Toggle */}
         <Box
           sx={{
             flex: 1,
@@ -111,6 +122,7 @@ export default function SettingsPage() {
           </Box>
         </Box>
 
+        {/* Delete Account */}
         <Box
           sx={{
             flex: 1,
@@ -145,6 +157,7 @@ export default function SettingsPage() {
         </Box>
       </Box>
 
+      {/* Confirmation Dialog */}
       <Dialog
         open={open}
         onClose={handleCloseDialog}
