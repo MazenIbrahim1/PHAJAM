@@ -66,16 +66,65 @@ export default function Proxy() {
   return (
     <Box
         sx={{
-            height: "100vh",
+            // height: "100vh",
             marginLeft: "13vw",
             display: "flex",
-            padding: 2,
+            paddingLeft: 2,
+            paddingRight: 2,
             flexDirection: "column",
             justifyContent: "top",
             alignItems: "center",
             // border: 'dashed'
         }}
     >
+        <Box
+            sx = {{
+                padding: 2
+            }}
+        >
+            <Typography
+                variant = "h4"
+                sx = {{ fontWeight: "bold" }}
+            >
+                {mockProxies.length === 0 ? "NO " : ""} AVAILABLE PROXIES
+            </Typography>
+        </Box>
+        <ProxyBox proxies = {mockProxies} setCurrentProxy = {handleSetCurrentProxy} />
+        <Dialog open = {priceOpened}>
+            <DialogTitle> Set Price </DialogTitle>
+            <IconButton
+                edge="end"
+                color="inherit"
+                onClick={cancelPrice}
+                aria-label="close"
+                sx={{ position: 'absolute', right: "6%", top: "3%" }}
+            >
+                <CloseIcon />
+            </IconButton>
+            <DialogContent>
+                <form id = "priceForm" onSubmit = {handleSubmit}>
+                    <TextField
+                        margin = "dense"
+                        label = "DOL / MB"
+                        type = "text"
+                        fullWidth
+                        variant = "outlined"
+                        required
+                    />
+                </form>
+            </DialogContent>
+            <DialogActions>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    type = "submit" 
+                    form = "priceForm" 
+                    sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
+                  >
+                    Submit
+                </Button>
+            </DialogActions>
+        </Dialog>
         <Box
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -153,54 +202,6 @@ export default function Proxy() {
                 </>
             )}
         </Box>
-        <Box
-            sx = {{
-                padding: 2
-            }}
-        >
-            <Typography
-                variant = "h4"
-                sx = {{ fontWeight: "bold" }}
-            >
-                {mockProxies.length === 0 ? "NO " : ""} AVAILABLE PROXIES
-            </Typography>
-        </Box>
-        <ProxyBox proxies = {mockProxies} setCurrentProxy = {handleSetCurrentProxy} />
-        <Dialog open = {priceOpened}>
-            <DialogTitle> Set Price </DialogTitle>
-            <IconButton
-                edge="end"
-                color="inherit"
-                onClick={cancelPrice}
-                aria-label="close"
-                sx={{ position: 'absolute', right: "6%", top: "3%" }}
-            >
-                <CloseIcon />
-            </IconButton>
-            <DialogContent>
-                <form id = "priceForm" onSubmit = {handleSubmit}>
-                    <TextField
-                        margin = "dense"
-                        label = "DC / MB"
-                        type = "text"
-                        fullWidth
-                        variant = "outlined"
-                        required
-                    />
-                </form>
-            </DialogContent>
-            <DialogActions>
-                <Button 
-                    variant = "contained"
-                    backgroundColor = "black"
-                    type = "submit" 
-                    form = "priceForm" 
-                    sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
-                  >
-                    Submit
-                </Button>
-            </DialogActions>
-        </Dialog>
     </Box>
   );
 }

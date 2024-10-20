@@ -5,13 +5,14 @@ const ProxyBox = ({proxies, setCurrentProxy}) => {
     return(
         <Box
             sx = {{
-                // marginTop: 2,
+                marginBottom: 2,
                 borderTop: "1px solid black",
+                borderBottom: "1px solid black",
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "center",
                 width: "100%",
-                height: "100%",
+                height: "75vh",
                 overflowY: "auto",
                 '&::-webkit-scrollbar': {
                     width: "8px",
@@ -31,7 +32,7 @@ const ProxyBox = ({proxies, setCurrentProxy}) => {
         >
             <Grid container spacing = {4}>
                 {proxies.map((proxy, index) => (
-                    <Grid item xs = {4} key = {index}>
+                    <Grid item xs = {3} key = {index}>
                         <Box
                             sx = {{
                                 flex: 1,
@@ -47,9 +48,12 @@ const ProxyBox = ({proxies, setCurrentProxy}) => {
                         >
                             <Box
                                 sx = {{
+                                    width: "100%",
                                     display: "flex",
                                     flexDirection: "column",
-                                    flex: 4,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    // flex: 4,
                                     // border: "dashed",
                                     padding: 2,
                                 }}
@@ -64,28 +68,50 @@ const ProxyBox = ({proxies, setCurrentProxy}) => {
                                     Location: {proxy.location}
                                 </Typography>
                                 <Typography variant = "body2" sx = {{ marginBottom: 1 }}>
-                                    Price: {proxy.price} DC/MB
+                                    Price: {proxy.price} DOL/MB
                                 </Typography>
+                                <Button
+                                    variant = "contained"
+                                    onClick = {() => setCurrentProxy(proxy)}
+                                    sx = {{
+                                        backgroundColor: "black",
+                                        '&:hover': {
+                                            backgroundColor: "#444"
+                                        },
+                                        color: "white",
+                                        maxHeight: "50px"
+                                        // border: "solid"
+                                    }}
+                                >
+                                    Select Proxy
+                                </Button>
                             </Box>
-                            <Button
-                                onClick = {() => setCurrentProxy(proxy)}
+                            {/* <Box
                                 sx = {{
                                     flex: 3,
-                                    borderRadius: "0 8px 8px 0",
-                                    backgroundColor: "black",
-                                    '&:hover': {
-                                        backgroundColor: "#444"
-                                    },
-                                    color: "white",
-                                    // border: "solid"
+                                    // border: "dashed",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center"
                                 }}
                             >
-                                <Typography variant = "h5" sx = {{ fontWeight: "bold" }}>
-                                    SELECT<br />
-                                    AS<br />
-                                    PROXY
-                                </Typography>
-                            </Button>
+                                <Button
+                                    variant = "contained"
+                                    onClick = {() => setCurrentProxy(proxy)}
+                                    sx = {{
+                                        backgroundColor: "black",
+                                        '&:hover': {
+                                            backgroundColor: "#444"
+                                        },
+                                        color: "white",
+                                        maxHeight: "50px"
+                                        // border: "solid"
+                                    }}
+                                >
+                                    Select <br />
+                                    Proxy
+                                </Button>
+                            </Box> */}
                         </Box>
                     </Grid>
                 ))}
