@@ -53,10 +53,25 @@ export default function GenerateKeys() {
     return validations.length && validations.number && validations.specialChar;
   };
 
+  const downloadFile = (filename, content) => {
+    const element = document.createElement("a");
+    const file = new Blob([content], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   const handleSavePassword = () => {
     if (password === confirmPassword && validatePassword(password)) {
       setPasswordSaved(true); 
-      setSnackbarOpen(true); 
+      setSnackbarOpen(true);
+
+      // Download the keys as text files
+      downloadFile("Dolphincoin_Address.txt", address);
+      downloadFile("Public_Key.txt", publicKey);
+      downloadFile("Private_Key.txt", privateKey);
     } else {
       setPasswordSaved(false); 
     }
@@ -69,6 +84,15 @@ export default function GenerateKeys() {
   useEffect(() => {
     setPasswordMatch(password === confirmPassword);
   }, [password, confirmPassword]);
+
+  const isPasswordValid = () => {
+    return (
+      passwordValidations.length &&
+      passwordValidations.number &&
+      passwordValidations.specialChar &&
+      passwordMatch
+    );
+  };
 
   return (
     <Box
@@ -113,18 +137,23 @@ export default function GenerateKeys() {
             }}
           >
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>Instructions</Typography>
-              <Typography variant="body2">
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                Instructions
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: "bold" }}>
                 Please follow the instructions provided to use create your account.<br />
                 <br />
-                You have been provided with a Dolphincoin Address, Public Key, and Private Key. In order to access these, you must first create the password for your accounnt. <br />
+              </Typography>
+              <Typography variant="body2">
+                You have been provided with a Dolphincoin Address, Public Key, and Private Key. <br />
+                In order to access these, you must first create the password for your account. <br />
                 Once you have successfully created your password, your Dolphincoin Address, Public Key, and Private Key will automatically be downloaded onto your device. 
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: "bold" }}>MAKE SURE YOU DO NOT LOSE THESE FILES!</Typography>
+              <Typography variant="body2" sx={{ fontWeight: "bold" }}> <br /> MAKE SURE YOU DO NOT LOSE THESE FILES!</Typography>
             </Box>
 
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>Generated Keys</Typography>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>Generated Wallet Address and Keys</Typography>
 
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2, marginTop: 2 }}>
                 <Typography variant="body1">Dolphincoin Address:</Typography>
@@ -210,7 +239,12 @@ export default function GenerateKeys() {
               </Typography>
             </Box>
 
-            <Button variant="contained" onClick={handleSavePassword} sx={{ marginTop: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleSavePassword}
+              disabled={!isPasswordValid()}
+              sx={{ marginTop: 2 }}
+            >
               Create Account
             </Button>
           </Box>
@@ -231,14 +265,13 @@ export default function GenerateKeys() {
             Back to Login
           </Button>
         </Box>
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          onClose={handleSnackbarClose}
-          message="Password saved successfully!"
-        />
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        onClose={handleSnackbarClose}
+        message="Your account has successfully been created! You may return to the login page and log into your new account!"
+      />
     </Box>
   );
 }
