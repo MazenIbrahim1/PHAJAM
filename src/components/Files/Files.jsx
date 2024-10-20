@@ -78,19 +78,19 @@ export default function Files() {
       <DataTable rows = {mockData} columns = {columns} search = {search} />
         
         {/* Upload File Popup */}
-        <Dialog open = {uploadOpened} onClose = {closeUpload}>
+        <Dialog open = {uploadOpened}>
             <DialogTitle> Upload File </DialogTitle>
             <IconButton
                 edge="end"
                 color="inherit"
                 onClick={closeUpload}
                 aria-label="close"
-                sx={{ position: 'absolute', right: "4%", top: "2%" }}
+                sx={{ position: 'absolute', right: "4%", top: "3%" }}
             >
                 <CloseIcon />
             </IconButton>
             <DialogContent>
-                <form onSubmit = {handleSubmit}>
+                <form id = "uploadForm" onSubmit = {handleSubmit}>
                     <input
                         type = "file"
                         id = "file-upload"
