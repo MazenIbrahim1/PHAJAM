@@ -1,4 +1,4 @@
-import { Box, Typography, Container, List, ListItem, ListItemText, ListItemIcon} from "@mui/material";
+{/*import { Box, Typography, Container, List, ListItem, ListItemText, ListItemIcon} from "@mui/material";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; 
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -40,7 +40,7 @@ export default function Home() {
           		<Typography variant="h5" > Have a fabulous file sharing frenzy! </Typography>
         	</Box>
 
-      		{/* Two side-by-side boxes */}
+      		
         	<Box
            		sx={{
             		display: "flex",
@@ -49,7 +49,7 @@ export default function Home() {
             	  	mb: "24px", // Space below the boxes
             	}}
         	>	
-        		{/* First Box */}
+        		// First Box *
             	<Box
               		sx={{
                 		width: "50%", // Each box takes up about half the container width
@@ -106,7 +106,7 @@ export default function Home() {
                 	</List>                   
             	</Box>
 
-            	{/* Second Box */}
+            	// Second Box 
             	<Box
               		sx={{
                 		width: "50%", // Each box takes up about half the container width
@@ -129,3 +129,165 @@ export default function Home() {
 		</Box>
   );
 }
+*/}
+import React from 'react';
+import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+export default function Home() {
+  const transactions = [
+    { from: '0000000', to: '5555555', amount: 0.5 },
+    { from: '1234567', to: '7654321', amount: 1.2 },
+    { from: '9999999', to: '1111111', amount: 0.8 },
+    { from: '2468101', to: '1024680', amount: 0.3 },
+    { from: '6543210', to: '0123456', amount: 2.1 },
+    { from: '7777777', to: '3333333', amount: 0.9 },
+    { from: '8888888', to: '4444444', amount: 1.4 },
+    { from: '5555555', to: '9999999', amount: 0.6 },
+    { from: '1234321', to: '9876543', amount: 0.2 },
+    { from: '3141592', to: '2718281', amount: .5 },
+    { from: '9988776', to: '6655443', amount: 3.5 },
+    { from: '4455667', to: '8899001', amount: 0.7 },
+    { from: '1122334', to: '5566778', amount: 1.9 },
+    { from: '6655443', to: '9988776', amount: 0.4 },
+    { from: '7788990', to: '2233445', amount: 2.2 },
+    { from: '9876543', to: '1234321', amount: 1.6 },
+    { from: '1928374', to: '5647382', amount: 1.3 },
+    { from: '1029384', to: '2938475', amount: 1.5 },
+    { from: '4567890', to: '0987654', amount: 0.8 }
+  ];
+
+  const data = {
+    labels: transactions.map((_, index) => `${index + 1}`), // Just show 1, 2, 3, etc.
+    datasets: [
+      {
+        label: 'DolphinCoin Transactions',
+        data: transactions.map(transaction => transaction.amount),
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 4,
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { 
+        display: true, 
+        text: 'Dolphin Coin Transactions Over Time',
+        color: 'black',  
+        font: { size: 24 },  
+      },
+    },
+    scales: {
+      x: { title: { display: true, text: 'Transaction Number' } },
+      y: { title: { display: true, text: 'Amount (DolphinCoin)' }, beginAtZero: true }
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        ml: "13vw",
+        pl: "5vw",
+        pr: "5vw",
+        height: "auto",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        position: 'relative',
+        minHeight: '100vh', // Make sure the page takes the full viewport height
+      }}
+    >
+      {/* Page Title */}
+      <Typography variant="h3" sx={{ mb: "16px", mt: "16px" }}> 
+        Welcome to Dolphin Data Sharing!
+      </Typography>
+
+      {/* Line Chart for Transactions */}
+      <Box sx={{ mt: 2, width: '80vw', height: '300px', display: 'flex', justifyContent: 'center' }}> 
+        <Line data={data} options={options} />
+      </Box>
+
+      {/* scrollable tableeeeee */}
+      <TableContainer component={Paper} sx={{ mt: 4, maxWidth: '80vw', maxHeight: '300px', overflow: 'auto' }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: '#e0f7fa' }}>
+              <TableCell>Transaction Number</TableCell> {/* transaction # */}
+              <TableCell>From</TableCell>
+              <TableCell>To</TableCell>
+              <TableCell>Amount (DolphinCoin)</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {transactions.map((transaction, index) => (
+              <TableRow key={index}>
+                <TableCell>{index + 1}</TableCell> 
+                <TableCell>{transaction.from}</TableCell>
+                <TableCell>{transaction.to}</TableCell>
+                <TableCell>{transaction.amount}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Button always visible at the bottom !! */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          backgroundColor: 'white',
+          pb: '16px', 
+        }}
+      >
+        <Typography variant="h4" sx={{ mb: "16px" }}>
+          Start Mining
+        </Typography>
+
+        <Button 
+          variant="contained" 
+          color="primary" 
+          sx={{ 
+            padding: "18px 36px",  
+            fontSize: "1.6rem",  
+            borderRadius: "8px"
+          }}
+        >
+          Mine Dolphin Coin!
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
