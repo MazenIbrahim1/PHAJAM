@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, IconButton, TextField, Snackbar } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DownloadIcon from "@mui/icons-material/Download";
+import { Box, Typography, Button, TextField, Snackbar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 // Function to generate a random key
@@ -20,7 +18,7 @@ export default function GenerateKeys() {
   const [privateKey, setPrivateKey] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMatch, setPasswordMatch] = useState(true); // Initially assume they match
+  const [passwordMatch, setPasswordMatch] = useState(true);
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [passwordValidations, setPasswordValidations] = useState({
@@ -31,41 +29,20 @@ export default function GenerateKeys() {
 
   const navigate = useNavigate();
 
-  // Function to generate keys
   const handleGenerateKeys = () => {
-    setAddress(generateRandomKey(42)); // Example length for a Dolphincoin address
-    setPublicKey(generateRandomKey(66)); // Example length for a public key
-    setPrivateKey(generateRandomKey(64)); // Example length for a private key
+    setAddress(generateRandomKey(42)); 
+    setPublicKey(generateRandomKey(66)); 
+    setPrivateKey(generateRandomKey(64)); 
   };
 
-  // Automatically generate keys when the component mounts
   useEffect(() => {
     handleGenerateKeys();
   }, []);
 
-  // Function to copy text to clipboard
-  const handleCopyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
-  };
-
-  // Function to navigate back to the login page
   const handleBackToLogin = () => {
-    navigate("/"); 
+    navigate("/");
   };
 
-  // Function to download a specific key as a text file
-  const handleDownloadFile = (fileName, content) => {
-    const blob = new Blob([content], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Function to handle password validation
   const validatePassword = (password) => {
     const validations = {
       length: password.length >= 8 && password.length <= 15,
@@ -76,7 +53,6 @@ export default function GenerateKeys() {
     return validations.length && validations.number && validations.specialChar;
   };
 
-  // Function to handle password save
   const handleSavePassword = () => {
     if (password === confirmPassword && validatePassword(password)) {
       setPasswordSaved(true); 
@@ -86,12 +62,10 @@ export default function GenerateKeys() {
     }
   };
 
-  // Function to handle Snackbar close
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
-  // Update the password match state based on user input
   useEffect(() => {
     setPasswordMatch(password === confirmPassword);
   }, [password, confirmPassword]);
@@ -102,191 +76,169 @@ export default function GenerateKeys() {
         width: "100%",
         height: "100vh",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between", 
+        justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#f0f4f8",
-        color: "#333",
         padding: "20px",
-        paddingTop: "7%",
       }}
     >
-      {/* Main container to hold both sections */}
-      <Box sx={{ display: "flex", width: "100%", maxWidth: "1200px", gap: 3 }}>
-        {/* Generate Keys Section */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          maxWidth: "1200px",
+          width: "100%",
+        }}
+      >
         <Box
           sx={{
-            flex: 1,
-            maxWidth: "700px", 
-            backgroundColor: "#fff",
-            borderRadius: "10px",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-            padding: "20px",
-            wordWrap: "break-word",
+            display: "flex",
+            flexDirection: "row",
+            gap: 3,
           }}
         >
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
-            Dolphincoin Address <strong>(Make sure to save your Dolphincoin address for logging in)</strong>
-          </Typography>
-          <Typography variant="body1" sx={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            {address || "Not generated yet."}
-            {address && (
-              <>
-                <IconButton onClick={() => handleCopyToClipboard(address)} sx={{ marginLeft: 1 }}>
-                  <ContentCopyIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDownloadFile("Dolphincoin_Address.txt", address)} sx={{ marginLeft: 1 }}>
-                  <DownloadIcon />
-                </IconButton>
-              </>
-            )}
-          </Typography>
+          <Box
+            sx={{
+              flex: 7,
+              backgroundColor: "#fff",
+              borderRadius: "10px",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              maxWidth: "700px",
+              width: "100%",
+            }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>Instructions</Typography>
+              <Typography variant="body2">
+                Please follow the instructions provided to use create your account.<br />
+                <br />
+                You have been provided with a Dolphincoin Address, Public Key, and Private Key. In order to access these, you must first create the password for your accounnt. <br />
+                Once you have successfully created your password, your Dolphincoin Address, Public Key, and Private Key will automatically be downloaded onto your device. 
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: "bold" }}>MAKE SURE YOU DO NOT LOSE THESE FILES!</Typography>
+            </Box>
 
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
-            Public Key
-          </Typography>
-          <Typography variant="body1" sx={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            {publicKey || "Not generated yet."}
-            {publicKey && (
-              <>
-                <IconButton onClick={() => handleCopyToClipboard(publicKey)} sx={{ marginLeft: 1 }}>
-                  <ContentCopyIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDownloadFile("Public_Key.txt", publicKey)} sx={{ marginLeft: 1 }}>
-                  <DownloadIcon />
-                </IconButton>
-              </>
-            )}
-          </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>Generated Keys</Typography>
 
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
-            Private Key
-          </Typography>
-          <Typography variant="body1" sx={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            {privateKey || "Not generated yet."}
-            {privateKey && (
-              <>
-                <IconButton onClick={() => handleCopyToClipboard(privateKey)} sx={{ marginLeft: 1 }}>
-                  <ContentCopyIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDownloadFile("Private_Key.txt", privateKey)} sx={{ marginLeft: 1 }}>
-                  <DownloadIcon />
-                </IconButton>
-              </>
-            )}
-          </Typography>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2, marginTop: 2 }}>
+                <Typography variant="body1">Dolphincoin Address:</Typography>
+                <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
+                  {address || "Not generated yet."}
+                </Typography>
+              </Box>
 
-          <Box sx={{ marginTop: 3 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleDownloadFile("Dolphincoin_Address.txt", address);
-                handleDownloadFile("Public_Key.txt", publicKey);
-                handleDownloadFile("Private_Key.txt", privateKey);
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                <Typography variant="body1">Public Key:</Typography>
+                <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
+                  {"*".repeat(publicKey.length)} {/* Display public key as asterisks */}
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                <Typography variant="body1">Private Key:</Typography>
+                <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
+                  {"*".repeat(privateKey.length)} {/* Display private key as asterisks */}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              flex: 3,
+              backgroundColor: "#fff",
+              borderRadius: "10px",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 2,
+              maxWidth: "600px",
+              width: "100%",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>Set Your Password</Typography>
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                validatePassword(e.target.value);
               }}
-              sx={{
-                padding: "10px 20px",
-                fontSize: "1rem",
-                marginRight: "10px",
+              required
+              error={!passwordMatch && confirmPassword !== ""}
+            />
+            <TextField
+              label="Confirm Password"
+              type="password"
+              variant="outlined"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
               }}
+              required
+              error={!passwordMatch && confirmPassword !== ""}
+            />
+            <Typography
+              variant="body2"
+              sx={{ color: passwordMatch ? "green" : "red", marginTop: 1 }}
             >
-              Download All Keys
+              {passwordMatch ? "Passwords match!" : "Passwords do not match!"}
+            </Typography>
+
+            <Box sx={{ marginTop: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                Password Requirements:
+              </Typography>
+              <Typography variant="body2" sx={{ color: passwordValidations.length ? "green" : "red" }}>
+                - Length: 8-15 characters
+              </Typography>
+              <Typography variant="body2" sx={{ color: passwordValidations.number ? "green" : "red" }}>
+                - At least one number
+              </Typography>
+              <Typography variant="body2" sx={{ color: passwordValidations.specialChar ? "green" : "red" }}>
+                - At least one special character
+              </Typography>
+            </Box>
+
+            <Button variant="contained" onClick={handleSavePassword} sx={{ marginTop: 2 }}>
+              Create Account
             </Button>
           </Box>
         </Box>
 
-        {/* Password Input Section */}
         <Box
           sx={{
-            flex: 1,
-            maxWidth: "400px",
-            backgroundColor: "#fff",
-            borderRadius: "10px",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-            padding: "20px", 
             display: "flex",
-            flexDirection: "column",
             justifyContent: "center",
-            gap: 2,
+            width: "100%",
+            marginTop: 2,
           }}
         >
-          <Typography variant="h6">Set Your Password</Typography>
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              validatePassword(e.target.value); 
-            }}
-            required
-            error={!passwordMatch && confirmPassword !== ""}
-          />
-          <TextField
-            label="Confirm Password"
-            type="password"
-            variant="outlined"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-            }}
-            required
-            error={!passwordMatch && confirmPassword !== ""}
-          />
-          <Typography
-            variant="body2"
-            sx={{ color: passwordMatch ? "green" : "red" }}
-          >
-            {passwordMatch ? "Passwords match" : "Passwords do not match"}
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: 1 }}>
-            <Typography variant="body2" sx={{ color: passwordValidations.length ? "green" : "#555" }}>
-              {passwordValidations.length ? "✓ Length (8-15 characters)" : "✗ Length (8-15 characters)"}
-            </Typography>
-            <Typography variant="body2" sx={{ color: passwordValidations.number ? "green" : "#555" }}>
-              {passwordValidations.number ? "✓ At least one number" : "✗ At least one number"}
-            </Typography>
-            <Typography variant="body2" sx={{ color: passwordValidations.specialChar ? "green" : "#555" }}>
-              {passwordValidations.specialChar ? "✓ At least one special character" : "✗ At least one special character"}
-            </Typography>
-          </Box>
-          <Button
+          <Button 
             variant="contained"
-            color="primary"
-            onClick={handleSavePassword}
-            sx={{
-              padding: "10px 20px",
-              fontSize: "1rem",
-              marginTop: "10px",
-              marginBottom: "10px",
-            }}
-          >
-            Save Password
+            onClick={handleBackToLogin}
+            color="secondary">
+            Back to Login
           </Button>
         </Box>
-      </Box>
 
-      {/* Snackbar for success message */}
-      <Snackbar
-        open={snackbarOpen}
-        onClose={handleSnackbarClose}
-        message={passwordSaved ? "Password saved successfully!" : "Failed to save password."}
-        autoHideDuration={3000}
-      />
-      {/* Back to Login Button */}
-      <Button
-        variant="contained"
-        onClick={handleBackToLogin}
-        color="secondary"
-        sx={{
-          marginTop: "20px",
-          alignSelf: "center",
-        }}
-      >
-        Back to Login
-      </Button>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          message="Password saved successfully!"
+        />
+      </Box>
     </Box>
   );
 }
