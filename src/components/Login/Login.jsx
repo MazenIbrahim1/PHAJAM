@@ -29,7 +29,7 @@ export default function LoginPage() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#ffffff", 
+        backgroundColor: "#ffffff",
       }}
     >
       <Typography
@@ -51,7 +51,7 @@ export default function LoginPage() {
         }}
       />
       <TextField
-        label="Private Key"
+        label="Password"
         type="password"
         variant="outlined"
         sx={{
@@ -60,7 +60,11 @@ export default function LoginPage() {
           backgroundColor: "white", // Set background to white
         }}
       />
-      <Button variant="contained" color="primary" onClick={handleLogin}>
+      <Button
+        variant="contained"
+        sx={{ backgroundColor: "black", color: "white" }} // Set background to black and text to white
+        onClick={handleLogin}
+      >
         Log In
       </Button>
       <Typography sx={{ marginTop: 5 }}>

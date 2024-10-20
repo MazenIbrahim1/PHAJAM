@@ -35,7 +35,7 @@ export default function LearnMore() {
         }}
       >
         <Typography variant="h4" sx={{ marginBottom: 3, fontWeight: "bold" }}>
-          What is Demure Data Sharing?
+          What is Dolphin Data Sharing?
         </Typography>
         <Typography
           variant="body1"
@@ -45,20 +45,20 @@ export default function LearnMore() {
             fontSize: "1.1rem",
           }}
         >
-          We are building Demure Data Sharing, a mindful decentralized file-sharing application powered by DolphinCoin. This blockchain-based platform offers secure and private peer-to-peer file sharing with key features including <b>STATUS</b> to monitor connection and network performance, <b>FILES</b> for managing personal data, and <b>EXPLORE</b> to browse files shared by peers. Users can connect with active peers through <b>PEERS</b>, customize their node settings in <b>SETTINGS</b>, and access the project README via <b>GITHUB</b>. Demure Data Sharing ensures efficient, secure, and fully decentralized file sharing, enhancing privacy and control.
+          Dolphin Data Sharing is a decentralized file-sharing platform powered by DolphinCoin. Our blockchain-based system enables secure, private peer-to-peer sharing with enhanced control and transparency. Key features include the ability to explore files shared by others, make payments, or negotiate prices. The platform offers seamless wallet management, transaction tracking, and proxy options for accessing files. Users can also mine DolphinCoin directly within the app and enjoy customizable settings like dark mode and account management. Dolphin Data Sharing ensures efficient, secure, and fully decentralized file sharing, empowering users with privacy and flexibility.
         </Typography>
         <Button
           variant="contained"
-          color="primary"
+          color="secondary"
           onClick={handleBackToLogin}
-          sx={{
-            padding: "10px 20px",
-            fontSize: "1rem",
-            backgroundColor: "#1976d2", // Primary button color
-            "&:hover": {
-              backgroundColor: "#1565c0", // Hover effect
-            },
-          }}
+          // sx={{
+          //   padding: "10px 20px",
+          //   fontSize: "1rem",
+          //   backgroundColor: "#1976d2", // Primary button color
+          //   "&:hover": {
+          //     backgroundColor: "#1565c0", // Hover effect
+          //   },
+          // }}
         >
           Back to Login
         </Button>
