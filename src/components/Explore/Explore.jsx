@@ -376,7 +376,6 @@ export default function Explore() {
       <Box
         sx={{
           marginLeft: "14vw",
-          width: "86vw",
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
@@ -427,7 +426,6 @@ export default function Explore() {
       <Box
         sx={{
           height: "85vh",
-          width: "87vw",
           marginLeft: "13vw",
           display: "flex",
           flexDirection: { sm: "column", md: "row" },
@@ -436,13 +434,12 @@ export default function Explore() {
       >
         <Box
           sx={{
-            width: { xs: "25vw", md: "46vw" },
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "flex-start",
-            gap: 2,
             padding: 2,
+            paddingRight: 0,
             height: "100%",
           }}
         >
@@ -452,22 +449,21 @@ export default function Explore() {
             onRowClick={handleRowClick}
             sx={{
               border: "1px solid #bdc3c9",
+              width: "47vw",
             }}
           />
         </Box>
         <Box
           sx={{
-            width: { xs: "87vw", md: "35vw" },
+            width: { xs: "87vw", md: "37vw" },
+            height: "100%",
             display: "flex",
             flexDirection: selected ? "column" : "center",
             justifyContent: "center",
             alignItems: "center",
             bgcolor: "#f0f4f8",
-            gap: 2,
             borderRadius: "4px",
-            padding: 2,
             marginTop: 2,
-            height: "95%",
             border: "1px solid #bdc3c9",
           }}
         >

@@ -20,7 +20,6 @@ const DataTable = ({ rows, columns, search }) => {
           },
         }}
         pageSizeOptions={[10]}
-        checkboxSelection
         autoHeight
         disableColumnMenu
         disableColumnResize

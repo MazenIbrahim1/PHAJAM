@@ -50,19 +50,21 @@ export default function Files() {
   return (
     <Box
       sx={{
-        height: "100vh",
-        marginLeft: "13vw",
+        marginLeft: "14vw",
+        marginRight: "1vw",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        gap: 2,
       }}
     >
       <Box
         sx = {{
           display: "flex",
           flexDirection: "row",
-          width: "100%"
+          width: "100%",
+          gap: 1,
         }}
       >
         <SearchBar search = {search} setSearch = {setSearch} />
