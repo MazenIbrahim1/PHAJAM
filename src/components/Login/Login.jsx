@@ -3,18 +3,21 @@ import { Box, Typography, TextField, Button, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate(); // Get the navigate function
 
+  // Function to handle login button click
   const handleLogin = () => {
-    navigate("/home");
+    navigate("/home"); // Navigate to the home page
   };
 
+  // Function to handle "Learn More" click
   const handleLearnMore = () => {
-    navigate("/learn-more"); 
+    navigate("/learn-more"); // Navigate to the learn-more page
   };
 
+  // Function to handle "Generate Keys" button click
   const handleGenerateKeys = () => {
-    navigate("/generate-keys");
+    navigate("/generate-keys"); // Navigate to the generate-keys page
   };
 
   return (
@@ -33,7 +36,7 @@ export default function LoginPage() {
         variant="h4"
         sx={{
           marginBottom: 3,
-          fontWeight: "bold", 
+          fontWeight: "bold", // Make the text bold
         }}
       >
         Welcome to Dolphin Data Sharing! (DDS)
@@ -44,7 +47,7 @@ export default function LoginPage() {
         sx={{
           marginBottom: 2,
           width: "300px",
-          backgroundColor: "white", 
+          backgroundColor: "white", // Set background to white
         }}
       />
       <TextField
@@ -54,12 +57,12 @@ export default function LoginPage() {
         sx={{
           marginBottom: 3,
           width: "300px",
-          backgroundColor: "white", 
+          backgroundColor: "white", // Set background to white
         }}
       />
       <Button
         variant="contained"
-        sx={{ backgroundColor: "black", color: "white" }} 
+        sx={{ backgroundColor: "black", color: "white" }} // Set background to black and text to white
         onClick={handleLogin}
       >
         Log In
@@ -70,7 +73,7 @@ export default function LoginPage() {
       <Button
         variant="contained"
         color="secondary"
-        onClick={handleGenerateKeys} 
+        onClick={handleGenerateKeys} // Updated to navigate to the Generate Keys page
         sx={{ marginTop: 1, marginBottom: 8 }}
       >
         Generate Keys

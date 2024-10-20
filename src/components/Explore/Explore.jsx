@@ -14,11 +14,13 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { Download, Help, Search } from "@mui/icons-material";
 
+// Function to handle download of a file
 function handlePurchase(selectedFile) {
   if (!selectedFile) {
     return;
   }
 
+  // Create a Blob from the file's data (assuming selectedFile.data contains raw data)
   const fileBlob = new Blob([selectedFile.data], { type: selectedFile.type });
 
   // Create a temporary download link and trigger it
@@ -32,6 +34,7 @@ function handlePurchase(selectedFile) {
   URL.revokeObjectURL(url);
 }
 
+// Function to render single files
 function RenderFileInfo({ selectedFile, func }) {
   if (!selectedFile) {
     return <Typography variant="h4">Select a file to view details</Typography>;
@@ -201,38 +204,44 @@ export default function Explore() {
     },
   ];
 
-  const [files, setFiles] = useState(mockData); 
-  const [balance, setBalance] = useState(500); 
+  const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
+  const [balance, setBalance] = useState(500); // TEMP BALANCE
   const [bid, setBid] = useState(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
-
+  // State for dialog visibility
   const [openHash, setOpenHash] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
   const searchResults = mockData.filter((data) => data.hash === search);
 
+  // Function to select a file in the market
   const handleRowClick = (params) => {
     setSelected(params.row);
   };
 
+  // Open the dialog for hash results
   const handleOpenDialogHash = () => {
     setOpenHash(true);
   };
 
+  // Close the hash results
   const handleCloseDialogHash = () => {
     setOpenHash(false);
   };
 
+  // Open the dialog for hash results
   const handleOpenDialogPurchase = () => {
     setOpenPurchase(true);
   };
 
+  // Close the hash results
   const handleCloseDialogPurchase = () => {
     setOpenPurchase(false);
   };
 
   return (
     <>
+      {/* Pop up to show hash search results */}
       <Dialog
         open={openHash}
         onClose={handleCloseDialogHash}
@@ -296,6 +305,7 @@ export default function Explore() {
         </DialogActions>
       </Dialog>
 
+      {/* Pop up to confirm purchase */}
       <Dialog
         open={openPurchase}
         onClose={handleCloseDialogPurchase}
