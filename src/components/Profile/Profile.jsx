@@ -19,7 +19,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 export default function Profile() {
-  const [balance, setBalance] = useState(100.5);
+  const [balance, setBalance] = useState(500);
   const [transactions, setTransactions] = useState([
     { id: 1, type: "Received", amount: 50, date: "2024-10-01T10:30:00", from: "0xabcdef123456", status: "Completed" },
     { id: 2, type: "Sent", amount: 25, date: "2024-10-05T14:15:00", to: "0x9876543210abcd", status: "Completed" },
@@ -133,7 +133,7 @@ export default function Profile() {
           }}
         >
           <Typography variant="h6">Wallet Balance</Typography>
-          <Typography variant="h4">{balance.toFixed(2)} DOL</Typography>
+          <Typography variant="h4">{balance.toFixed(2)} DC</Typography>
         </Box>
 
         <Box

@@ -51,7 +51,7 @@ export default function GenerateKeys() {
 
   // Function to navigate back to the login page
   const handleBackToLogin = () => {
-    navigate("/"); // Update this route based on your login page path
+    navigate("/"); 
   };
 
   // Function to download a specific key as a text file
@@ -79,11 +79,10 @@ export default function GenerateKeys() {
   // Function to handle password save
   const handleSavePassword = () => {
     if (password === confirmPassword && validatePassword(password)) {
-      // Save the password logic goes here
-      setPasswordSaved(true); // Show password saved status
-      setSnackbarOpen(true); // Show snackbar
+      setPasswordSaved(true); 
+      setSnackbarOpen(true); 
     } else {
-      setPasswordSaved(false); // Indicate passwords do not match
+      setPasswordSaved(false); 
     }
   };
 
@@ -101,12 +100,12 @@ export default function GenerateKeys() {
     <Box
       sx={{
         width: "100%",
-        height: "100%",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between", // Space between elements
+        justifyContent: "space-between", 
         alignItems: "center",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#f0f4f8",
         color: "#333",
         padding: "20px",
         paddingTop: "7%",
@@ -118,7 +117,7 @@ export default function GenerateKeys() {
         <Box
           sx={{
             flex: 1,
-            maxWidth: "700px", // Increased width for better icon fit
+            maxWidth: "700px", 
             backgroundColor: "#fff",
             borderRadius: "10px",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
@@ -205,7 +204,7 @@ export default function GenerateKeys() {
             backgroundColor: "#fff",
             borderRadius: "10px",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-            padding: "20px", // Adjusted padding to match the Generate Keys section
+            padding: "20px", 
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -220,7 +219,7 @@ export default function GenerateKeys() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              validatePassword(e.target.value); // Validate on change
+              validatePassword(e.target.value); 
             }}
             required
             error={!passwordMatch && confirmPassword !== ""}
