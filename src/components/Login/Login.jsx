@@ -76,7 +76,7 @@ export default function LoginPage() {
         onClick={handleGenerateKeys}
         sx={{ marginTop: 1, marginBottom: 8 }}
       >
-        Create Account
+        Generate Keys
       </Button>
       <Typography variant="body2">
         Not sure about Dolphin Data Sharing?{" "}
