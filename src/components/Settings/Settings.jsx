@@ -1,14 +1,47 @@
-import { Box, Typography, Button, Switch, FormControlLabel, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+
+import { 
+  Box,
+  Typography,
+  Button,
+  Switch,
+  FormControlLabel,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  Snackbar, // Import Snackbar
+} from "@mui/material";
 import { useState } from "react";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useTheme } from "../../ThemeContext"; 
+import { useTheme } from "../../ThemeContext";
 
 export default function SettingsPage() {
-  const { darkMode, setDarkMode } = useTheme(); 
+  const { darkMode, setDarkMode } = useTheme();
 
   // State for dialog visibility
   const [open, setOpen] = useState(false);
+
+  // States for password fields
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // State for password validations
+  const [passwordValidations, setPasswordValidations] = useState({
+    length: false,
+    number: false,
+    specialChar: false,
+  });
+
+  // State for password match status
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
+
+  // State for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   // Handle dark mode toggle
   const handleDarkModeToggle = () => {
@@ -29,40 +62,261 @@ export default function SettingsPage() {
   const handleDeleteAccount = () => {
     console.log("Account deleted");
     setDarkMode(false);
-    window.location.href = "/"; 
-};
+    setSnackbarMessage("Account deleted successfully.");
+    setSnackbarOpen(true); 
+    window.location.href = "/";
+  };
+
+  // Password validation function
+  const validatePassword = (password) => {
+    const validations = {
+      length: password.length >= 8 && password.length <= 15,
+      number: /\d/.test(password),
+      specialChar: /[!@#$%^&*(),.?":{}|/<>_]/.test(password),
+    };
+    setPasswordValidations(validations);
+    return validations.length && validations.number && validations.specialChar;
+  };
+
+  // Handle password change
+  const handlePasswordChange = () => {
+    console.log("Password updated", { currentPassword, newPassword, confirmPassword });
+    setSnackbarMessage("Password updated successfully.");
+    setSnackbarOpen(true); 
+    // Add your logic for password update here
+  };
+
+  // Handle password input change
+  const handleNewPasswordChange = (e) => {
+    const password = e.target.value;
+    setNewPassword(password);
+    validatePassword(password);
+    setPasswordsMatch(password === confirmPassword);
+  };
+
+  // Handle confirm password input change
+  const handleConfirmPasswordChange = (e) => {
+    const confirmPassword = e.target.value;
+    setConfirmPassword(confirmPassword);
+    setPasswordsMatch(newPassword === confirmPassword);
+  };
+
+  const isSaveButtonEnabled = () => {
+    return (
+      passwordValidations.length &&
+      passwordValidations.number &&
+      passwordValidations.specialChar &&
+      passwordsMatch
+    );
+  };
+
+  // Snackbar close handler
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   return (
     <Box
       sx={{
         width: "100%",
         padding: 2,
+        paddingInline: 3,
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         gap: 3,
         overflowY: "auto",
         overflowX: "hidden",
         height: "100vh",
         boxSizing: "border-box",
-        backgroundColor: darkMode ? "#18191e" : "#ffffff",
+        backgroundColor: darkMode ? "#18191e" : "#f0f4f8",
         color: darkMode ? "#ffffff" : "#000000",
       }}
     >
-      {/* Other components remain unchanged */}
+      {/* Left Column: Password Reset */}
       <Box
         sx={{
-          marginLeft: "13vw",
+          flex: 1,
+          marginLeft: "13%",
           display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
+          flexDirection: "column",
           gap: 4,
         }}
       >
-        {/* Light/Dark Mode Toggle */}
+        {/* Password Reset Box */}
         <Box
           sx={{
-            flex: 1,
-            backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+            padding: 2,
+            borderRadius: 2,
+            boxShadow: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            height: "auto",
+            border: '2px solid #b2dfdb',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              marginBottom: 1,
+              color: darkMode ? "#ffffff" : "#000000",
+              fontWeight: "bold",
+            }}
+          >
+            RESET PASSWORD
+          </Typography>
+          <Typography variant="body2" sx={{ marginBottom: 2 }}>
+            Enter your current password and set a new password.
+          </Typography>
+          <TextField
+            type="text" // Current Password
+            label="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            sx={{
+              marginBottom: 2,
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+            }}
+            fullWidth
+          />
+
+          <TextField
+            type="text" // New Password
+            label="New Password"
+            value={newPassword}
+            onChange={handleNewPasswordChange}
+            sx={{
+              marginBottom: 2,
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+            }}
+            fullWidth
+          />
+
+          <TextField
+            type="text" // Confirm Password
+            label="Confirm Password"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+            sx={{
+              marginBottom: 2,
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+            }}
+            fullWidth
+          />
+          {/* Password Validation Indicators */}
+          <Box sx={{ marginBottom: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+              Password Requirements:
+            </Typography>
+            <Typography
+              sx={{
+                color: passwordValidations.length ? "green" : "red",
+              }}
+            >
+              - 8-15 characters
+            </Typography>
+            <Typography
+              sx={{
+                color: passwordValidations.number ? "green" : "red",
+              }}
+            >
+              - At least one number
+            </Typography>
+            <Typography
+              sx={{
+                color: passwordValidations.specialChar ? "green" : "red",
+              }}
+            >
+              - At least one special character (!@#$%^&*...)
+            </Typography>
+          </Box>
+
+          {/* Password Match Indicator */}
+          <Typography
+            sx={{
+              color: passwordsMatch ? "green" : "red",
+              fontWeight: "bold",
+            }}
+          >
+            {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+          </Typography>
+
+          <Button
+            variant="contained"
+            onClick={handlePasswordChange}
+            disabled={!isSaveButtonEnabled()}
+            sx={{
+              marginTop: 2,
+              backgroundColor: "#000000",
+              "&:hover": {
+                backgroundColor: "#7a99d9",
+              },
+            }}
+          >
+            Save Password
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Right Column: Theme Settings and Delete Account */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+        }}
+      >
+        {/* Theme Settings Box */}
+        <Box
+          sx={{
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
             padding: 2,
             borderRadius: 2,
             boxShadow: 1,
@@ -70,6 +324,7 @@ export default function SettingsPage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "125px",
+            border: '2px solid #b2dfdb',
           }}
         >
           <Typography
@@ -118,11 +373,10 @@ export default function SettingsPage() {
           </Box>
         </Box>
 
-        {/* Delete Account */}
+        {/* Delete Account Box */}
         <Box
           sx={{
-            flex: 1,
-            backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
             padding: 2,
             borderRadius: 2,
             boxShadow: 1,
@@ -130,6 +384,7 @@ export default function SettingsPage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "125px",
+            border: '2px solid #b2dfdb',
           }}
         >
           <Typography
@@ -149,43 +404,31 @@ export default function SettingsPage() {
             <Button variant="contained" color="error" onClick={handleOpenDialog}>
               Delete Account
             </Button>
+            <Dialog open={open} onClose={handleCloseDialog}>
+              <DialogTitle>Confirm Account Deletion</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to permanently delete your account? This action cannot be undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialog}>Cancel</Button>
+                <Button onClick={handleDeleteAccount} color="error">
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Box>
         </Box>
       </Box>
 
-      {/* Confirmation Dialog */}
-      <Dialog
-        open={open}
-        onClose={handleCloseDialog}
-        aria-labelledby="confirm-delete-dialog-title"
-        aria-describedby="confirm-delete-dialog-description"
-        PaperProps={{
-          sx: {
-            backgroundColor: darkMode ? "#333333" : "#ffffff",
-            color: darkMode ? "#ffffff" : "#000000",
-          },
-        }}
-      >
-        <DialogTitle id="confirm-delete-dialog-title">
-          {"Confirm Account Deletion"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText
-            id="confirm-delete-dialog-description"
-            sx={{ color: darkMode ? "#ffffff" : "#000000" }}
-          >
-            Are you sure you want to delete your account? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteAccount} color="error" autoFocus>
-            Delete Account
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+      />
     </Box>
   );
 }
