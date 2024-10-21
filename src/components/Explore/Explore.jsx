@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { Download, Help, Search } from "@mui/icons-material";
+import { useTheme } from "../../ThemeContext";
 
 // Function to handle download of a file
 function handlePurchase(selectedFile) {
@@ -36,6 +37,7 @@ function handlePurchase(selectedFile) {
 
 // Function to render single files
 function RenderFileInfo({ selectedFile, func }) {
+  const { darkMode } = useTheme(); 
   if (!selectedFile) {
     return <Typography variant="h4">Select a file to view details</Typography>;
   }
@@ -43,7 +45,7 @@ function RenderFileInfo({ selectedFile, func }) {
   return (
     <>
       <Typography variant="h5">File Details</Typography>
-      <Box sx={{ padding: 2 }}>
+      <Box sx={{ padding: 2, backgroundColor: darkMode ? "#333333" : "#ffffff",}}>
         <Typography variant="body1">
           <strong>Name:</strong> {selectedFile.name}
         </Typography>
@@ -59,7 +61,7 @@ function RenderFileInfo({ selectedFile, func }) {
         <Typography variant="body1">
           <strong>Hash:</strong> {selectedFile.hash}
         </Typography>
-        <Typography variant="body1">
+        <Typography variant="body1" >
           <strong>Price:</strong>{" "}
           {selectedFile.price ? selectedFile.price + " DC" : "tbd"}
         </Typography>
@@ -204,6 +206,8 @@ export default function Explore() {
     },
   ];
 
+  const { darkMode } = useTheme(); 
+
   const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
   const [balance, setBalance] = useState(500); // TEMP BALANCE
   const [bid, setBid] = useState(null);
@@ -259,7 +263,8 @@ export default function Explore() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  bgcolor: "#f5f5f5",
+                  bgcolor: darkMode ? "#333333" : "#ffffff",
+                  color: darkMode ? "#ffffff" : "#000000",
                   gap: 1,
                   padding: 2,
                   margin: 2,
@@ -383,35 +388,46 @@ export default function Explore() {
         }}
       >
         <TextField
-          variant="outlined"
-          placeholder="Search by Hash..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          sx={{
-            width: "47vw",
-            bgcolor: "#f0f4f8",
-            borderRadius: "4px",
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-          fullWidth
-          autoComplete="off"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleOpenDialogHash();
-            }
-          }}
+            variant="outlined"
+            placeholder="Search by Hash..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            sx={{
+                width: "47vw",
+                backgroundColor: darkMode ? "#333333" : "#f0f4f8",
+                borderRadius: "4px",
+            }}
+            InputProps={{
+                startAdornment: (
+                    <InputAdornment position="start">
+                        <Search />
+                    </InputAdornment>
+                ),
+                // Set input styling here
+                sx: {
+                    color: darkMode ? "#ffffff" : "#000000",
+                    '& .MuiInputBase-input': { 
+                        color: darkMode ? "#ffffff" : "#000000",
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: darkMode ? "#ffffff" : "#000000", 
+                    },
+                },
+            }}
+            fullWidth
+            autoComplete="off"
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    handleOpenDialogHash();
+                }
+            }}
         />
         <Box
           sx={{
             width: "37vw",
             height: "55px",
-            bgcolor: "#f0f4f8",
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#333333" :  "#f0f4f8",
             borderRadius: "4px",
             display: "flex",
             flexDirection: "row",
@@ -430,6 +446,7 @@ export default function Explore() {
           display: "flex",
           flexDirection: { sm: "column", md: "row" },
           gap: 1,
+          
         }}
       >
         <Box
@@ -450,6 +467,8 @@ export default function Explore() {
             sx={{
               border: "1px solid #bdc3c9",
               width: "47vw",
+              backgroundColor: darkMode ? "#4a4a4a" : "#f0f4f8",
+              color: darkMode ? "#ffffff" : "#000000",
             }}
           />
         </Box>
@@ -461,7 +480,8 @@ export default function Explore() {
             flexDirection: selected ? "column" : "center",
             justifyContent: "center",
             alignItems: "center",
-            bgcolor: "#f0f4f8",
+            backgroundColor: darkMode ? "#333333" : "#f0f4f8",
+            color: darkMode ? "#ffffff" : "#000000",
             borderRadius: "4px",
             marginTop: 2,
             border: "1px solid #bdc3c9",

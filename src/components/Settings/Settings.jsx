@@ -13,9 +13,9 @@ import {
   TextField,
   Snackbar, // Import Snackbar
 } from "@mui/material";
-import { useState } from "react";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { useState } from "react";
 import { useTheme } from "../../ThemeContext";
 
 export default function SettingsPage() {
@@ -128,7 +128,7 @@ export default function SettingsPage() {
         overflowX: "hidden",
         height: "100vh",
         boxSizing: "border-box",
-        backgroundColor: darkMode ? "#18191e" : "#f0f4f8",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
         color: darkMode ? "#ffffff" : "#000000",
       }}
     >
@@ -293,7 +293,7 @@ export default function SettingsPage() {
             disabled={!isSaveButtonEnabled()}
             sx={{
               marginTop: 2,
-              backgroundColor: "#000000",
+              backgroundColor: darkMode ? "#f06292": "#000000",
               "&:hover": {
                 backgroundColor: "#7a99d9",
               },
