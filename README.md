@@ -17,17 +17,9 @@ A simple decentralized file-sharing application powered by DolphinCoin.
     npm install 
     ```
 
-### Running the App Locally
-3. To run the app locally for development:
+### Running the App
+3. To run the app:
     ```
+    npm run build
     npm run dev
     ```
-
-### Running the Electron App
-4. To build and run the Electron app:
-    ```
-    npm install
-    npm run build
-    npm start
-    ```
-
