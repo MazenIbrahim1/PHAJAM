@@ -29,7 +29,7 @@ export default function LoginPage() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#f0f4f8",
       }}
     >
       <Typography
@@ -76,7 +76,7 @@ export default function LoginPage() {
         onClick={handleGenerateKeys}
         sx={{ marginTop: 1, marginBottom: 8 }}
       >
-        Generate Keys
+        Create Account
       </Button>
       <Typography variant="body2">
         Not sure about Dolphin Data Sharing?{" "}

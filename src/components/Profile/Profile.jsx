@@ -38,20 +38,20 @@ export default function Profile() {
   };
 
   const handleSendMoney = () => {
-    const amountToSend = parseFloat(amount);
-
+    const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
+  
     if (isNaN(amountToSend) || amountToSend <= 0) {
       alert("Please enter a valid amount.");
       return;
     }
-
+  
     if (amountToSend > balance) {
       alert("Insufficient balance.");
       return;
     }
-
-    setBalance((prevBalance) => prevBalance - amountToSend);
-
+  
+    setBalance((prevBalance) => parseFloat((prevBalance - amountToSend).toFixed(2)));
+  
     const newTransaction = {
       id: transactions.length + 1,
       type: "Sent",
@@ -61,7 +61,7 @@ export default function Profile() {
       status: "Completed",
     };
     setTransactions((prevTransactions) => [...prevTransactions, newTransaction]);
-
+  
     setRecipientAddress("");
     setAmount("");
     alert("Transaction successful!");
@@ -123,11 +123,11 @@ export default function Profile() {
       }}
     >
       {/* Left column */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, maxWidth: "300px" }}> {/* Set a max width for the left column */}
         <Box
           sx={{
             padding: 2,
-            border: "1px solid #ccc",
+            border: '2px solid #b2dfdb', 
             borderRadius: "8px",
             textAlign: "center",
           }}
@@ -135,11 +135,11 @@ export default function Profile() {
           <Typography variant="h6">Wallet Balance</Typography>
           <Typography variant="h4">{balance.toFixed(2)} DC</Typography>
         </Box>
-
+  
         <Box
           sx={{
             padding: 2,
-            border: "1px solid #ccc",
+            border: '2px solid #b2dfdb', 
             borderRadius: "8px",
           }}
         >
@@ -159,11 +159,11 @@ export default function Profile() {
             <ContentCopyIcon />
           </IconButton>
         </Box>
-
+  
         <Box
           sx={{
             padding: 2,
-            border: "1px solid #ccc",
+            border: '2px solid #b2dfdb', 
             borderRadius: "8px",
           }}
         >
@@ -183,7 +183,12 @@ export default function Profile() {
             variant="outlined"
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d*\.?\d{0,2}$/.test(value)) {
+                setAmount(value);
+              }
+            }}
             fullWidth
             sx={{ marginBottom: 2 }}
           />
@@ -192,13 +197,15 @@ export default function Profile() {
           </Button>
         </Box>
       </Box>
-
+  
       <Box
         sx={{
           flex: 2,
-          border: "2px solid #000", 
-          borderRadius: "8px", 
+          border: '2px solid #b2dfdb',
+          borderRadius: "8px",
           padding: 2,
+          height: "600px", // Keep the height for the right column
+          overflow: "hidden", // Prevent overflow if necessary
         }}
       >
         <Typography variant="h5" gutterBottom>
@@ -223,44 +230,68 @@ export default function Profile() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {["id", "type", "amount", "date"].map((column) => (
-                  <TableCell key={column}>
-                    <TableSortLabel
-                      active={sortConfig.key === column}
-                      direction={sortConfig.key === column ? sortConfig.direction : "asc"}
-                      onClick={() => handleSort(column)}
-                    >
-                      {column.charAt(0).toUpperCase() + column.slice(1)}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell>
-                  {filter === "Sent" ? "To" : filter === "Received" ? "From" : "Other Wallet Address"}
-                </TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{transaction.id}</TableCell>
-                  <TableCell>{transaction.type}</TableCell>
-                  <TableCell>{transaction.amount}</TableCell>
-                  <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
+
+        <Box sx={{ maxHeight: "400px", overflowY: "auto" }}> {/* Adjusted maxHeight for the table container */}
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {["id", "type", "amount", "date"].map((column) => (
+                    <TableCell key={column}>
+                      <TableSortLabel
+                        active={sortConfig.key === column}
+                        direction={sortConfig.key === column ? sortConfig.direction : "asc"}
+                        onClick={() => handleSort(column)}
+                      >
+                        {column.charAt(0).toUpperCase() + column.slice(1)}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
                   <TableCell>
-                    {transaction.type === "Sent" ? transaction.to : transaction.from}
+                    {filter === "Sent" ? "To" : filter === "Received" ? "From" : "Other Wallet Address"}
                   </TableCell>
-                  <TableCell>{transaction.status}</TableCell>
+                  <TableCell>Status</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredTransactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>{transaction.id}</TableCell>
+                    <TableCell>{transaction.type}</TableCell>
+                    <TableCell sx={{ width: "80px" }}>{transaction.amount}</TableCell> {/* Smaller space for amount column */}
+                    <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: "250px", // Increase width for wallet address column
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {transaction.type === "Sent" ? transaction.to : transaction.from}
+                      </span>
+                      <IconButton
+                        onClick={() => {
+                          navigator.clipboard.writeText(transaction.type === "Sent" ? transaction.to : transaction.from);
+                          alert("Wallet address copied to clipboard!");
+                        }}
+                        size="small"
+                        sx={{ marginLeft: 1 }}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                    <TableCell>{transaction.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       </Box>
     </Box>
-  );
+  );    
 }
