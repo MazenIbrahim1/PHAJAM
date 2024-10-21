@@ -17,8 +17,11 @@ import {
   TableSortLabel,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useTheme } from "../../ThemeContext";
 
 export default function Profile() {
+  const { darkMode } = useTheme();
+  
   const [balance, setBalance] = useState(500);
   const [transactions, setTransactions] = useState([
     { id: 1, type: "Received", amount: 50, date: "2024-10-01T10:30:00", from: "0xabcdef123456", status: "Completed" },
@@ -120,6 +123,8 @@ export default function Profile() {
         maxWidth: "1200px",
         margin: "0 auto",
         paddingLeft: "13vw",
+        color: darkMode ? "#ffffff" : "#000000",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
       }}
     >
       {/* Left column */}
@@ -130,6 +135,7 @@ export default function Profile() {
             border: '2px solid #b2dfdb', 
             borderRadius: "8px",
             textAlign: "center",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           <Typography variant="h6">Wallet Balance</Typography>
@@ -141,6 +147,7 @@ export default function Profile() {
             padding: 2,
             border: '2px solid #b2dfdb', 
             borderRadius: "8px",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           <Typography variant="h6">Wallet Address</Typography>
@@ -156,7 +163,7 @@ export default function Profile() {
             {address}
           </Typography>
           <IconButton onClick={handleCopyToClipboard} sx={{ marginLeft: 1 }}>
-            <ContentCopyIcon />
+            <ContentCopyIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
           </IconButton>
         </Box>
   
@@ -165,6 +172,7 @@ export default function Profile() {
             padding: 2,
             border: '2px solid #b2dfdb', 
             borderRadius: "8px",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           <Typography variant="h6" gutterBottom>
@@ -176,7 +184,24 @@ export default function Profile() {
             value={recipientAddress}
             onChange={(e) => setRecipientAddress(e.target.value)}
             fullWidth
-            sx={{ marginBottom: 2 }}
+            sx={{ marginBottom: 2, 
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+            }}
           />
           <TextField
             label="Amount"
@@ -190,9 +215,28 @@ export default function Profile() {
               }
             }}
             fullWidth
-            sx={{ marginBottom: 2 }}
+            sx={{ marginBottom: 2, backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#ffffff" : "#000000",
+              },
+              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              }, }}
           />
-          <Button variant="contained" color="primary" onClick={handleSendMoney} fullWidth>
+          <Button variant="contained" 
+            sx={{backgroundColor: darkMode ? "#f06292": "#000000",
+              "&:hover": {
+                backgroundColor: "#7a99d9"}}} 
+                onClick={handleSendMoney} fullWidth>
             Send
           </Button>
         </Box>
@@ -206,6 +250,7 @@ export default function Profile() {
           padding: 2,
           height: "600px", // Keep the height for the right column
           overflow: "hidden", // Prevent overflow if necessary
+          backgroundColor: darkMode ? "#333333" : "#ffffff",
         }}
       >
         <Typography variant="h5" gutterBottom>
@@ -214,25 +259,97 @@ export default function Profile() {
         <Tabs
           value={filter}
           onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
           centered
+          sx={{
+            "& .MuiTabs-indicator": {
+              backgroundColor: darkMode ? "#ffffff" : "#000000", 
+            },
+          }}
         >
-          <Tab label="All" value="All" />
-          <Tab label="Sent" value="Sent" />
-          <Tab label="Received" value="Received" />
+          <Tab
+            label="All"
+            value="All"
+            sx={{
+              color: darkMode ? "#ffffff" : "#000000",
+              "&.Mui-selected": {
+                color: darkMode ? "#ffffff" : "#000000", 
+              },
+            }}
+          />
+          <Tab
+            label="Sent"
+            value="Sent"
+            sx={{
+              color: darkMode ? "#ffffff" : "#000000",
+              "&.Mui-selected": {
+                color: darkMode ? "#ffffff" : "#000000", 
+              },
+            }}
+          />
+          <Tab
+            label="Received"
+            value="Received"
+            sx={{
+              color: darkMode ? "#ffffff" : "#000000",
+              "&.Mui-selected": {
+                color: darkMode ? "#ffffff" : "#000000", 
+              },
+            }}
+          />
         </Tabs>
+
         <TextField
           label="Search transactions by either other person's wallet address or by date"
           variant="outlined"
           fullWidth
-          sx={{ marginY: 2 }}
+          sx={{
+            marginY: 2,
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            "& .MuiInputBase-input": {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+            "& .MuiInputLabel-root": {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&:hover fieldset": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: darkMode ? "#ffffff" : "#000000",
+              },
+            },
+          }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        <Box sx={{ maxHeight: "400px", overflowY: "auto" }}> {/* Adjusted maxHeight for the table container */}
-          <TableContainer component={Paper}>
+        <Box
+          sx={{
+            maxHeight: "400px",
+            overflowY: "auto",
+            backgroundColor: darkMode ? "#333" : "#ffffff", 
+            "& .MuiTableCell-root": {
+              color: darkMode ? "#ffffff" : "#000000",
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            },
+            "& .MuiTableSortLabel-root": {
+              color: darkMode ? "#ffffff" : "#000000", 
+              "&.Mui-active": {
+                color: darkMode ? "#ffffff" : "#000000", 
+              },
+            },
+          }}
+        >
+          <TableContainer
+            component={Paper}
+            sx={{
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            }}
+          >
             <Table>
               <TableHead>
                 <TableRow>
@@ -262,7 +379,7 @@ export default function Profile() {
                     <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
                     <TableCell
                       sx={{
-                        maxWidth: "250px", // Increase width for wallet address column
+                        maxWidth: "250px", 
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -279,7 +396,7 @@ export default function Profile() {
                           alert("Wallet address copied to clipboard!");
                         }}
                         size="small"
-                        sx={{ marginLeft: 1 }}
+                        sx={{ marginLeft: 1, color: darkMode ? "#ffffff" : "#000000" }}
                       >
                         <ContentCopyIcon fontSize="small" />
                       </IconButton>

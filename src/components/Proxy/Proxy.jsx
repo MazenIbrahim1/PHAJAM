@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Box, Button, Typography, FormControlLabel, Switch, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
 import RouterIcon from '@mui/icons-material/Router';
 import CloseIcon from '@mui/icons-material/Close';
-
+import { useTheme } from "../../ThemeContext";
 import ProxyBox from "./ProxyBox";
 
 export default function Proxy() {
-
+  const { darkMode, setDarkMode } = useTheme();
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
@@ -74,6 +74,7 @@ export default function Proxy() {
             flexDirection: "column",
             justifyContent: "top",
             alignItems: "center",
+            color: darkMode ? "#ffffff" : "#000000",
             // border: 'dashed'
         }}
     >

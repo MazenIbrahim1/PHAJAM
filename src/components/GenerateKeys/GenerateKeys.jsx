@@ -290,7 +290,7 @@ export default function GenerateKeys() {
           <Button 
             variant="contained"
             onClick={handleBackToLogin}
-            backgroundColor="pink">
+            backgroundColor="secondary">
             Return to Login
           </Button>
         </DialogActions>

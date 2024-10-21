@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { useTheme } from "../../ThemeContext";
+import { useState } from "react";
 
 ChartJS.register(
   CategoryScale,
@@ -23,6 +25,7 @@ ChartJS.register(
 );
 
 export default function Home() {
+  const { darkMode, setDarkMode } = useTheme();
   const transactions = [  //all the transactions in table (dummy data)
     {
       from: '0000000',
@@ -127,6 +130,7 @@ export default function Home() {
         borderWidth: 2,
         tension: 0.3,
         pointRadius: 4,
+		color: darkMode ? "#ffffff" : "#000000"
       }
     ]
   };
@@ -139,14 +143,16 @@ export default function Home() {
       title: { 
         display: true, 
         text: 'Dolphin Coin Transactions Over Time',
-        color: 'black',  
+        color: darkMode ? "#ffffff" : "#000000",  
         font: { size: 24 },  
+		
       },
     },
     scales: {
-      x: { title: { display: true, text: 'Transaction Number' } },
-      y: { title: { display: true, text: 'Price (DolphinCoin)' }, beginAtZero: true } 
+      x: { title: { display: true, text: 'Transaction Number', color: darkMode ? "#ffffff" : "#000000" } },
+      y: { title: { display: true, text: 'Price (DolphinCoin)', color: darkMode ? "#ffffff" : "#000000" }, beginAtZero: true } 
     }
+	
   };
 
   return (
@@ -165,7 +171,7 @@ export default function Home() {
       }}
     >
       {/* Page Title */}
-      <Typography variant="h3" sx={{ mb: "16px", mt: "16px" }}> 
+      <Typography variant="h3" sx={{ mb: "16px", mt: "16px", color: darkMode ? "#ffffff" : "#000000"}}> 
         Welcome to Dolphin Data Sharing!
       </Typography>
 
@@ -176,6 +182,7 @@ export default function Home() {
           width: '100%',
           display: 'flex', // Flex layout for side by side boxes 
           justifyContent: 'space-between',
+		  backgroundColor: darkMode ? "#333333" : "#ffffff",
         }}
       >
         {/* Outlined Box around Line Chart */}
@@ -204,7 +211,7 @@ export default function Home() {
             borderRadius: '12px', 
             padding: '16px',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
-           
+			backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           
@@ -219,7 +226,7 @@ export default function Home() {
             }}
           />
           
-          <Typography variant="h4" sx={{ mb: "16px" }}>
+          <Typography variant="h4" sx={{ mb: "16px", color: darkMode ? "#ffffff" : "#000000" }}>
             Start Mining
           </Typography>
 
@@ -231,7 +238,11 @@ export default function Home() {
               fontSize: "1.2rem",  
               borderRadius: "8px",
 			  width: "200px", 
-    		  height: "70px"
+    		  height: "70px",
+			  backgroundColor: darkMode ? "#f06292": "#000000",
+              "&:hover": {
+                backgroundColor: "#7a99d9",
+			  }
             }}
           >
             Mine Dolphin Coin!
@@ -248,9 +259,20 @@ export default function Home() {
           borderRadius: '12px', 
           padding: '16px',
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
+		  backgroundColor: darkMode ? "#333" : "#ffffff",
+		  "& .MuiTableCell-root": {
+			color: darkMode ? "#ffffff" : "#000000", 
+			backgroundColor: darkMode ? "#4a4a4a" : "#ffffff", 
+		  },
+		  "& .MuiTableSortLabel-root": {
+			color: darkMode ? "#ffffff" : "#000000", 
+			"&.Mui-active": {
+			  color: darkMode ? "#ffffff" : "#000000", 
+			},
+		  },
         }}
       >
-        <TableContainer component={Paper} sx={{ maxHeight: '300px', overflow: 'auto' }}>
+        <TableContainer component={Paper} sx={{ maxHeight: '300px', overflow: 'auto', backgroundColor: darkMode ? "#4a4a4a" : "#ffffff", }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow sx={{ backgroundColor: '#e0f7fa' }}>
