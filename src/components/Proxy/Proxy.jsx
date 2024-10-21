@@ -105,7 +105,7 @@ export default function Proxy() {
                 <form id = "priceForm" onSubmit = {handleSubmit}>
                     <TextField
                         margin = "dense"
-                        label = "DOL / MB"
+                        label = "DC / MB"
                         type = "text"
                         fullWidth
                         variant = "outlined"
@@ -175,7 +175,7 @@ export default function Proxy() {
                             fontSize: "1.5rem"
                         }}
                     >
-                        CURRENT PROXY: {currentProxy.name.toUpperCase()} ({currentProxy.ip}, {currentProxy.price} BC/MB)
+                        CURRENT PROXY: {currentProxy.name.toUpperCase()} ({currentProxy.ip}, {currentProxy.price} DC/MB)
                     </Typography>
                 )}
                 </>

@@ -68,7 +68,7 @@ const ProxyBox = ({proxies, setCurrentProxy}) => {
                                     Location: {proxy.location}
                                 </Typography>
                                 <Typography variant = "body2" sx = {{ marginBottom: 1 }}>
-                                    Price: {proxy.price} DOL/MB
+                                    Price: {proxy.price} DC/MB
                                 </Typography>
                                 <Button
                                     variant = "contained"

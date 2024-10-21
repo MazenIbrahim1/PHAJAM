@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, TextField, Snackbar } from "@mui/material";
+import { Box, Typography, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-// Function to generate a random key
 const generateRandomKey = (length) => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -20,7 +19,7 @@ export default function GenerateKeys() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [passwordSaved, setPasswordSaved] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [passwordValidations, setPasswordValidations] = useState({
     length: false,
     number: false,
@@ -30,9 +29,9 @@ export default function GenerateKeys() {
   const navigate = useNavigate();
 
   const handleGenerateKeys = () => {
-    setAddress(generateRandomKey(42)); 
-    setPublicKey(generateRandomKey(66)); 
-    setPrivateKey(generateRandomKey(64)); 
+    setAddress(generateRandomKey(42));
+    setPublicKey(generateRandomKey(57));
+    setPrivateKey(generateRandomKey(57));
   };
 
   useEffect(() => {
@@ -63,22 +62,24 @@ export default function GenerateKeys() {
     document.body.removeChild(element);
   };
 
+  const downloadAllFiles = () => {
+    downloadFile("Dolphincoin_Address.txt", address);
+    downloadFile("Public_Key.txt", publicKey);
+    downloadFile("Private_Key.txt", privateKey);
+  };
+
   const handleSavePassword = () => {
     if (password === confirmPassword && validatePassword(password)) {
-      setPasswordSaved(true); 
-      setSnackbarOpen(true);
-
-      // Download the keys as text files
-      downloadFile("Dolphincoin_Address.txt", address);
-      downloadFile("Public_Key.txt", publicKey);
-      downloadFile("Private_Key.txt", privateKey);
+      setPasswordSaved(true);
+      setDialogOpen(true);
+      downloadAllFiles();
     } else {
-      setPasswordSaved(false); 
+      setPasswordSaved(false);
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
+  const handleDialogClose = () => {
+    setDialogOpen(false);
   };
 
   useEffect(() => {
@@ -134,6 +135,7 @@ export default function GenerateKeys() {
               gap: 2,
               maxWidth: "700px",
               width: "100%",
+              border: '2px solid #b2dfdb',
             }}
           >
             <Box>
@@ -141,8 +143,7 @@ export default function GenerateKeys() {
                 Instructions
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                Please follow the instructions provided to use create your account.<br />
-                <br />
+                Please follow the instructions provided to create your account.<br /><br />
               </Typography>
               <Typography variant="body2">
                 You have been provided with a Dolphincoin Address, Public Key, and Private Key. <br />
@@ -158,21 +159,21 @@ export default function GenerateKeys() {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2, marginTop: 2 }}>
                 <Typography variant="body1">Dolphincoin Address:</Typography>
                 <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
-                  {address || "Not generated yet."}
+                  {address}
                 </Typography>
               </Box>
 
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                 <Typography variant="body1">Public Key:</Typography>
                 <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
-                  {"*".repeat(publicKey.length)} {/* Display public key as asterisks */}
+                  {publicKey}
                 </Typography>
               </Box>
 
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                 <Typography variant="body1">Private Key:</Typography>
                 <Typography variant="body1" sx={{ wordWrap: "break-word", marginRight: 1 }}>
-                  {"*".repeat(privateKey.length)} {/* Display private key as asterisks */}
+                  {"*".repeat(privateKey.length)}
                 </Typography>
               </Box>
             </Box>
@@ -191,6 +192,7 @@ export default function GenerateKeys() {
               gap: 2,
               maxWidth: "600px",
               width: "100%",
+              border: '2px solid #b2dfdb',
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: "bold" }}>Set Your Password</Typography>
@@ -262,16 +264,37 @@ export default function GenerateKeys() {
             variant="contained"
             onClick={handleBackToLogin}
             color="secondary">
-            Back to Login
+            Return to Login
           </Button>
         </Box>
       </Box>
 
-      <Snackbar
-        open={snackbarOpen}
-        onClose={handleSnackbarClose}
-        message="Your account has successfully been created! You may return to the login page and log into your new account!"
-      />
+      {/* Dialog Popup */}
+      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+        <DialogTitle sx={{ fontWeight: "bold" }}>{"Account Created Successfully"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Your keys have been downloaded to your device. 
+            If they did not download or an error occured, click here to download them again.
+            Please make sure to store them securely. <br /> 
+            <br />
+            You can now return to the login page.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            variant="contained"
+            onClick={downloadAllFiles} 
+            backgroundColor="primary">
+            Download Again</Button>
+          <Button 
+            variant="contained"
+            onClick={handleBackToLogin}
+            backgroundColor="pink">
+            Return to Login
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
