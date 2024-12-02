@@ -299,7 +299,11 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				fmt.Printf("Failed to get record: %v\n", err)
 				continue
 			}
-			fmt.Printf("Record: %s\n", res)
+			if string(res) == "NULL" {
+				fmt.Printf("Record is NULL\n")
+			} else {
+				fmt.Printf("Record: %s\n", res)
+			}
 
 		case "GET_PROVIDERS":
 			if len(args) < 2 {
@@ -307,6 +311,18 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				continue
 			}
 			key := args[1]
+			dhtKey := "/orcanet/" + key
+
+			// First, check if the value of the key is NULL or non-existent
+			value, err := dht.GetValue(ctx, dhtKey)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if string(value) == "NULL" {
+				fmt.Println("Key is NULL")
+				continue
+			}
 			data := []byte(key)
 			hash := sha256.Sum256(data)
 			mh, err := multihash.EncodeName(hash[:], "sha2-256")
@@ -342,23 +358,43 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				fmt.Printf("Failed to put record: %v\n", err)
 				continue
 			}
-			// provideKey(ctx, dht, key)
+			provideKey(ctx, dht, key, true)
 			fmt.Println("Record stored successfully")
 
-		case "PUT_PROVIDER":
+		case "DELETE":
 			if len(args) < 2 {
 				fmt.Println("Expected key")
 				continue
 			}
 			key := args[1]
-			provideKey(ctx, dht, key)
+			dhtKey := "/orcanet/" + key
+
+			// Check if the key exists by trying to retrieve its value
+			value, err := dht.GetValue(ctx, dhtKey)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if string(value) == "NULL" {
+				fmt.Println("Key is NULL")
+				continue
+			}
+			// Key exists, proceed to delete it
+			err = dht.PutValue(ctx, dhtKey, []byte("NULL"))
+			if err != nil {
+				fmt.Printf("Failed to mark record as deleted: %v\n", err)
+			} else {
+				fmt.Println("Record marked as deleted successfully")
+			}
+			provideKey(ctx, dht, key, false)
+
 		default:
-			fmt.Println("Expected GET, GET_PROVIDERS, PUT or PUT_PROVIDER")
+			fmt.Println("Expected GET, GET_PROVIDERS, or PUT")
 		}
 	}
 }
 
-func provideKey(ctx context.Context, dht *dht.IpfsDHT, key string) error {
+func provideKey(ctx context.Context, dht *dht.IpfsDHT, key string, provide bool) error {
 	data := []byte(key)
 	hash := sha256.Sum256(data)
 	mh, err := multihash.EncodeName(hash[:], "sha2-256")
@@ -368,9 +404,13 @@ func provideKey(ctx context.Context, dht *dht.IpfsDHT, key string) error {
 	c := cid.NewCidV1(cid.Raw, mh)
 
 	// Start providing the key
-	err = dht.Provide(ctx, c, true)
+	err = dht.Provide(ctx, c, provide)
 	if err != nil {
-		return fmt.Errorf("failed to start providing key: %v", err)
+		if provide {
+			return fmt.Errorf("failed to start providing key: %v", err)
+		} else {
+			return fmt.Errorf("failed to stop providing key: %v", err)
+		}
 	}
 	return nil
 }
