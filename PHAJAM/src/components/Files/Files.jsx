@@ -86,7 +86,7 @@ export default function Files() {
         
       {/* Upload File Popup */}
       <Dialog open={uploadOpened}>
-        <DialogTitle>Upload File</DialogTitle>
+        <DialogTitle sx={{ paddingBottom: 0 }}>Upload File</DialogTitle>
         <IconButton
           edge="end"
           color="inherit"
@@ -96,7 +96,7 @@ export default function Files() {
         >
           <CloseIcon />
         </IconButton>
-        <DialogContent>
+        <DialogContent sx={{ paddingTop : 1 }}>
           <form id="uploadForm" onSubmit={handleSubmit}>
             <input
               type="file"

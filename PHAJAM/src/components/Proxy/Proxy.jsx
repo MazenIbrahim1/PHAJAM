@@ -10,23 +10,39 @@ export default function Proxy() {
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
+  // Proxy chosen BEFORE confirmation
+  const [selectedProxy, setSelectedProxy] = useState(null);
+
+  // Proxy used AFTER confirmation
   const [currentProxy, setCurrentProxy] = useState(null);
   
+  // Popup to confirm proxy choice
+  const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
+
+  // Popup to set price of your own proxy
   const [priceOpened, setPriceOpened] = useState(false);
+
+  // Popup to confirm disabling of your own proxy
+  const [confirmDisableProxyModeOpened, setConfirmDisableProxyModeOpened] = useState(false);
+
+  // Popup to confirm disabling of proxy connection
+  const [confirmDisconnectProxyOpen, setConfirmDisconnectProxyOpen] = useState(false);
 
   const [isHovered, setIsHovered] = useState(false);
 
   const handleToggleProxy = () => {
     if (isProxy) {
-      setIsProxy(false);
+      setConfirmDisableProxyModeOpened(true);
     } else {
       openPrice();
     }
   }
 
   const handleSetCurrentProxy = (proxy) => {
-    setCurrentProxy(proxy);
-    setIsProxy(false); // Set isProxy to false whenever a proxy is set
+    setSelectedProxy(proxy);
+    setConfirmProxyOpened(true);
+    // setCurrentProxy(proxy);
+    // setIsProxy(false); // Set isProxy to false whenever a proxy is set
   };
 
   const openPrice = () => {
@@ -92,7 +108,7 @@ export default function Proxy() {
         </Box>
         <ProxyBox proxies = {mockProxies} setCurrentProxy = {handleSetCurrentProxy} />
         <Dialog open = {priceOpened}>
-            <DialogTitle> Set Price </DialogTitle>
+            <DialogTitle sx={{ paddingBottom: 0 }}> Set Price </DialogTitle>
             <IconButton
                 edge="end"
                 color="inherit"
@@ -102,7 +118,7 @@ export default function Proxy() {
             >
                 <CloseIcon />
             </IconButton>
-            <DialogContent>
+            <DialogContent sx={{ paddingTop: 1 }}>
                 <form id = "priceForm" onSubmit = {handleSubmit}>
                     <TextField
                         margin = "dense"
@@ -123,6 +139,96 @@ export default function Proxy() {
                     sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
                   >
                     Submit
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {confirmProxyOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Use {selectedProxy == null ? "" : selectedProxy.name} as a proxy </DialogTitle>
+            <Typography 
+                sx={{ textAlign: "left", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+            Warning: You cannot connect to a proxy while being a proxy. You will be disabled as a proxy if you proceed.
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setCurrentProxy(selectedProxy);
+                        setIsProxy(false);
+                        setConfirmProxyOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Confirm
+                </Button>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setConfirmProxyOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Cancel
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {confirmDisableProxyModeOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disable proxy mode </DialogTitle>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setIsProxy(false);
+                        setConfirmDisableProxyModeOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Confirm
+                </Button>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setConfirmDisableProxyModeOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Cancel
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {confirmDisconnectProxyOpen}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disconnect from {currentProxy ? currentProxy.name : ""} </DialogTitle>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setCurrentProxy(null);
+                        setConfirmDisconnectProxyOpen(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Confirm
+                </Button>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setConfirmDisconnectProxyOpen(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Cancel
                 </Button>
             </DialogActions>
         </Dialog>
@@ -147,7 +253,7 @@ export default function Proxy() {
                 <>
                 {isHovered ? (
                     <Button
-                        onClick = {() => setCurrentProxy(null)}
+                        onClick = {() => setConfirmDisconnectProxyOpen(true)}
                         sx = {{
                             display: "flex",
                             width: "100%",
