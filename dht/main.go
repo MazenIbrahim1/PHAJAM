@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -30,9 +30,10 @@ import (
 )
 
 var (
-	node_id                    = "114538640" // give your SBU ID
-	relay_node_addr            = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
-	bootstrap_node_addr        = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
+	node_id             = "SBU_Id" // give your SBU ID
+	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
+	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
+	// Change the ip address to your public ip address"
 	native_bootstrap_node_addr = "/ip4/172.25.237.210/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 )
@@ -52,7 +53,7 @@ func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
 func createNode() (host.Host, *dht.IpfsDHT, error) {
 	ctx := context.Background()
 	seed := []byte(node_id)
-	customAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/0")
+	customAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/tcp/60000")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse multiaddr: %w", err)
 	}
@@ -277,8 +278,8 @@ func main() {
 	go handlePeerExchange(node)
 	go handleInput(ctx, dht)
 
-	//receiveDataFromPeer(node)
-	//sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1")
+	// receiveDataFromPeer(node)
+	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
 
 	defer node.Close()
 
@@ -389,7 +390,6 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			if string(value) == "NULL" {
 				fmt.Println("Key is NULL")
-				continue
 			}
 			// Key exists, proceed to delete it
 			err = dht.PutValue(ctx, dhtKey, []byte("NULL"))
