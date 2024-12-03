@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	dbClient *mongo.Client
-	dbName   = "fileRecordsDB"
+	dbClient     *mongo.Client
+	dbName       = "fileRecordsDB"
 	dbCollection = "fileRecords"
 )
 
@@ -33,6 +33,30 @@ func InitializeDatabase(uri string) error {
 	}
 
 	fmt.Println("Connected to MongoDB!")
+
+	collectionNames, err := dbClient.Database(dbName).ListCollectionNames(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("Failed to list collections: %w", err)
+	}
+
+	collectionExists := false
+	for _, name := range collectionNames {
+		if name == dbCollection {
+			collectionExists = true
+			break
+		}
+	}
+
+	if !collectionExists {
+		err = dbClient.Database(dbName).CreateCollection(ctx, dbCollection)
+		if err != nil {
+			return fmt.Errorf("Failed to create collection: %w", err)
+		}
+		fmt.Printf("Collection '%s' created successfully.\n", dbCollection)
+	} else {
+		fmt.Printf("Collection '%s' already exists.\n", dbCollection)
+	}
+
 	return nil
 }
 
@@ -43,8 +67,8 @@ func StoreFileRecord(hash string, path string) error {
 	defer cancel()
 
 	record := bson.M{
-		"hash": hash,
-		"path": path,
+		"hash":      hash,
+		"path":      path,
 		"timestamp": time.Now(),
 	}
 
