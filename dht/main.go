@@ -29,10 +29,11 @@ import (
 )
 
 var (
-	node_id             = "SBU_Id" // give your SBU ID
-	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
-	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
-	globalCtx           context.Context
+	node_id                    = "SBU_Id" // give your SBU ID
+	relay_node_addr            = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
+	bootstrap_node_addr        = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
+	native_bootstrap_node_addr = "/ip4/172.25.237.210/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
+	globalCtx                  context.Context
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -260,7 +261,7 @@ func main() {
 	connectToPeer(node, relay_node_addr) // connect to relay node
 	makeReservation(node)                // make reservation on realy node
 	go refreshReservation(node, 10*time.Minute)
-	connectToPeer(node, bootstrap_node_addr) // connect to bootstrap node
+	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
 	go handleInput(ctx, dht)
 
@@ -321,7 +322,6 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			if string(value) == "NULL" {
 				fmt.Println("Key is NULL")
-				continue
 			}
 			data := []byte(key)
 			hash := sha256.Sum256(data)
@@ -389,7 +389,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			provideKey(ctx, dht, key, false)
 
 		default:
-			fmt.Println("Expected GET, GET_PROVIDERS, or PUT")
+			fmt.Println("Expected GET, GET_PROVIDERS, PUT, or DELETE")
 		}
 	}
 }
@@ -425,7 +425,7 @@ func makeReservation(node host.Host) {
 	if err != nil {
 		log.Fatalf("Failed to make reservation on relay: %v", err)
 	}
-	fmt.Printf("Reservation successfull \n")
+	fmt.Printf("Reservation successful \n")
 }
 
 func refreshReservation(node host.Host, interval time.Duration) {
