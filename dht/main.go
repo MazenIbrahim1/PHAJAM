@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -29,7 +30,7 @@ import (
 )
 
 var (
-	node_id                    = "SBU_Id" // give your SBU ID
+	node_id                    = "114538640" // give your SBU ID
 	relay_node_addr            = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr        = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	native_bootstrap_node_addr = "/ip4/172.25.237.210/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
@@ -246,6 +247,17 @@ func handlePeerExchange(node host.Host) {
 }
 
 func main() {
+	err := InitializeDatabase("mongodb://localhost:27017")
+	if err != nil {
+		fmt.Printf("Failed to initialize MongoDB: %v\n", err)
+		return
+	}
+	defer func() {
+		if err := DisconnectDatabase(); err != nil {
+			fmt.Printf("Failed to disconnect MongoDB: %v\n", err)
+		}
+	}()
+
 	node, dht, err := createNode()
 	if err != nil {
 		log.Fatalf("Failed to create node: %s", err)
@@ -265,8 +277,8 @@ func main() {
 	go handlePeerExchange(node)
 	go handleInput(ctx, dht)
 
-	// receiveDataFromPeer(node)
-	// sendDataToPeer(node, "12D3KooWKNWVMpDh5ZWpFf6757SngZfyobsTXA8WzAWqmAjgcdE6")
+	//receiveDataFromPeer(node)
+	//sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1")
 
 	defer node.Close()
 
@@ -388,8 +400,36 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			provideKey(ctx, dht, key, false)
 
+		case "UPLOAD":
+			if len(args) < 2 {
+				fmt.Println("Expected file path")
+				continue
+			}
+			filePath := args[1]
+			file, err := os.Open(filePath)
+			if err != nil {
+				fmt.Printf("Failed to open file: %v\n", err)
+				continue
+			}
+			defer file.Close()
+
+			hasher := sha256.New()
+			if _, err := io.Copy(hasher, file); err != nil {
+				fmt.Printf("Failed to hash file: %v\n", err)
+				continue
+			}
+			fileHash := hex.EncodeToString(hasher.Sum(nil))
+
+			err = StoreFileRecord(fileHash, filePath)
+			if err != nil {
+				fmt.Printf("Failed to store file record in MongoDB: %v\n", err)
+				continue
+			}
+
+			fmt.Printf("File uploaded successfully. Hash %s\n", fileHash)
+
 		default:
-			fmt.Println("Expected GET, GET_PROVIDERS, PUT, or DELETE")
+			fmt.Println("Expected GET, GET_PROVIDERS, PUT, DELETE, or UPLOAD")
 		}
 	}
 }
