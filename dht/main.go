@@ -276,7 +276,7 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
-	go handleInput(ctx, dht)
+	go handleInput(node, ctx, dht)
 
 	// receiveDataFromPeer(node)
 	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
@@ -286,7 +286,7 @@ func main() {
 	select {}
 }
 
-func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
+func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("User Input \n ")
 	for {
@@ -428,6 +428,15 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 
 			fmt.Printf("File uploaded successfully. Hash %s\n", fileHash)
 
+		case "PROVIDE":
+			if len(args) < 2 {
+				fmt.Println("Expected key")
+				continue
+			}
+			key := args[1]
+			provideKey(ctx, dht, key, true)
+			fmt.Println("Record stored successfully")
+
 		default:
 			fmt.Println("Expected GET, GET_PROVIDERS, PUT, DELETE, or UPLOAD")
 		}
@@ -442,7 +451,6 @@ func provideKey(ctx context.Context, dht *dht.IpfsDHT, key string, provide bool)
 		return fmt.Errorf("error encoding multihash: %v", err)
 	}
 	c := cid.NewCidV1(cid.Raw, mh)
-
 	// Start providing the key
 	err = dht.Provide(ctx, c, provide)
 	if err != nil {

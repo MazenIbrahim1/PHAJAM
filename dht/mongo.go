@@ -36,7 +36,7 @@ func InitializeDatabase(uri string) error {
 
 	collectionNames, err := dbClient.Database(dbName).ListCollectionNames(ctx, bson.M{})
 	if err != nil {
-		return fmt.Errorf("Failed to list collections: %w", err)
+		return fmt.Errorf("failed to list collections: %w", err)
 	}
 
 	collectionExists := false
@@ -50,7 +50,7 @@ func InitializeDatabase(uri string) error {
 	if !collectionExists {
 		err = dbClient.Database(dbName).CreateCollection(ctx, dbCollection)
 		if err != nil {
-			return fmt.Errorf("Failed to create collection: %w", err)
+			return fmt.Errorf("failed to create collection: %w", err)
 		}
 		fmt.Printf("Collection '%s' created successfully.\n", dbCollection)
 	} else {
