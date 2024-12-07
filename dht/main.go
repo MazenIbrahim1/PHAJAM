@@ -52,6 +52,7 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Providers sync: ", providers)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(providers); err != nil {
 		http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
 	}
