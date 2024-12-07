@@ -51,6 +51,10 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Providers sync: ", providers)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(providers); err != nil {
+		http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
+	}
 }
 
 func main() {
@@ -83,7 +87,7 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
-	//go handleInput(ctx, dht)
+	//go handleInput(ctx, dhtRoute)
 	http.HandleFunc("/getproviders", getProviders)
 	http.HandleFunc("/upload", handleFileUpload)
 	fmt.Println("Starting server at port 8080")
