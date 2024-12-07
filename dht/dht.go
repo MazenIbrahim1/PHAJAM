@@ -305,17 +305,19 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				continue
 			}
 			c := cid.NewCidV1(cid.Raw, mh)
-			providers := dht.FindProvidersAsync(ctx, c, 20)
-			fmt.Println("Searching for providers...")
-			for p := range providers {
-				if p.ID == peer.ID("") {
-					break
+			/*
+				providers := dht.FindProvidersAsync(ctx, c, 20)
+				fmt.Println("Searching for providers...")
+				for p := range providers {
+					if p.ID == peer.ID("") {
+						break
+					}
+					fmt.Printf("Found provider: %s\n", p.ID.String())
+					for _, addr := range p.Addrs {
+						fmt.Printf(" - Address: %s\n", addr.String())
+					}
 				}
-				fmt.Printf("Found provider: %s\n", p.ID.String())
-				for _, addr := range p.Addrs {
-					fmt.Printf(" - Address: %s\n", addr.String())
-				}
-			}
+			*/
 			providerssync, err := dht.FindProviders(ctx, c)
 			fmt.Println("Providers sync:")
 			fmt.Println(providerssync)
