@@ -9,6 +9,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ipfs/go-cid"
@@ -39,7 +41,6 @@ func enableCORS(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -103,7 +104,7 @@ func main() {
 	fmt.Println("Node Peer ID:", node.ID())
 
 	connectToPeer(node, relay_node_addr) // connect to relay node
-	makeReservation(node)                // make reservation on realy node
+	makeReservation(node)                // make reservation on relay node
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
@@ -134,7 +135,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to parse form: %v", err), http.StatusBadRequest)
 		log.Printf("Failed to parse form: %v", err)
@@ -148,6 +149,30 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	// Create the 'files' directory if it doesn't exist
+	err = os.MkdirAll("files", os.ModePerm)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create directory: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to create directory: %v", err)
+		return
+	}
+
+	// Create a file in the 'files' directory
+	dst, err := os.Create(filepath.Join("files", header.Filename))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create file in directory: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to create file in directory: %v", err)
+		return
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file to the destination file
+	if _, err := io.Copy(dst, file); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to save file: %v", err)
+		return
+	}
 
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -164,6 +189,8 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to store file metadata: %v", err)
 		return
 	}
+
+	provideKey(ctx, dhtRoute, fileHash, true)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
