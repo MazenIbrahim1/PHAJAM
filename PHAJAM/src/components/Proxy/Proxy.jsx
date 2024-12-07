@@ -269,7 +269,7 @@ export default function Proxy() {
                                 fontSize: "1.5rem"
                             }}
                         >
-                            REMOVE CURRENT PROXY
+                            DISCONNECT FROM {currentProxy.name.toUpperCase()}
                         </Typography>
                     </Button>
                 ) : (
