@@ -22,6 +22,25 @@ var (
 	ctx      context.Context
 )
 
+// CORS middleware
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow all origins
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+
 func getProviders(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -88,11 +107,15 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
-	//go handleInput(ctx, dhtRoute)
-	http.HandleFunc("/getproviders", getProviders)
-	http.HandleFunc("/upload", handleFileUpload)
+	//go handleInput(ctx, dht)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/getproviders", getProviders)
+	mux.HandleFunc("/upload", handleFileUpload)
+	mux.HandleFunc("/files", handleFetchFiles)
+
 	fmt.Println("Starting server at port 8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", enableCORS(mux)); err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
 
@@ -149,4 +172,21 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		"hash":     fileHash,
 		"filename": header.Filename,
 	})
+}
+
+func handleFetchFiles(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	records, err := FetchAllFileRecords()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch records: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(records)
 }

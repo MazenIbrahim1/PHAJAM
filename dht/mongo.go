@@ -109,3 +109,26 @@ func DisconnectDatabase() error {
 	}
 	return nil
 }
+
+func FetchAllFileRecords() ([]map[string]interface{}, error) {
+	collection := dbClient.Database(dbName).Collection(dbCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to fetch records: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var records []map[string]interface{}
+	for cursor.Next(ctx) {
+		var record map[string]interface{}
+		if err := cursor.Decode(&record); err != nil {
+			return nil, fmt.Errorf("Failed to decode record: %w", err)
+		}
+		records = append(records, record)
+	}
+	
+	return records, nil
+}
