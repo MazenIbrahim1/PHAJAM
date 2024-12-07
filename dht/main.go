@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -84,6 +85,7 @@ func main() {
 	go handlePeerExchange(node)
 	//go handleInput(ctx, dht)
 	http.HandleFunc("/getproviders", getProviders)
+	http.HandleFunc("/upload", handleFileUpload)
 	fmt.Println("Starting server at port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Println("Error starting server: ", err)
@@ -95,4 +97,51 @@ func main() {
 	defer node.Close()
 
 	select {}
+}
+
+func handleFileUpload(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		log.Printf("Invalid request method: %s", r.Method)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse form: %v", err), http.StatusBadRequest)
+		log.Printf("Failed to parse form: %v", err)
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to retrieve file: %v", err), http.StatusBadRequest)
+		log.Printf("Failed to retrieve file: %v", err)
+		return
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to hash file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to hash file: %v", err)
+		return
+	}
+	fileHash := hex.EncodeToString(hasher.Sum(nil))
+	log.Printf("File hash computed: %s", fileHash)
+
+	err = StoreFileRecord(fileHash, header.Filename)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to store file metadata: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to store file metadata: %v", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":  "File uploaded successfully",
+		"hash":     fileHash,
+		"filename": header.Filename,
+	})
 }

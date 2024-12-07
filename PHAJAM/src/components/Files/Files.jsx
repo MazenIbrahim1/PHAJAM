@@ -9,10 +9,14 @@ import { useTheme } from "../../ThemeContext";
 
 export default function Files() {
   const { darkMode } = useTheme();
-
+  
+  const [file, setFile] = useState(null);
   const [search, setSearch] = useState('');
   const [fileName, setFileName] = useState('');
+  const [price, setPrice] = useState('');
   const [uploadOpened, setUploadOpened] = useState(false);
+  const [uploadResponse, setUploadResponse] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const columns = [
     { field: "name", headerName: "Name", flex: 1 },
@@ -32,19 +36,53 @@ export default function Files() {
 
   const closeUpload = () => {
     setUploadOpened(false);
+    setFile(null);
+    setFileName('');
+    setPrice('');
+    setUploadResponse(null);
   };
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+      setFile(file);
       setFileName(file.name);
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Handle form submission
-    closeUpload();
+    
+    if (!file || !price) {
+      alert("Please select a file to upload and set a price.");
+      return;
+    }
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("price", price);
+
+    try {
+      const response = await fetch("http://localhost:8080/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if(!response.ok) {
+        throw new Error("failed to upload file");
+      }
+
+      const result = await response.json();
+      setUploadResponse(result);
+    } catch(error) {
+      console.error("Error during file upload:", error);
+      alert("An error occurred while uploading the file");
+    } finally {
+      setUploading(false);
+      closeUpload();
+    }
   };
 
   return (
@@ -85,7 +123,7 @@ export default function Files() {
       <DataTable rows={mockData} columns={columns} search={search} darkMode={darkMode} />
         
       {/* Upload File Popup */}
-      <Dialog open={uploadOpened}>
+      <Dialog open={uploadOpened} onClose={closeUpload}>
         <DialogTitle>Upload File</DialogTitle>
         <IconButton
           edge="end"
@@ -130,6 +168,8 @@ export default function Files() {
               type="text"
               fullWidth
               variant="outlined"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
               required
             />
           </form>
@@ -139,6 +179,7 @@ export default function Files() {
             variant="contained"
             type="submit" 
             form="uploadForm" 
+            disabled={!file || uploading}
             sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
           >
             Submit
