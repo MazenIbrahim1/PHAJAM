@@ -34,7 +34,7 @@ var (
 	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	// Change the ip address to your public ip address"
-	native_bootstrap_node_addr = "/ip4/172.25.237.210/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
+	native_bootstrap_node_addr = "/ip4/10.1.252.208/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 )
 
@@ -247,45 +247,6 @@ func handlePeerExchange(node host.Host) {
 	})
 }
 
-func main() {
-	err := InitializeDatabase("mongodb://localhost:27017")
-	if err != nil {
-		fmt.Printf("Failed to initialize MongoDB: %v\n", err)
-		return
-	}
-	defer func() {
-		if err := DisconnectDatabase(); err != nil {
-			fmt.Printf("Failed to disconnect MongoDB: %v\n", err)
-		}
-	}()
-
-	node, dht, err := createNode()
-	if err != nil {
-		log.Fatalf("Failed to create node: %s", err)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	globalCtx = ctx
-
-	fmt.Println("Node multiaddresses:", node.Addrs())
-	fmt.Println("Node Peer ID:", node.ID())
-
-	connectToPeer(node, relay_node_addr) // connect to relay node
-	makeReservation(node)                // make reservation on realy node
-	go refreshReservation(node, 10*time.Minute)
-	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
-	go handlePeerExchange(node)
-	go handleInput(node, ctx, dht)
-
-	// receiveDataFromPeer(node)
-	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
-
-	defer node.Close()
-
-	select {}
-}
-
 func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("User Input \n ")
@@ -331,7 +292,7 @@ func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 			value, err := dht.GetValue(ctx, dhtKey)
 			if err != nil {
 				fmt.Println(err)
-				continue
+				//continue
 			}
 			if string(value) == "NULL" {
 				fmt.Println("Key is NULL")
@@ -345,7 +306,6 @@ func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			c := cid.NewCidV1(cid.Raw, mh)
 			providers := dht.FindProvidersAsync(ctx, c, 20)
-
 			fmt.Println("Searching for providers...")
 			for p := range providers {
 				if p.ID == peer.ID("") {
@@ -356,6 +316,11 @@ func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 					fmt.Printf(" - Address: %s\n", addr.String())
 				}
 			}
+			providerssync, err := dht.FindProviders(ctx, c)
+			fmt.Println("Providers sync:")
+			fmt.Println(providerssync)
+			fmt.Println("err:")
+			fmt.Println(err)
 
 		case "PUT":
 			if len(args) < 3 {
@@ -386,7 +351,7 @@ func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
 			value, err := dht.GetValue(ctx, dhtKey)
 			if err != nil {
 				fmt.Println(err)
-				continue
+				//continue
 			}
 			if string(value) == "NULL" {
 				fmt.Println("Key is NULL")
