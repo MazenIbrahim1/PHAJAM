@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import SearchBar from "./SearchBar";
@@ -9,21 +9,20 @@ import { useTheme } from "../../ThemeContext";
 
 export default function Files() {
   const { darkMode } = useTheme();
-
+  
+  const [file, setFile] = useState(null);
   const [search, setSearch] = useState('');
   const [fileName, setFileName] = useState('');
+  const [price, setPrice] = useState('');
   const [uploadOpened, setUploadOpened] = useState(false);
+  const [uploadResponse, setUploadResponse] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const columns = [
-    { field: "name", headerName: "Name", flex: 1 },
-    { field: "size", headerName: "Size", flex: 0.5 },
-  ];
-
-  const mockData = [
-    { id: 1, name: "hello.py", size: "10KB" },
-    { id: 2, name: "script.sh", size: "20KB" },
-    { id: 3, name: "hw4.php", size: "1GB" },
-    { id: 4, name: "server.js", size: "1MB" }
+    { field: "filename", headerName: "File Name", flex: 1 },
+    { field: "timestamp", headerName: "Uploaded At", flex: 1 },
   ];
 
   const openUpload = () => {
@@ -32,20 +31,76 @@ export default function Files() {
 
   const closeUpload = () => {
     setUploadOpened(false);
+    setFile(null);
+    setFileName('');
+    setPrice('');
+    setUploadResponse(null);
   };
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+      setFile(file);
       setFileName(file.name);
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Handle form submission
-    closeUpload();
+    
+    if (!file || !price) {
+      alert("Please select a file to upload and set a price.");
+      return;
+    }
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("price", price);
+
+    try {
+      const response = await fetch("http://localhost:8080/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      setUploadResponse(result)
+    } catch(error) {
+      console.error("Error during file upload:", error);
+    } finally {
+      setUploading(false);
+      closeUpload();
+    }
   };
+
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/files");
+      if(!response.ok) {
+        throw new Error("Failed to fetch files");
+      }
+      const data = await response.json();
+
+      const formattedData = data.map((item, index) => ({
+        id: index + 1,
+        filename: item.path,
+        timestamp: new Date(item.timestamp).toLocaleString(),
+      }));
+
+      console.log("Formatted files:", formattedData);
+      setFiles(formattedData);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFiles();
+  }, []);
 
   return (
     <Box
@@ -82,11 +137,14 @@ export default function Files() {
           Upload
         </Button>
       </Box>
-      <DataTable rows={mockData} columns={columns} search={search} darkMode={darkMode} />
+      <DataGrid 
+        rows={files} 
+        columns={columns} 
+      />
         
       {/* Upload File Popup */}
-      <Dialog open={uploadOpened}>
-        <DialogTitle sx={{ paddingBottom: 0 }}>Upload File</DialogTitle>
+      <Dialog open={uploadOpened} onClose={closeUpload}>
+        <DialogTitle>Upload File</DialogTitle>
         <IconButton
           edge="end"
           color="inherit"
@@ -130,6 +188,8 @@ export default function Files() {
               type="text"
               fullWidth
               variant="outlined"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
               required
             />
           </form>
@@ -139,6 +199,7 @@ export default function Files() {
             variant="contained"
             type="submit" 
             form="uploadForm" 
+            disabled={!file || uploading}
             sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
           >
             Submit
