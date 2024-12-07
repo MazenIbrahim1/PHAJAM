@@ -4,8 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
+
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 )
+
+var dhtRoute *dht.IpfsDHT
+var ctx context.Context
+
+func provide(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func main() {
 	err := InitializeDatabase("mongodb://localhost:27017")
@@ -36,7 +46,7 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
-	go handleInput(node, ctx, dht)
+	go handleInput(ctx, dht)
 
 	// receiveDataFromPeer(node)
 	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")

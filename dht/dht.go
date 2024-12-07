@@ -247,7 +247,7 @@ func handlePeerExchange(node host.Host) {
 	})
 }
 
-func handleInput(node host.Host, ctx context.Context, dht *dht.IpfsDHT) {
+func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("User Input \n ")
 	for {
