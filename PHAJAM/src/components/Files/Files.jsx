@@ -21,10 +21,10 @@ export default function Files() {
   const [loading, setLoading] = useState(true);
 
   const columns = [
-    { field: "filename", headerName: "File Name", flex: 1 },
-    { field: "hash", headerName: "Hash", flex: 2 },
+    { field: "filename", headerName: "File Name", flex: 2 },
+    { field: "hash", headerName: "Hash", flex: 4 },
     { field: "cost", headerName: "Cost", flex: 1 },
-    { field: "timestamp", headerName: "Uploaded At", flex: 1 },
+    { field: "timestamp", headerName: "Uploaded At", flex: 2 },
   ];
 
   const openUpload = () => {
