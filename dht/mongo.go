@@ -118,7 +118,7 @@ func FetchAllFileRecords() ([]map[string]interface{}, error) {
 
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to fetch records: %w", err)
+		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
 	defer cursor.Close(ctx)
 
@@ -126,7 +126,7 @@ func FetchAllFileRecords() ([]map[string]interface{}, error) {
 	for cursor.Next(ctx) {
 		var record map[string]interface{}
 		if err := cursor.Decode(&record); err != nil {
-			return nil, fmt.Errorf("Failed to decode record: %w", err)
+			return nil, fmt.Errorf("failed to decode record: %w", err)
 		}
 		records = append(records, record)
 	}
