@@ -133,3 +133,23 @@ func FetchAllFileRecords() ([]map[string]interface{}, error) {
 
 	return records, nil
 }
+
+// DeleteFileRecord deletes a file record by hash
+func DeleteFileRecord(hash string) error {
+	collection := dbClient.Database(dbName).Collection(dbCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"hash": hash}
+
+	result, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("failed to delete record: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("no record found with hash: %s", hash)
+	}
+
+	return nil
+}

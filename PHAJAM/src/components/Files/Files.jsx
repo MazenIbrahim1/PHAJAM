@@ -10,10 +10,10 @@ import {
   TextField,
   IconButton,
 } from "@mui/material";
-import SearchBar from "./SearchBar";
-import DataTable from "./DataTable";
 import UploadIcon from "@mui/icons-material/Upload";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchBar from "./SearchBar";
+import DataTable from "./DataTable";
 import { useTheme } from "../../ThemeContext";
 
 export default function Files() {
@@ -57,10 +57,6 @@ export default function Files() {
     }
   };
 
-  const handleCloseErrorPopup = () => {
-    setErrorPopup({ open: false, message: "" });
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -82,12 +78,8 @@ export default function Files() {
       });
 
       if (!response.ok) {
-        if (response.status === 500) {
-          setErrorPopup({ open: true, message: "Internal Server Error" });
-        } else {
-          const errorText = await response.text();
-          setErrorPopup({ open: true, message: errorText });
-        }
+        const errorText = await response.text();
+        setErrorPopup({ open: true, message: errorText });
         return;
       }
 
@@ -119,12 +111,31 @@ export default function Files() {
         timestamp: new Date(item.timestamp).toLocaleString(),
       }));
 
-      console.log("Formatted files:", formattedData);
       setFiles(formattedData);
     } catch (error) {
       console.error("Error fetching files:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (hash) => {
+    try {
+      const response = await fetch(`http://localhost:8080/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hash }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete file");
+      }
+
+      // Remove the deleted file from state
+      setFiles((prevFiles) => prevFiles.filter((file) => file.hash !== hash));
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      setErrorPopup({ open: true, message: `Error deleting file: ${error.message}` });
     }
   };
 
@@ -168,10 +179,9 @@ export default function Files() {
         </Button>
       </Box>
       <Typography sx={{ color: "red" }}>
-        *These files still persist even if you delete the files on your computer! Select a file to start deleting
-        instead.
+        *These files still persist even if you delete the files on your computer! Select a file to start deleting instead.
       </Typography>
-      <DataTable rows={files} columns={columns} search={search} darkMode={darkMode} />
+      <DataTable rows={files} columns={columns} search={search} onDelete={handleDelete} />
 
       {/* Upload File Popup */}
       <Dialog open={uploadOpened} onClose={closeUpload}>
@@ -243,13 +253,13 @@ export default function Files() {
       </Dialog>
 
       {/* Error Popup */}
-      <Dialog open={errorPopup.open} onClose={handleCloseErrorPopup}>
+      <Dialog open={errorPopup.open} onClose={() => setErrorPopup({ open: false, message: "" })}>
         <DialogTitle>Error</DialogTitle>
         <DialogContent>
           <Typography>{errorPopup.message}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseErrorPopup} color="primary" variant="contained">
+          <Button onClick={() => setErrorPopup({ open: false, message: "" })} color="primary" variant="contained">
             Close
           </Button>
         </DialogActions>
