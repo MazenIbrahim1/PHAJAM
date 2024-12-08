@@ -3,7 +3,7 @@ import { DataGrid } from "@mui/x-data-grid";
 
 const DataTable = ({ rows, columns, search }) => {
   const filteredRows = rows.filter(row =>
-    row.name.toLowerCase().includes(search.toLowerCase())
+    row.filename.toLowerCase().includes(search.toLowerCase())
   );
 
   return (

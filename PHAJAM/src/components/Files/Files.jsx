@@ -22,6 +22,8 @@ export default function Files() {
 
   const columns = [
     { field: "filename", headerName: "File Name", flex: 1 },
+    { field: "hash", headerName: "Hash", flex: 2 },
+    { field: "cost", headerName: "Cost", flex: 1 },
     { field: "timestamp", headerName: "Uploaded At", flex: 1 },
   ];
 
@@ -72,6 +74,7 @@ export default function Files() {
     } finally {
       setUploading(false);
       closeUpload();
+      fetchFiles();
     }
   };
 
@@ -85,7 +88,9 @@ export default function Files() {
 
       const formattedData = data.map((item, index) => ({
         id: index + 1,
-        filename: item.path,
+        filename: item.filename,
+        hash: item.hash,
+        cost: item.cost,
         timestamp: new Date(item.timestamp).toLocaleString(),
       }));
 
@@ -137,9 +142,17 @@ export default function Files() {
           Upload
         </Button>
       </Box>
-      <DataGrid 
+      <Typography
+        sx={{
+          color:"red",
+        }}>
+        *These files still persist even if you delete the files on your computer! Select a file to start deleting instead
+      </Typography>
+      <DataTable
         rows={files} 
-        columns={columns} 
+        columns={columns}
+        search={search}
+        darkMode={darkMode}
       />
         
       {/* Upload File Popup */}

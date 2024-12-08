@@ -372,8 +372,8 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				fmt.Println("Expected file path")
 				continue
 			}
-			filePath := args[1]
-			file, err := os.Open(filePath)
+			filename := args[1]
+			file, err := os.Open(filename)
 			if err != nil {
 				fmt.Printf("Failed to open file: %v\n", err)
 				continue
@@ -387,7 +387,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			fileHash := hex.EncodeToString(hasher.Sum(nil))
 
-			err = StoreFileRecord(fileHash, filePath)
+			err = StoreFileRecord(fileHash, filename, 0)
 			if err != nil {
 				fmt.Printf("Failed to store file record in MongoDB: %v\n", err)
 				continue

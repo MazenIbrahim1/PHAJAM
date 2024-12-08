@@ -61,15 +61,16 @@ func InitializeDatabase(uri string) error {
 }
 
 // StoreFileRecord saves the file hash and path to the database
-func StoreFileRecord(hash string, path string) error {
+func StoreFileRecord(hash string, filename string, cost float64) error {
 	collection := dbClient.Database(dbName).Collection(dbCollection)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	record := bson.M{
 		"hash":      hash,
-		"path":      path,
+		"filename":  filename,
 		"timestamp": time.Now(),
+		"cost":      cost,
 	}
 
 	_, err := collection.InsertOne(ctx, record)
@@ -129,6 +130,6 @@ func FetchAllFileRecords() ([]map[string]interface{}, error) {
 		}
 		records = append(records, record)
 	}
-	
+
 	return records, nil
 }

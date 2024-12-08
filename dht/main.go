@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/ipfs/go-cid"
@@ -116,7 +117,7 @@ func main() {
 	mux.HandleFunc("/files", handleFetchFiles)
 
 	fmt.Println("Starting server at port 8080")
-	if err := http.ListenAndServe(":8080", enableCORS(mux)); err != nil {
+	if err := http.ListenAndServe("localhost:8080", enableCORS(mux)); err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
 
@@ -183,7 +184,17 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	fileHash := hex.EncodeToString(hasher.Sum(nil))
 	log.Printf("File hash computed: %s", fileHash)
 
-	err = StoreFileRecord(fileHash, header.Filename)
+	price := r.FormValue("price")
+	if price == "" {
+		http.Error(w, "Missing price", http.StatusBadRequest)
+		return
+	}
+	priceFloat, err := strconv.ParseFloat(price, 64)
+	if err != nil {
+		http.Error(w, "Invalid price value", http.StatusBadRequest)
+		return
+	}
+	err = StoreFileRecord(fileHash, header.Filename, priceFloat)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to store file metadata: %v", err), http.StatusInternalServerError)
 		log.Printf("Failed to store file metadata: %v", err)
