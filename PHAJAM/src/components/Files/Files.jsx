@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import {
+  Box,
+  Button,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton,
+} from "@mui/material";
 import SearchBar from "./SearchBar";
 import DataTable from "./DataTable";
 import UploadIcon from "@mui/icons-material/Upload";
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from "@mui/icons-material/Close";
 import { useTheme } from "../../ThemeContext";
 
 export default function Files() {
   const { darkMode } = useTheme();
-  
+
   const [file, setFile] = useState(null);
-  const [search, setSearch] = useState('');
-  const [fileName, setFileName] = useState('');
-  const [price, setPrice] = useState('');
+  const [search, setSearch] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [price, setPrice] = useState("");
   const [uploadOpened, setUploadOpened] = useState(false);
   const [uploadResponse, setUploadResponse] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorPopup, setErrorPopup] = useState({ open: false, message: "" });
 
   const columns = [
     { field: "filename", headerName: "File Name", flex: 2 },
@@ -34,8 +44,8 @@ export default function Files() {
   const closeUpload = () => {
     setUploadOpened(false);
     setFile(null);
-    setFileName('');
-    setPrice('');
+    setFileName("");
+    setPrice("");
     setUploadResponse(null);
   };
 
@@ -47,9 +57,13 @@ export default function Files() {
     }
   };
 
+  const handleCloseErrorPopup = () => {
+    setErrorPopup({ open: false, message: "" });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!file || !price) {
       alert("Please select a file to upload and set a price.");
       return;
@@ -67,10 +81,21 @@ export default function Files() {
         body: formData,
       });
 
+      if (!response.ok) {
+        if (response.status === 500) {
+          setErrorPopup({ open: true, message: "Internal Server Error" });
+        } else {
+          const errorText = await response.text();
+          setErrorPopup({ open: true, message: errorText });
+        }
+        return;
+      }
+
       const result = await response.json();
-      setUploadResponse(result)
-    } catch(error) {
+      setUploadResponse(result);
+    } catch (error) {
       console.error("Error during file upload:", error);
+      setErrorPopup({ open: true, message: `Unexpected Error: ${error.message}` });
     } finally {
       setUploading(false);
       closeUpload();
@@ -81,7 +106,7 @@ export default function Files() {
   const fetchFiles = async () => {
     try {
       const response = await fetch("http://localhost:8080/files");
-      if(!response.ok) {
+      if (!response.ok) {
         throw new Error("Failed to fetch files");
       }
       const data = await response.json();
@@ -142,19 +167,12 @@ export default function Files() {
           Upload
         </Button>
       </Box>
-      <Typography
-        sx={{
-          color:"red",
-        }}>
-        *These files still persist even if you delete the files on your computer! Select a file to start deleting instead
+      <Typography sx={{ color: "red" }}>
+        *These files still persist even if you delete the files on your computer! Select a file to start deleting
+        instead.
       </Typography>
-      <DataTable
-        rows={files} 
-        columns={columns}
-        search={search}
-        darkMode={darkMode}
-      />
-        
+      <DataTable rows={files} columns={columns} search={search} darkMode={darkMode} />
+
       {/* Upload File Popup */}
       <Dialog open={uploadOpened} onClose={closeUpload}>
         <DialogTitle>Upload File</DialogTitle>
@@ -163,7 +181,7 @@ export default function Files() {
           color="inherit"
           onClick={closeUpload}
           aria-label="close"
-          sx={{ position: 'absolute', right: "4%", top: "3%" }}
+          sx={{ position: "absolute", right: "4%", top: "3%" }}
         >
           <CloseIcon />
         </IconButton>
@@ -176,9 +194,13 @@ export default function Files() {
               style={{ display: "none" }}
               required
             />
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               <label htmlFor="file-upload">
-                <Button variant="contained" component="span" sx={{ marginTop: .4, marginRight: 1, fontSize: '.75rem' }}>
+                <Button
+                  variant="contained"
+                  component="span"
+                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem" }}
+                >
                   Choose File
                 </Button>
               </label>
@@ -208,14 +230,27 @@ export default function Files() {
           </form>
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             variant="contained"
-            type="submit" 
-            form="uploadForm" 
+            type="submit"
+            form="uploadForm"
             disabled={!file || uploading}
             sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
           >
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Popup */}
+      <Dialog open={errorPopup.open} onClose={handleCloseErrorPopup}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorPopup.message}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseErrorPopup} color="primary" variant="contained">
+            Close
           </Button>
         </DialogActions>
       </Dialog>

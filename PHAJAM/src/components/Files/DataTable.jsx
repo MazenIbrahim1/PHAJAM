@@ -1,17 +1,16 @@
-import React from "react"
+import React from "react";
 import { DataGrid } from "@mui/x-data-grid";
 
 const DataTable = ({ rows, columns, search }) => {
-  const filteredRows = rows.filter(row =>
-    row.filename.toLowerCase().includes(search.toLowerCase())
+  const filteredRows = rows.filter((row) =>
+      row.filename.toLowerCase().includes(search.toLowerCase()) || row.hash.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div style = {{ height: 400, width: "100%" }}>
-      
-      <DataGrid 
-        rows = {filteredRows} 
-        columns = {columns}
+    <div style={{ height: 400, width: "100%" }}>
+      <DataGrid
+        rows={filteredRows}
+        columns={columns}
         initialState={{
           pagination: {
             paginationModel: {
@@ -24,9 +23,8 @@ const DataTable = ({ rows, columns, search }) => {
         disableColumnMenu
         disableColumnResize
       />
-
     </div>
-  )
-}
+  );
+};
 
 export default DataTable;

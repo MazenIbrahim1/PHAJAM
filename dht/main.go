@@ -170,7 +170,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if existingFile != nil {
-		http.Error(w, fmt.Sprintf("File exists: %v", fileHash), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("File exists: %v", header.Filename), http.StatusBadRequest)
 		log.Printf("Duplicate file rejected: %v", fileHash)
 		return
 	}
