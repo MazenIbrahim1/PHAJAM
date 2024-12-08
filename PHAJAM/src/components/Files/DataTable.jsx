@@ -1,13 +1,16 @@
 import React from "react";
 import { DataGrid } from "@mui/x-data-grid";
+import { Box } from "@mui/material";
 
 const DataTable = ({ rows, columns, search }) => {
-  const filteredRows = rows.filter((row) =>
-      row.filename.toLowerCase().includes(search.toLowerCase()) || row.hash.toLowerCase().includes(search.toLowerCase())
+  const filteredRows = rows.filter(
+    (row) =>
+      row.filename.toLowerCase().includes(search.toLowerCase()) || 
+      row.hash.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div style={{ height: 400, width: "100%" }}>
+    <Box sx={{ height: 400, width: "100%" }}>
       <DataGrid
         rows={filteredRows}
         columns={columns}
@@ -22,8 +25,14 @@ const DataTable = ({ rows, columns, search }) => {
         autoHeight
         disableColumnMenu
         disableColumnResize
+        checkboxSelection
+        sx={{
+          "& .MuiDataGrid-cell:focus-within": {
+            outline: "none",
+          },
+        }}
       />
-    </div>
+    </Box>
   );
 };
 
