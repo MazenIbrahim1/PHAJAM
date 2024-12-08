@@ -192,13 +192,21 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save the file to the 'files' directory
-	dst, err := os.Create(filepath.Join("files", header.Filename))
+	filePath := filepath.Join("files", header.Filename)
+	dst, err := os.Create(filePath)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create file in directory: %v", err), http.StatusInternalServerError)
 		log.Printf("Failed to create file in directory: %v", err)
 		return
 	}
-	defer dst.Close()
+	defer func() {
+		dst.Close()
+		// Ensure the file is deleted if an error occurs
+		if err != nil {
+			log.Printf("Encountered error, deleting file: %s", filePath)
+			os.Remove(filePath)
+		}
+	}()
 
 	if _, err := io.Copy(dst, file); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save file: %v", err), http.StatusInternalServerError)
@@ -209,11 +217,13 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	price := r.FormValue("price")
 	if price == "" {
 		http.Error(w, "Missing price", http.StatusBadRequest)
+		log.Printf("Missing price")
 		return
 	}
 	priceFloat, err := strconv.ParseFloat(price, 64)
 	if err != nil {
 		http.Error(w, "Invalid price value", http.StatusBadRequest)
+		log.Printf("Invalid price value: %v", price)
 		return
 	}
 
