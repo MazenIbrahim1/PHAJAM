@@ -151,6 +151,38 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	// Compute hash directly from the uploaded file
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to hash file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to hash file: %v", err)
+		return
+	}
+	fileHash := hex.EncodeToString(hasher.Sum(nil))
+	log.Printf("File hash computed: %s", fileHash)
+
+	// Check if the file hash already exists in the database
+	existingFile, err := GetFileRecord(fileHash)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to check existing file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to check existing file: %v", err)
+		return
+	}
+
+	if existingFile != nil {
+		http.Error(w, fmt.Sprintf("File exists: %v", fileHash), http.StatusBadRequest)
+		log.Printf("Duplicate file rejected: %v", fileHash)
+		return
+	}
+
+	// Rewind the file reader to save the file
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to rewind file reader: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to rewind file reader: %v", err)
+		return
+	}
+
 	// Create the 'files' directory if it doesn't exist
 	err = os.MkdirAll("files", os.ModePerm)
 	if err != nil {
@@ -159,7 +191,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a file in the 'files' directory
+	// Save the file to the 'files' directory
 	dst, err := os.Create(filepath.Join("files", header.Filename))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create file in directory: %v", err), http.StatusInternalServerError)
@@ -168,31 +200,11 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer dst.Close()
 
-	// Copy the uploaded file to the destination file
 	if _, err := io.Copy(dst, file); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save file: %v", err), http.StatusInternalServerError)
 		log.Printf("Failed to save file: %v", err)
 		return
 	}
-
-	// Re-open the saved file for hashing
-	savedFile, err := os.Open(filepath.Join("files", header.Filename))
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to open saved file for hashing: %v", err), http.StatusInternalServerError)
-		log.Printf("Failed to open saved file for hashing: %v", err)
-		return
-	}
-	defer savedFile.Close()
-
-	// Compute the hash of the saved file
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, savedFile); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to hash file: %v", err), http.StatusInternalServerError)
-		log.Printf("Failed to hash file: %v", err)
-		return
-	}
-	fileHash := hex.EncodeToString(hasher.Sum(nil))
-	log.Printf("File hash computed: %s", fileHash)
 
 	price := r.FormValue("price")
 	if price == "" {
@@ -204,6 +216,8 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid price value", http.StatusBadRequest)
 		return
 	}
+
+	// Store file metadata in the database
 	err = StoreFileRecord(fileHash, header.Filename, priceFloat)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to store file metadata: %v", err), http.StatusInternalServerError)

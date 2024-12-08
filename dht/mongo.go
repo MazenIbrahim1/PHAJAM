@@ -90,7 +90,7 @@ func GetFileRecord(hash string) (map[string]interface{}, error) {
 	err := collection.FindOne(ctx, bson.M{"hash": hash}).Decode(&result)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("record not found")
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve record: %w", err)
 	}
