@@ -30,14 +30,19 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
 
   // Add a delete button column
   const deleteColumn = {
-    field: "delete",
-    headerName: "Delete",
     width: 100,
     renderCell: (params) => (
       <Button
         color="error"
         size="small"
         onClick={() => handleDeleteClick(params.row.hash, params.row.filename)}
+        sx={{
+          backgroundColor: "red",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#b83127",
+          }
+        }}
       >
         Delete
       </Button>

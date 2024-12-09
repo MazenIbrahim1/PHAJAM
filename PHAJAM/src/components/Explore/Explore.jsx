@@ -3,19 +3,36 @@ import { Box, TextField, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
+function CustomNoRowsOverlay() {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        color: "gray",
+        fontSize: "16px",
+      }}
+    >
+      No providers found
+    </Box>
+  );
+}
+
 export default function Explore() {
   const [searchQuery, setSearchQuery] = useState("");
   const [rows, setRows] = useState([]);
 
   const columns = [
-    { field: "pid", headerName: "Peer ID", flex: 2 },
+    { field: "ID", headerName: "Peer ID", flex: 2 },
     { field: "cost", headerName: "Cost", flex: 1 },
   ];
 
   const handleKeyDown = async (e) => {
     if (e.key === "Enter") {
       try {
-        const response = await fetch("/getproviders", {
+        const response = await fetch("http://localhost:8080/getproviders", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -88,7 +105,10 @@ export default function Explore() {
             outline: "none",
           },
         }}
-        getRowId={(row) => row.pid} // Ensure unique IDs for each row
+        getRowId={(row) => row.ID} // Ensure unique IDs for each row
+        slots={{
+          noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
+        }}
       />
     </Box>
   );
