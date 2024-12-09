@@ -1,26 +1,9 @@
-/*package manager
-
-import "log"
-
-func Initialize() error {
-	log.Println("Initializing Dolphin Coin backend...")
-	// Add logic to initialize services like btcd and btcwallet
-	return nil
-}
-
-func StopServices() error {
-	log.Println("Stopping Dolphin Coin backend...")
-	// Add logic to gracefully stop services
-	return nil
-} */
-
 package manager
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/creack/pty"
 	"io"
 	"log"
 	"os"
@@ -28,6 +11,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/creack/pty"
 )
 
 // Initialize initializes the DolphinCoin backend services
@@ -135,6 +120,39 @@ func CreateWallet(password string) (string, error) {
 	return walletSeed, nil
 }
 
+func DeleteWallet() error {
+	// Determine the wallet path based on the operating system
+	log.Println("Checking wallet")
+	var walletPath string
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Println("Error locating home directory")
+	}
+
+	if runtime.GOOS == "windows" {
+		walletPath = filepath.Join(homeDir, "AppData", "Local", "Btcwallet", "mainnet", "wallet.db")
+	} else if runtime.GOOS == "darwin" {
+		log.Println("darwin")
+		walletPath = filepath.Join(homeDir, "Library", "Application Support", "Btcwallet", "mainnet", "wallet.db")
+	} else {
+		log.Println("cool")
+		walletPath = filepath.Join(homeDir, ".btcwallet", "mainnet", "wallet.db")
+	}
+
+	// check if it exists
+	_, err = os.Stat(walletPath)
+	if err != nil {
+		log.Println("Wallet doesn't exists...")
+	}
+
+	// Delete wallet
+	if err := os.Remove(walletPath); err != nil {
+		return fmt.Errorf("failed to delete wallet at path %s: %v", walletPath, err)
+	}
+
+	fmt.Println("Wallet deleted successfully.")
+	return nil
+}
 
 // WalletExists checks if the wallet file exists on the system.
 func WalletExists() bool {
