@@ -9,14 +9,6 @@ export default function Proxy() {
 
   const { darkMode, setDarkMode } = useTheme();
 
-  const [peerID, setPeerID] = useState(null);
-  useEffect(() => {
-    fetch("http://localhost:8080/getPeerID")
-        .then((response) => response.text())
-        .then((data) => setPeerID(data))
-        .catch((error) => console.error("Error fetching peerID: ", error));
-  })
-
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
@@ -68,7 +60,6 @@ export default function Proxy() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ peerID: peerID }),
         });
         
         // const data = await response.json();

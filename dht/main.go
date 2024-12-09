@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"net"
 
 	"github.com/ipfs/go-cid"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -79,7 +80,45 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getLocalIPv4Address() string {
+	// Get all interfaces on the local machine
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, iface := range interfaces {
+		// Skip loopback interface (127.0.0.1) and interfaces that are down
+		if (iface.Flags & net.FlagUp) == 0 || iface.Name == "lo" {
+			continue
+		}
+
+		// Get the addresses associated with this interface
+		addrs, err := iface.Addrs()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Look for an IPv4 address
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok && ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
+
+
 func main() {
+	// Find local IPv4 address
+	ip := getLocalIPv4Address()
+	if ip != "" {
+		fmt.Println("Local IPv4 Address: ", ip)
+	} else {
+		fmt.Println("No local IPv4 address found")
+	}
+	
 	err := InitializeDatabase("mongodb://localhost:27017")
 	if err != nil {
 		fmt.Printf("Failed to initialize MongoDB: %v\n", err)
@@ -111,18 +150,22 @@ func main() {
 	go handlePeerExchange(node)
 	//go handleInput(ctx, dht)
 
+	// Register current node as a disabled proxy
+	registerProxyAsService(ctx, dhtRoute, "", node)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/getproviders", getProviders)
 	mux.HandleFunc("/upload", handleFileUpload)
 	mux.HandleFunc("/files", handleFetchFiles)
-	mux.HandleFunc("/registerProxy", registerProxy)
 
 	// New handler for returning Peer ID
-	mux.HandleFunc("/getPeerID", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
+		registerProxyAsService(ctx, dhtRoute, "", node)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
-			"peerID": node.ID().String(),
+			"message": "Registered as a proxy",
 		})
 	})
 
@@ -341,49 +384,4 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-}
-
-
-// register a peer as a proxy
-func registerProxy(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		log.Printf("Invalid request method: %s", r.Method)
-		return
-	}
-
-	var request struct {
-		PeerID string `json:"peerID"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&request)
-	if err != nil {
-		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
-		log.Printf("Error parsing JSON: %v", err)
-		return
-	}
-
-	if request.PeerID == "" {
-		http.Error(w, "PeerID is required", http.StatusBadRequest)
-		return
-	}
-
-	// Store the peerID as a proxy
-	err = StoreProxy(request.PeerID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to store proxy: %v", err), http.StatusInternalServerError)
-		log.Printf("Failed to store proxy: %v", err)
-		return
-	}
-
-	log.Printf("PeerID %s registered as a proxy", request.PeerID)
-
-	// Respond with success!
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Peer registered as a proxy",
-		"peerID": request.PeerID,
-	})
 }

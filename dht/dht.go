@@ -469,43 +469,58 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
 	// 2. Create proxy information (PeerID, IP Address, Port)
-	proxyInfo := ProxyInfo{
-		PeerID:    node.ID().String(),
-		IPAddress: ipAddress, // Example, replace with actual IP or relay info
-		Port:      8080,
+	var proxyInfo *ProxyInfo
+
+	if ipAddress != "" {
+		proxyInfo = &ProxyInfo{
+			PeerID:    node.ID().String(),
+			IPAddress: ipAddress, // Example, replace with actual IP or relay info
+			Port:      8080,
+		}
 	}
 
 	// 3. Serialize proxy information to JSON
-	proxyInfoJSON, err := json.Marshal(proxyInfo)
-	if err != nil {
-		fmt.Printf("Error marshalling proxy info: %v\n", err)
-		return
+	var proxyInfoJSON []byte
+	var err error
+	if proxyInfo != nil {
+		proxyInfoJSON, err = json.Marshal(proxyInfo)
+		if err != nil {
+			fmt.Printf("Error marshalling proxy info: %v\n", err)
+			return
+		}
 	}
 
-	hash := sha256.Sum256(proxyInfoJSON)
-
-	// 4: Encode the hash into a multihash (SHA2-256 in this case)
-	mh, err := multihash.Encode(hash[:], multihash.SHA2_256)
-	if err != nil {
-		fmt.Printf("Error encoding multihash: %v\n", err)
-		return
+	// 4. Create value
+	var value []byte
+	if proxyInfo != nil {
+		value = proxyInfoJSON
+	} else {
+		value = nil
 	}
 
-	// 5: Create the CID from the multihash
-	c := cid.NewCidV1(cid.Raw, mh)
-
-	// 6: Store proxy information in the DHT
-	err = dht.PutValue(ctx, proxyKey, proxyInfoJSON)
+	// 5. Store proxy info in the DHT
+	err = dht.PutValue(ctx, proxyKey, value)
 	if err != nil {
 		fmt.Printf("Error storing proxy info in DHT: %v\n", err)
 		return
 	}
 
-	// 7: Provide the proxy information (indicating this peer is a proxy)
-	err = dht.Provide(ctx, c, true)
-	if err != nil {
-		fmt.Printf("Failed to provide proxy info in DHT: %v\n", err)
-		return
+	// 6. Provide key to indicate the node is acting as a proxy
+	if proxyInfo != nil {
+		hash := sha256.Sum256(proxyInfoJSON)
+		mh, err := multihash.Encode(hash[:], multihash.SHA2_256)
+		if err != nil {
+			fmt.Printf("Error encoding multihash: %v\n", err)
+			return
+		}
+
+		c := cid.NewCidV1(cid.Raw, mh)
+
+		err = dht.Provide(ctx, c, true)
+		if err != nil {
+			fmt.Printf("Failed to provide proxy info in DHT: %v\n", err)
+			return
+		}
 	}
 
 	fmt.Println("Proxy registered successfully!")
