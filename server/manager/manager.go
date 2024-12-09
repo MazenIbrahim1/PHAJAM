@@ -21,7 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -129,6 +131,46 @@ func ValidateAddress(address string) error {
 	}
 
 	return nil
+}
+
+func BtcctlCommand(command string) (string, error) {
+	rpcUser := "user"
+	rpcPass := "password"
+	rpcServer := "127.0.0.1:8332"
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("Error getting working directory: %v", err)
+	}
+
+	rootPath := filepath.Dir(wd)
+    btcctlPath := filepath.Join(rootPath, "btcd", "cmd", "btcctl")
+    fmt.Printf("Executing btcctl at path: %s\n", btcctlPath)
+
+    if _, err := os.Stat(btcctlPath); os.IsNotExist(err) {
+        return "", fmt.Errorf("btcctl binary not found at %s", btcctlPath)
+    }
+
+    // Add flags before the command itself
+    params := []string{
+        "--wallet",
+        "--rpcuser=" + rpcUser,
+        "--rpcpass=" + rpcPass,
+        "--rpcserver=" + rpcServer,
+        "--notls",
+    }
+
+	params = append(params, strings.Split(command, " ") ...)
+	fmt.Printf("Executing command: %s", strings.Join(params, " "))
+
+	cmd := exec.Command("btcctl", params...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Error executing btcctl command: %s\nOutput: %s\nError: %v", strings.Join(params, " "), string(output), err)
+	}
+	
+
+	return strings.TrimSpace(string(output)), nil
 }
 
 // KillProcesses forces termination of backend services (if needed)

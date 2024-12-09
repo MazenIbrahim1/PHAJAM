@@ -60,6 +60,7 @@ import (
 
 	"github.com/MazenIbrahim1/PHAJAM/server/handlers" // Adjust this import path to match your module structure
 	"github.com/MazenIbrahim1/PHAJAM/server/manager"  // Updated to correctly reference `manager`
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -74,10 +75,19 @@ func main() {
 	// Step 3: Handle graceful shutdown
 	handleGracefulShutdown()
 
+	corsOptions := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Explicitly specify allowed origins
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"}, // Allowed HTTP methods
+		AllowedHeaders:   []string{"Content-Type", "Authorization"}, // Allowed request headers
+		AllowCredentials: true, // Allow credentials (e.g., cookies)
+	})
+
+	handler := corsOptions.Handler(http.DefaultServeMux)
+
 	// Step 4: Start the HTTP server
 	const serverAddr = ":8080"
 	log.Printf("Server is starting on %s...\n", serverAddr)
-	if err := http.ListenAndServe(serverAddr, nil); err != nil {
+	if err := http.ListenAndServe(serverAddr, handler); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }

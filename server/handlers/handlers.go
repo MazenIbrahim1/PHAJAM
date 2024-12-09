@@ -181,9 +181,9 @@ func GetNewAddress(w http.ResponseWriter, r *http.Request) {
 
 // GetBalance retrieves the wallet balance
 func GetBalance(w http.ResponseWriter, r *http.Request) {
-	balance, err := manager.CallDolphinCmd("getbalance")
+	balance, err := manager.BtcctlCommand("getbalance")
 	if err != nil {
-		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to retrieve balance: " + err.Error(), http.StatusInternalServerError)
 		return
 	}
 
