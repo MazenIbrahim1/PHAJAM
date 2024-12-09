@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const { exec } = require("child_process");
 
 // Function to determine the wallet path based on the operating system
 function getWalletPath() {
@@ -22,10 +23,48 @@ function checkWalletExists() {
   return walletExists;
 }
 
-// IPC handler for wallet status
+// IPC handler for checking wallet existence
 ipcMain.handle("check-wallet", async () => {
   console.log("[Main Process] Handling 'check-wallet' request...");
   return checkWalletExists();
+});
+
+// IPC handler for creating a wallet
+ipcMain.handle("create-wallet", async (event, password) => {
+  try {
+    console.log(`[Main Process] Attempting to create a wallet with the provided password...`);
+    const walletCreationCommand = `btcwallet --create`;
+
+    return new Promise((resolve, reject) => {
+      const walletProcess = exec(walletCreationCommand);
+
+      walletProcess.stdin.write(`${password}\n`);
+      walletProcess.stdin.write(`${password}\n`);
+      walletProcess.stdin.end();
+
+      walletProcess.stdout.on("data", (data) => {
+        console.log(`[Main Process] Wallet creation process: ${data}`);
+      });
+
+      walletProcess.stderr.on("data", (data) => {
+        console.error(`[Main Process] Wallet creation error: ${data}`);
+        reject({ success: false, error: data });
+      });
+
+      walletProcess.on("exit", (code) => {
+        if (code === 0) {
+          console.log("[Main Process] Wallet created successfully!");
+          resolve({ success: true });
+        } else {
+          console.error(`[Main Process] Wallet creation failed with exit code ${code}.`);
+          reject({ success: false, error: `Wallet creation failed with exit code ${code}.` });
+        }
+      });
+    });
+  } catch (error) {
+    console.error("[Main Process] Error during wallet creation:", error);
+    return { success: false, error: error.message };
+  }
 });
 
 // Create the Electron browser window

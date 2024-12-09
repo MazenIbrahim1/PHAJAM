@@ -1,54 +1,3 @@
-// main.go
-/*
-package main
-
-import (
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/MazenIbrahim1/PHAJAM/server/handlers" // Ensure this import path matches your module structure
-	"github.com/MazenIbrahim1/PHAJAM/server/manager"  // Updated to reference `manager`
-)
-
-func main() {
-	// Initialize the application
-	if err := manager.Initialize(); err != nil { // Changed to `manager.Initialize`
-		log.Fatalf("Initialization failed: %v", err)
-	}
-
-	// Set up HTTP routes
-	handlers.SetupRoutes()
-
-	// Handle graceful shutdown
-	handleGracefulShutdown()
-
-	// Start the server
-	const serverAddr = ":8080"
-	log.Printf("Server is starting on %s...\n", serverAddr)
-
-	if err := http.ListenAndServe(serverAddr, nil); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
-	}
-}
-
-func handleGracefulShutdown() {
-	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-stopChan
-		log.Println("Shutdown signal received. Stopping services...")
-		if err := manager.StopServices(); err != nil { // Changed to `manager.StopServices`
-			log.Fatalf("Failed to stop services: %v", err)
-		}
-		os.Exit(0)
-	}()
-}
-*/
-
 package main
 
 import (
@@ -84,15 +33,39 @@ func main() {
 
 // setupRoutes registers all HTTP routes defined in the handlers package
 func setupRoutes() {
-	http.HandleFunc("/", handlers.GetRoot)
-	http.HandleFunc("/hello", handlers.GetHello)
-	http.HandleFunc("/wallet/create", handlers.CreateWallet)
-	http.HandleFunc("/wallet/login", handlers.Login)
-	http.HandleFunc("/wallet/logout", handlers.Logout)
-	http.HandleFunc("/wallet/address/new", handlers.GetNewAddress)
-	http.HandleFunc("/wallet/balance", handlers.GetBalance)
-	http.HandleFunc("/wallet/mine", handlers.Mine)
-	http.HandleFunc("/wallet/send", handlers.SendToAddress)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", handlers.GetRoot)
+	// mux.HandleFunc("/hello", handlers.GetHello)
+	mux.HandleFunc("/wallet/create", handlers.CreateWallet)
+	mux.HandleFunc("/wallet/check", handlers.CheckWallet)
+	mux.HandleFunc("/wallet/login", handlers.Login)
+	mux.HandleFunc("/wallet/logout", handlers.Logout)
+	mux.HandleFunc("/wallet/address/new", handlers.GetNewAddress)
+	mux.HandleFunc("/wallet/balance", handlers.GetBalance)
+	mux.HandleFunc("/wallet/mine", handlers.Mine)
+	mux.HandleFunc("/wallet/send", handlers.SendToAddress)
+
+	// Wrap the mux with CORS middleware
+	http.Handle("/", corsMiddleware(mux))
+}
+
+// corsMiddleware adds the necessary CORS headers to HTTP responses
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // handleGracefulShutdown ensures services stop cleanly when the application exits

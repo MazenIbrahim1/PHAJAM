@@ -1,46 +1,73 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, TextField, Button, Link, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Link,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [password, setPassword] = useState(""); // Track password input
   const [walletExists, setWalletExists] = useState(null); // Track wallet existence
   const [walletStatus, setWalletStatus] = useState("Fetching wallet status...");
   const [openWarningDialog, setOpenWarningDialog] = useState(false); // Warning dialog state
+  const [errorMessage, setErrorMessage] = useState(""); // Error message for login
 
-  // Function to fetch wallet status dynamically
+  // Fetch wallet status using HTTP request
   const fetchWalletStatus = async () => {
     try {
-      console.log("[Renderer] Fetching wallet status...");
-      const exists = await window.walletApi.checkWallet();
-      console.log("[Renderer] Wallet exists:", exists);
-      setWalletExists(exists);
+      const response = await fetch("http://localhost:8080/wallet/check");
+      if (!response.ok) throw new Error("Failed to fetch wallet status");
+
+      const data = await response.json();
+      setWalletExists(data.exists);
       setWalletStatus(
-        exists
-          ? "Wallet found on local device."
-          : "You do not have a wallet downloaded on your local device or we could not find it.\n You must have a wallet in order to log in!"
+        data.exists
+          ? "Wallet found. You can log in now."
+          : "No wallet found. Please create a wallet to continue."
       );
     } catch (error) {
-      console.error("[Renderer] Error fetching wallet status:", error);
+      console.error("Error fetching wallet status:", error);
+      setWalletExists(false);
       setWalletStatus("Error checking wallet status.");
     }
   };
 
-  // Fetch wallet status every time the login page is mounted
   useEffect(() => {
     fetchWalletStatus();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!walletExists) {
       setWalletStatus("Cannot log in. No wallet address found.");
       return;
     }
-    navigate("/home"); // Navigate to the home page
-  };
 
-  const handleLearnMore = () => {
-    navigate("/learn-more");
+    try {
+      const response = await fetch("http://localhost:8080/wallet/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        navigate("/home"); // Navigate to home page
+      } else {
+        const data = await response.json();
+        setErrorMessage(data.message || "Login failed. Please check your password.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      setErrorMessage("An error occurred during login. Please try again.");
+    }
   };
 
   const handleGenerateKeys = () => {
@@ -67,20 +94,18 @@ export default function LoginPage() {
         backgroundColor: "#f0f4f8",
       }}
     >
-      <Typography
-        variant="h4"
-        sx={{
-          marginBottom: 3,
-          fontWeight: "bold",
-        }}
-      >
+      <Typography variant="h4" sx={{ marginBottom: 3, fontWeight: "bold" }}>
         Welcome to Dolphin Data Sharing!
       </Typography>
-      <Typography sx={{ marginTop: 1 }}>Log into your account with the password to your wallet.</Typography>
+      <Typography sx={{ marginTop: 1 }}>
+        Log into your account with the password to your wallet.
+      </Typography>
       <TextField
         label="Wallet Password"
         type="password"
         variant="outlined"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         sx={{
           marginTop: 2,
           marginBottom: 3,
@@ -88,6 +113,8 @@ export default function LoginPage() {
           backgroundColor: "white",
         }}
         disabled={!walletExists} // Disable if no wallet is found
+        error={!!errorMessage} // Show error state if login fails
+        helperText={errorMessage} // Display error message below the input
       />
       <Button
         variant="contained"
@@ -98,7 +125,7 @@ export default function LoginPage() {
           fontWeight: "bold",
         }}
         onClick={handleLogin}
-        disabled={!walletExists} // Disable if no wallet is found
+        disabled={!walletExists || !password} // Disable if no wallet is found or password is empty
       >
         Log In
       </Button>
@@ -129,7 +156,7 @@ export default function LoginPage() {
       <Typography variant="body2">
         Not sure about Dolphin Data Sharing?{" "}
         <Link
-          onClick={handleLearnMore}
+          onClick={() => navigate("/learn-more")}
           underline="always"
           style={{ cursor: "pointer" }}
         >
@@ -151,7 +178,7 @@ export default function LoginPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeWarningDialog} color="primary" autoFocus>
+          <Button onClick={closeWarningDialog} color="primary" variant="contained" autoFocus>
             Go Back
           </Button>
         </DialogActions>

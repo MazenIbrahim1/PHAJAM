@@ -1,211 +1,196 @@
-/*package handlers
-
-import (
-	"encoding/json"
-	"net/http"
-)
-
-func SetupRoutes() {
-	http.HandleFunc("/", getRoot)
-	http.HandleFunc("/createWallet", createWallet)
-	http.HandleFunc("/getBalance", getBalance)
-	// Add more routes as needed
-}
-
-func getRoot(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{"message": "Welcome to Dolphin Coin!"}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-func createWallet(w http.ResponseWriter, r *http.Request) {
-	// Logic to create a wallet
-	response := map[string]string{"walletID": "12345"} // Placeholder
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-func getBalance(w http.ResponseWriter, r *http.Request) {
-	// Logic to get wallet balance
-	response := map[string]float64{"balance": 100.50} // Placeholder
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-} */
-
 package handlers
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"math/big"
+	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/MazenIbrahim1/PHAJAM/server/manager" // Adjusted to match your project structure
+	"github.com/MazenIbrahim1/PHAJAM/server/manager" // Adjust this import to match your project structure
 )
 
-// GetRoot returns a welcome message
+// GetRoot returns a welcome message.
 func GetRoot(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{
-		"message": "Welcome to the DolphinCoin API!",
-	}
+	response := map[string]string{"message": "Welcome to the DolphinCoin API!"}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+	log.Println("Root endpoint accessed.")
 }
 
-// GetHello provides a hello message with a timestamp
-func GetHello(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{
-		"message":   "Hello from DolphinCoin!",
-		"timestamp": time.Now().Format(time.RFC3339),
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-// GenerateRandomPassword generates a secure random password
-func GenerateRandomPassword(length int) (string, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	var password strings.Builder
-	for i := 0; i < length; i++ {
-		randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		if err != nil {
-			return "", fmt.Errorf("failed to generate random index: %v", err)
-		}
-		password.WriteByte(charset[randomIndex.Int64()])
-	}
-	return password.String(), nil
-}
-
-// CreateWallet creates a new DolphinCoin wallet
 func CreateWallet(w http.ResponseWriter, r *http.Request) {
-	password, err := GenerateRandomPassword(12)
-	if err != nil {
-		http.Error(w, "Failed to generate password: "+err.Error(), http.StatusInternalServerError)
+	var request struct {
+		Password string `json:"password"`
+	}
+
+	// Parse JSON body
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Error decoding JSON payload: %v", err)
 		return
 	}
 
-	_, err = manager.CreateWallet(password)
-	if err != nil {
-		http.Error(w, "Failed to create wallet: "+err.Error(), http.StatusInternalServerError)
+	// Validate password
+	if len(request.Password) < 8 || len(request.Password) > 15 {
+		http.Error(w, `{"error": "Password must be between 8 and 15 characters"}`, http.StatusBadRequest)
+		log.Printf("Password validation failed for request: %+v", request)
 		return
 	}
 
-	time.Sleep(3 * time.Second)
+	log.Println("Creating a new wallet...")
 
+	// Construct the command to create a wallet
+	// cmd := exec.Command("btcwallet", "--create", "--username", "user", "--password", request.Password)
+	cmd := exec.Command("btcwallet", "--create")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error": "Failed to create wallet: %s"}`, string(output)), http.StatusInternalServerError)
+		log.Printf("Error creating wallet: %v, output: %s", err, string(output))
+		return
+	}
+
+	log.Println("Wallet created successfully.")
+
+	// Generate a new mining address
 	newAddress, err := manager.CallDolphinCmd("getnewaddress")
 	if err != nil {
-		http.Error(w, "Failed to generate mining address: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to generate mining address"}`, http.StatusInternalServerError)
+		log.Printf("Error generating mining address: %v", err)
 		return
 	}
 
+	// Configure the mining address
 	if err := manager.ConfigureMiningAddress(newAddress); err != nil {
-		http.Error(w, "Failed to configure mining address: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to configure mining address"}`, http.StatusInternalServerError)
+		log.Printf("Error configuring mining address: %v", err)
 		return
 	}
 
-	unlockCmd := fmt.Sprintf("walletpassphrase %s %d", password, 60*60)
-	if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
-		http.Error(w, "Failed to unlock wallet: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	// Respond with success
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":       "Wallet created and mining address configured successfully!",
-		"password":      password,
+		"message":       "Wallet created successfully!",
 		"miningAddress": newAddress,
 	})
+	log.Println("Wallet creation process completed successfully.")
 }
 
-// Login logs in the user by unlocking the wallet and starting DolphinCoin services
+// CheckWallet verifies if a wallet exists on the system.
+func CheckWallet(w http.ResponseWriter, r *http.Request) {
+	exists := manager.WalletExists() // Ensure this function is implemented in your manager package
+	response := map[string]bool{"exists": exists}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	log.Printf("Wallet existence check: %v", exists)
+}
+
+// Login logs in the user by unlocking the wallet.
 func Login(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Password string `json:"password"`
 	}
+
+	// Parse JSON body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Error decoding JSON payload: %v", err)
 		return
 	}
 
+	// Start wallet services
 	if err := manager.StartWallet(); err != nil {
-		http.Error(w, "Failed to start wallet. Please create a wallet first.", http.StatusUnauthorized)
+		http.Error(w, `{"error": "Failed to start wallet. Please create a wallet first."}`, http.StatusUnauthorized)
+		log.Printf("Error starting wallet: %v", err)
 		return
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(3 * time.Second) // Simulate delay
 
-	unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 60*60)
+	// Unlock wallet
+	unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 3600)
 	if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
-		http.Error(w, "Failed to unlock wallet: "+err.Error(), http.StatusUnauthorized)
+		http.Error(w, `{"error": "Failed to unlock wallet. Check your password."}`, http.StatusUnauthorized)
+		log.Printf("Error unlocking wallet: %v", err)
 		return
 	}
 
+	// Respond with success
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully."})
+	log.Println("Wallet login successful.")
 }
 
-// Logout locks the wallet and stops DolphinCoin services
+// Logout locks the wallet and stops services.
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if _, err := manager.CallDolphinCmd("walletlock"); err != nil {
-		http.Error(w, "Failed to lock wallet: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to lock wallet"}`, http.StatusInternalServerError)
+		log.Printf("Error locking wallet: %v", err)
 		return
 	}
 
 	if err := manager.StopWallet(); err != nil {
-		http.Error(w, "Failed to stop wallet service: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
+		log.Printf("Error stopping wallet service: %v", err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Wallet locked and services stopped successfully!",
-	})
+	json.NewEncoder(w).Encode(map[string]string{"message": "Wallet locked and services stopped successfully!"})
+	log.Println("Wallet logout successful.")
 }
 
-// GetNewAddress generates a new wallet address
+// GetNewAddress generates a new wallet address.
 func GetNewAddress(w http.ResponseWriter, r *http.Request) {
 	newAddress, err := manager.CallDolphinCmd("getnewaddress")
 	if err != nil {
-		http.Error(w, "Failed to generate new address: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to generate new address"}`, http.StatusInternalServerError)
+		log.Printf("Error generating new address: %v", err)
 		return
 	}
 
 	response := map[string]string{"newAddress": newAddress}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+	log.Println("New wallet address generated successfully.")
 }
 
-// GetBalance retrieves the wallet balance
+// GetBalance retrieves the wallet balance.
 func GetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := manager.CallDolphinCmd("getbalance")
 	if err != nil {
-		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to retrieve balance"}`, http.StatusInternalServerError)
+		log.Printf("Error retrieving balance: %v", err)
 		return
 	}
 
 	response := map[string]string{"balance": balance}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+	log.Println("Wallet balance retrieved successfully.")
 }
 
-// Mine triggers mining of a specified number of blocks
+// Mine triggers mining of a specified number of blocks.
 func Mine(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		NumBlocks int `json:"num_blocks"`
 	}
+
+	// Parse JSON body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.NumBlocks <= 0 {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Invalid request payload: %v", err)
 		return
 	}
 
+	// Start mining
 	cmd := fmt.Sprintf("generate %d", request.NumBlocks)
 	output, err := manager.CallDolphinCmd(cmd)
 	if err != nil {
-		http.Error(w, "Failed to start mining: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to start mining"}`, http.StatusInternalServerError)
+		log.Printf("Error starting mining: %v", err)
 		return
 	}
 
@@ -215,45 +200,59 @@ func Mine(w http.ResponseWriter, r *http.Request) {
 		"message":    "Mining started successfully",
 		"block_hash": blockHashes,
 	})
+	log.Println("Mining started successfully.")
 }
 
-// SendToAddress sends funds to a specific address
+// SendToAddress sends funds to a specific address.
 func SendToAddress(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Address string `json:"address"`
 		Amount  string `json:"amount"`
 	}
+
+	// Parse JSON body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Error decoding JSON payload: %v", err)
 		return
 	}
 
+	// Validate recipient address
 	if err := manager.ValidateAddress(request.Address); err != nil {
-		http.Error(w, "Invalid recipient address: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid recipient address"}`, http.StatusBadRequest)
+		log.Printf("Invalid recipient address: %v", err)
 		return
 	}
 
+	// Get wallet balance
 	balance, err := manager.GetWalletBalance()
 	if err != nil {
-		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to retrieve balance"}`, http.StatusInternalServerError)
+		log.Printf("Error retrieving wallet balance: %v", err)
 		return
 	}
 
-	amount, err := strconv.ParseFloat(request.Amount, 64)
-	if err != nil || amount > balance {
-		http.Error(w, "Insufficient funds or invalid amount.", http.StatusBadRequest)
+	// Validate amount
+	amountFloat, err := strconv.ParseFloat(request.Amount, 64)
+	if err != nil || amountFloat > balance {
+		http.Error(w, `{"error": "Insufficient funds or invalid amount"}`, http.StatusBadRequest)
+		log.Printf("Error validating amount: %v", err)
 		return
 	}
 
+	// Send funds
 	txid, err := manager.CallDolphinCmd(fmt.Sprintf("sendtoaddress %s %s", request.Address, request.Amount))
 	if err != nil {
-		http.Error(w, "Failed to send funds: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, `{"error": "Failed to send funds"}`, http.StatusInternalServerError)
+		log.Printf("Error sending funds: %v", err)
 		return
 	}
 
+	// Respond with success
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Funds sent successfully!",
 		"txid":    txid,
 	})
+	log.Println("Funds sent successfully.")
 }

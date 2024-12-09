@@ -21,7 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -59,14 +62,36 @@ func CallDolphinCmd(cmd string) (string, error) {
 	return out.String(), nil
 }
 
-// CreateWallet creates a new wallet with the given password
-func CreateWallet(password string) (string, error) {
-	log.Println("Creating a new wallet...")
-	output, err := CallDolphinCmd(fmt.Sprintf("createwallet %s", password))
+// CreateWallet creates a new wallet using the provided password.
+func CreateWallet(password string) error {
+	cmd := exec.Command("btcwallet", "--create", fmt.Sprintf("--passphrase=%s", password))
+	output, err := cmd.CombinedOutput() // Capture both stdout and stderr
 	if err != nil {
-		return "", fmt.Errorf("failed to create wallet: %w", err)
+		return fmt.Errorf("failed to create wallet: %s, output: %s", err.Error(), string(output))
 	}
-	return output, nil
+	return nil
+}
+
+// WalletExists checks if the wallet file exists on the system.
+func WalletExists() bool {
+	// Determine the wallet path based on the operating system
+	var walletPath string
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	if runtime.GOOS == "windows" {
+		walletPath = filepath.Join(homeDir, "AppData", "Local", "Btcwallet", "mainnet", "wallet.db")
+	} else if runtime.GOOS == "darwin" {
+		walletPath = filepath.Join(homeDir, "Library", "Application Support", "Btcwallet", "mainnet", "wallet.db")
+	} else {
+		walletPath = filepath.Join(homeDir, ".btcwallet", "mainnet", "wallet.db")
+	}
+
+	// Check if the wallet file exists
+	_, err = os.Stat(walletPath)
+	return err == nil
 }
 
 // StartWallet starts the DolphinCoin wallet service
