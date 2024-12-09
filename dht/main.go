@@ -64,7 +64,7 @@ func main() {
 	mux.HandleFunc("/delete", handleDeleteFile)
 
 	fmt.Println("Starting server at port 8080")
-	if err := http.ListenAndServe("localhost:8080", enableCORS(mux)); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:8080", enableCORS(logRequests(mux))); err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
 
@@ -74,6 +74,13 @@ func main() {
 	defer node.Close()
 
 	select {}
+}
+
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received request: Method=%s, URL=%s, RemoteAddr=%s", r.Method, r.URL.String(), r.RemoteAddr)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // CORS middleware

@@ -179,7 +179,7 @@ export default function Files() {
         </Button>
       </Box>
       <Typography sx={{ color: "red" }}>
-        *These files still persist even if you delete the files on your computer! Select a file to start deleting instead.
+        *These files still persist even if you delete the files on your computer! Use the delete button instead.
       </Typography>
       <DataTable rows={files} columns={columns} search={search} onDelete={handleDelete} />
 
