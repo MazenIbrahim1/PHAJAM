@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 )
 
-require github.com/creack/pty v1.1.24 // indirect
+require github.com/creack/pty v1.1.24 // direct
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.1.3 // indirect
