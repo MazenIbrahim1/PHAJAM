@@ -9,6 +9,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/ipfs/go-cid"
@@ -39,7 +42,6 @@ func enableCORS(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -144,7 +146,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to parse form: %v", err), http.StatusBadRequest)
 		log.Printf("Failed to parse form: %v", err)
@@ -159,6 +161,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	// Compute hash directly from the uploaded file
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to hash file: %v", err), http.StatusInternalServerError)
@@ -166,14 +169,82 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fileHash := hex.EncodeToString(hasher.Sum(nil))
-	log.Printf("File hash computed: %s", fileHash)
 
-	err = StoreFileRecord(fileHash, header.Filename)
+	// Check if the file hash already exists in the database
+	existingFile, err := GetFileRecord(fileHash)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to check existing file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to check existing file: %v", err)
+		return
+	}
+
+	if existingFile != nil {
+		http.Error(w, fmt.Sprintf("File exists: %v", header.Filename), http.StatusBadRequest)
+		log.Printf("Duplicate file rejected: %v", fileHash)
+		return
+	}
+
+	// Rewind the file reader to save the file
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to rewind file reader: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to rewind file reader: %v", err)
+		return
+	}
+
+	// Create the 'files' directory if it doesn't exist
+	err = os.MkdirAll("files", os.ModePerm)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create directory: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to create directory: %v", err)
+		return
+	}
+
+	// Save the file to the 'files' directory
+	filePath := filepath.Join("files", header.Filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create file in directory: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to create file in directory: %v", err)
+		return
+	}
+	defer func() {
+		dst.Close()
+		// Ensure the file is deleted if an error occurs
+		if err != nil {
+			log.Printf("Encountered error, deleting file: %s", filePath)
+			os.Remove(filePath)
+		}
+	}()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save file: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to save file: %v", err)
+		return
+	}
+
+	price := r.FormValue("price")
+	if price == "" {
+		http.Error(w, "Missing price", http.StatusBadRequest)
+		log.Printf("Missing price")
+		return
+	}
+	priceFloat, err := strconv.ParseFloat(price, 64)
+	if err != nil {
+		http.Error(w, "Invalid price value", http.StatusBadRequest)
+		log.Printf("Invalid price value: %v", price)
+		return
+	}
+
+	// Store file metadata in the database
+	err = StoreFileRecord(fileHash, header.Filename, priceFloat)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to store file metadata: %v", err), http.StatusInternalServerError)
 		log.Printf("Failed to store file metadata: %v", err)
 		return
 	}
+
+	provideKey(ctx, dhtRoute, fileHash, true)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -200,6 +271,78 @@ func handleFetchFiles(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(records)
 }
+
+func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		log.Printf("Invalid request method: %s", r.Method)
+		return
+	}
+
+	// Parse the request body
+	var request struct {
+		Hash string `json:"hash"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid JSON request body", http.StatusBadRequest)
+		log.Printf("Error decoding JSON request body: %v", err)
+		return
+	}
+
+	if request.Hash == "" {
+		http.Error(w, "Hash is required", http.StatusBadRequest)
+		log.Println("Error: Hash is required")
+		return
+	}
+
+	// Retrieve the file record from the database
+	record, err := GetFileRecord(request.Hash)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to retrieve record: %v", err), http.StatusInternalServerError)
+		log.Printf("Error retrieving file record: %v", err)
+		return
+	}
+	if record == nil {
+		http.Error(w, "File record not found", http.StatusNotFound)
+		log.Printf("File record not found for hash: %s", request.Hash)
+		return
+	}
+
+	// Get the filename from the record
+	filename, ok := record["filename"].(string)
+	if !ok {
+		http.Error(w, "Invalid record format", http.StatusInternalServerError)
+		log.Println("Error: Invalid record format - filename not found")
+		return
+	}
+
+	// Delete the file from the filesystem
+	filePath := filepath.Join("files", filename)
+	if err := os.Remove(filePath); err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("File not found on disk, skipping deletion: %s", filePath)
+		} else {
+			http.Error(w, fmt.Sprintf("Failed to delete file: %v", err), http.StatusInternalServerError)
+			log.Printf("Error deleting file from filesystem: %v", err)
+			return
+		}
+	}
+
+	// Delete the record from the database
+	err = DeleteFileRecord(request.Hash)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete record: %v", err), http.StatusInternalServerError)
+		log.Printf("Error deleting file record from database: %v", err)
+		return
+	}
+
+	provideKey(ctx, dhtRoute, request.Hash, false)
+
+	// Send response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
 
 // register a peer as a proxy
 func registerProxy(w http.ResponseWriter, r *http.Request) {
