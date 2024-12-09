@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/creack/pty"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -63,14 +65,76 @@ func CallDolphinCmd(cmd string) (string, error) {
 }
 
 // CreateWallet creates a new wallet using the provided password.
-func CreateWallet(password string) error {
-	cmd := exec.Command("btcwallet", "--create", fmt.Sprintf("--passphrase=%s", password))
-	output, err := cmd.CombinedOutput() // Capture both stdout and stderr
+func CreateWallet(password string) (string, error) {
+	log.Println("Executing the create command from btcwallet using pty...")
+
+	// Command to create the wallet
+	cmd := exec.Command("btcwallet", "--create")
+
+	// Create a pseudo-terminal for the command
+	ptyFile, err := pty.Start(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to create wallet: %s, output: %s", err.Error(), string(output))
+		return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
 	}
-	return nil
+	defer ptyFile.Close()
+
+	// Buffer for capturing output
+	var outputBuffer strings.Builder
+	var walletSeed string
+
+	// Goroutine to read output in real-time
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := ptyFile.Read(buf)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Printf("Error reading from pty: %v", err)
+				return
+			}
+			output := string(buf[:n])
+			outputBuffer.WriteString(output)
+			log.Println("btcwallet output:", output)
+
+			// Write input as required
+			log.Println("Responding to passphrase prompt...")
+			ptyFile.Write([]byte(password + "\n"))
+			log.Println("Responding to confirm passphrase prompt...")
+			ptyFile.Write([]byte(password + "\n"))
+			log.Println("Responding to additional encryption prompt...")
+			ptyFile.Write([]byte("no\n"))
+			log.Println("Responding to existing seed prompt...")
+			ptyFile.Write([]byte("no\n"))
+			ptyFile.Write([]byte("OK\n"))
+			if strings.Contains(output, "Your wallet generation seed is:") {
+				log.Println("Capturing wallet seed...")
+				lines := strings.Split(output, "\n")
+				for i, line := range lines {
+					if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
+						walletSeed = lines[i+1]
+						break
+					}
+				}
+			}
+		}
+	}()
+
+	// Wait for the command to finish
+	if err := cmd.Wait(); err != nil {
+		return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
+	}
+
+	// Check if seed was captured
+	if walletSeed == "" {
+		return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
+	}
+
+	log.Println("Wallet creation successful. Wallet seed:", walletSeed)
+	return walletSeed, nil
 }
+
 
 // WalletExists checks if the wallet file exists on the system.
 func WalletExists() bool {
@@ -98,12 +162,33 @@ func WalletExists() bool {
 }
 
 // StartWallet starts the DolphinCoin wallet service
-func StartWallet() error {
+func StartWalletServer() error {
 	log.Println("Starting DolphinCoin wallet service...")
-	_, err := CallDolphinCmd("startwallet")
-	if err != nil {
-		return fmt.Errorf("failed to start wallet service: %w", err)
+	rpcUser := "user"
+	rpcPass := "password"
+	rpcConnect := "127.0.0.1:8334"
+
+	params := []string {
+		"--btcdusername=" + rpcUser,
+		"--btcdpassword=" + rpcPass,
+		"--rpcconnect=" + rpcConnect,
+		"--noclienttls",
+		"--noservertls",
 	}
+
+	// Command to start server with above params
+	cmd := exec.Command("btcwallet", params...)
+	fmt.Printf("Executing command: btcwallet %s", strings.Join(params, " "))
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Failed to start wallet service: %s\nOutput: %s", err.Error(), string(output))
+		return fmt.Errorf("error starting wallet service: %s, output: %s", err.Error(), string(output))
+	}
+
+	// Log the success message
+	log.Println("DolphinCoin wallet service started successfully.")
+	log.Println(string(output))
 	return nil
 }
 
@@ -159,23 +244,25 @@ func ValidateAddress(address string) error {
 	return nil
 }
 
+// Handle btcctl commands
 func BtcctlCommand(command string) (string, error) {
 	rpcUser := "user"
 	rpcPass := "password"
 	rpcServer := "127.0.0.1:8332"
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("Error getting working directory: %v", err)
-	}
+	// In case we have to create an executable in the directory
+	// wd, err := os.Getwd()
+	// if err != nil {
+	// 	return "", fmt.Errorf("Error getting working directory: %v", err)
+	// }
 
-	rootPath := filepath.Dir(wd)
-	btcctlPath := filepath.Join(rootPath, "btcd", "cmd", "btcctl")
-	fmt.Printf("Executing btcctl at path: %s\n", btcctlPath)
+	// rootPath := filepath.Dir(wd)
+	// btcctlPath := filepath.Join(rootPath, "btcd", "cmd", "btcctl")
+	// fmt.Printf("Executing btcctl at path: %s\n", btcctlPath)
 
-	if _, err := os.Stat(btcctlPath); os.IsNotExist(err) {
-		return "", fmt.Errorf("btcctl binary not found at %s", btcctlPath)
-	}
+	// if _, err := os.Stat(btcctlPath); os.IsNotExist(err) {
+	// 	return "", fmt.Errorf("btcctl binary not found at %s", btcctlPath)
+	// }
 
 	// Add flags before the command itself
 	params := []string{
@@ -187,9 +274,8 @@ func BtcctlCommand(command string) (string, error) {
 	}
 
 	params = append(params, strings.Split(command, " ")...)
-	fmt.Printf("Executing command: %s", strings.Join(params, " "))
-
 	cmd := exec.Command("btcctl", params...)
+	fmt.Printf("Executing command: %s", strings.Join(params, " "))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("Error executing btcctl command: %s\nOutput: %s\nError: %v", strings.Join(params, " "), string(output), err)

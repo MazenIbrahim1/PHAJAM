@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -41,41 +40,31 @@ func CreateWallet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Creating a new wallet...")
-
-	// Construct the command to create a wallet
-	// cmd := exec.Command("btcwallet", "--create", "--username", "user", "--password", request.Password)
-	cmd := exec.Command("btcwallet", "--create")
-	output, err := cmd.CombinedOutput()
+	seed, err := manager.CreateWallet(request.Password)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error": "Failed to create wallet: %s"}`, string(output)), http.StatusInternalServerError)
-		log.Printf("Error creating wallet: %v, output: %s", err, string(output))
+		// Handle wallet creation error
+		http.Error(w, `{"error": "Failed to create wallet"}`, http.StatusInternalServerError)
+		log.Printf("Failed to create wallet: %v", err)
 		return
 	}
 
-	log.Println("Wallet created successfully.")
+	// Respond with the wallet seed if successful
+	response := struct {
+		Message string `json:"message"`
+		Seed    string `json:"seed"`
+	}{
+		Message: "Wallet created successfully",
+		Seed:    seed,
+	}
 
-	// Generate a new mining address
-	newAddress, err := manager.CallDolphinCmd("getnewaddress")
-	if err != nil {
-		http.Error(w, `{"error": "Failed to generate mining address"}`, http.StatusInternalServerError)
-		log.Printf("Error generating mining address: %v", err)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, `{"error": "Failed to encode response"}`, http.StatusInternalServerError)
+		log.Printf("Error encoding response: %v", err)
 		return
 	}
 
-	// Configure the mining address
-	if err := manager.ConfigureMiningAddress(newAddress); err != nil {
-		http.Error(w, `{"error": "Failed to configure mining address"}`, http.StatusInternalServerError)
-		log.Printf("Error configuring mining address: %v", err)
-		return
-	}
-
-	// Respond with success
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message":       "Wallet created successfully!",
-		"miningAddress": newAddress,
-	})
-	log.Println("Wallet creation process completed successfully.")
+	log.Println("Wallet created successfully, seed returned.")
 }
 
 // CheckWallet verifies if a wallet exists on the system.
@@ -101,7 +90,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start wallet services
-	if err := manager.StartWallet(); err != nil {
+	if err := manager.StartWalletServer(); err != nil {
 		http.Error(w, `{"error": "Failed to start wallet. Please create a wallet first."}`, http.StatusUnauthorized)
 		log.Printf("Error starting wallet: %v", err)
 		return
