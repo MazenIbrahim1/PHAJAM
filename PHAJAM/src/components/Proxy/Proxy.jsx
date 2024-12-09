@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, FormControlLabel, Switch, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from "@mui/material";
 import RouterIcon from '@mui/icons-material/Router';
 import CloseIcon from '@mui/icons-material/Close';
@@ -6,7 +6,17 @@ import { useTheme } from "../../ThemeContext";
 import ProxyBox from "./ProxyBox";
 
 export default function Proxy() {
+
   const { darkMode, setDarkMode } = useTheme();
+
+  const [peerID, setPeerID] = useState(null);
+  useEffect(() => {
+    fetch("http://localhost:8080/getPeerID")
+        .then((response) => response.text())
+        .then((data) => setPeerID(data))
+        .catch((error) => console.error("Error fetching peerID: ", error));
+  })
+
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
@@ -49,9 +59,26 @@ export default function Proxy() {
     setPriceOpened(true);
   }
 
-  const closePrice = () => {
-    setPriceOpened(false);
-    setIsProxy(true);
+  const closePrice = async () => {
+
+    // Register as proxy
+    try {
+        const response = await fetch("http://localhost:8080/registerProxy", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ peerID: peerID }),
+        });
+        
+        // const data = await response.json();
+        if (response.ok) {
+            setPriceOpened(false);
+            setIsProxy(true);
+        }
+    } catch (error) {
+
+    }
   }
 
   const cancelPrice = () => {
