@@ -345,11 +345,11 @@ export default function GenerateKeys() {
       setPasswordMatch(false);
       return;
     }
-  
+
     setLoading(true); // Show loading dialog
     setDialogMessage("Creating your wallet. Please wait...");
     setDialogOpen(true);
-  
+
     try {
       // Call backend to create the wallet with the user's password
       const response = await fetch("http://localhost:8080/wallet/create", {
@@ -357,9 +357,9 @@ export default function GenerateKeys() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         setCreateSuccess(true);
         setDialogMessage("Wallet created successfully! You can now log in.");
@@ -375,7 +375,6 @@ export default function GenerateKeys() {
       setLoading(false); // Stop loading animation
     }
   };
-  
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -387,7 +386,8 @@ export default function GenerateKeys() {
       passwordValidations.length &&
       passwordValidations.number &&
       passwordValidations.specialChar &&
-      passwordMatch
+      passwordMatch && // Ensure passwords match
+      password === confirmPassword // Double-check the password match
     );
   };
 
@@ -435,7 +435,10 @@ export default function GenerateKeys() {
           type="password"
           variant="outlined"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setPasswordMatch(e.target.value === password); // Check if passwords match
+          }}
           required
         />
         <Typography
@@ -472,7 +475,7 @@ export default function GenerateKeys() {
         <Button
           variant="contained"
           onClick={handleSavePassword}
-          disabled={!isPasswordValid()}
+          disabled={!isPasswordValid()} // Button enabled only if valid
         >
           Create Wallet
         </Button>

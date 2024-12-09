@@ -17,7 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState(""); // Track password input
   const [walletExists, setWalletExists] = useState(null); // Track wallet existence
-  const [walletStatus, setWalletStatus] = useState("Fetching wallet status...");
+  const [walletStatus, setWalletStatus] = useState(""); // Display status
   const [openWarningDialog, setOpenWarningDialog] = useState(false); // Warning dialog state
   const [errorMessage, setErrorMessage] = useState(""); // Error message for login
 
@@ -29,15 +29,9 @@ export default function LoginPage() {
 
       const data = await response.json();
       setWalletExists(data.exists);
-      setWalletStatus(
-        data.exists
-          ? "Wallet found. You can log in now."
-          : "No wallet found. Please create a wallet to continue."
-      );
     } catch (error) {
       console.error("Error fetching wallet status:", error);
       setWalletExists(false);
-      setWalletStatus("Error checking wallet status.");
     }
   };
 
@@ -47,11 +41,12 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     if (!walletExists) {
-      setWalletStatus("Cannot log in. No wallet address found.");
+      setErrorMessage("Cannot log in because no wallet could be found on your local device.");
       return;
     }
     navigate("/home");
 
+    // Example API call for login (commented for now)
     // try {
     //   const response = await fetch("http://localhost:8080/wallet/login", {
     //     method: "POST",
@@ -113,20 +108,19 @@ export default function LoginPage() {
           width: "300px",
           backgroundColor: "white",
         }}
-        disabled={!walletExists} // Disable if no wallet is found
-        error={!!errorMessage} // Show error state if login fails
-        helperText={errorMessage} // Display error message below the input
+        disabled={walletExists === null} // Disable if wallet status is not yet fetched
+        // error={!!errorMessage} // Show error state if login fails
+        // helperText={errorMessage} // Display error message below the input
       />
       <Button
         variant="contained"
         size="large"
         sx={{
-          backgroundColor: walletExists ? "black" : "gray",
+          backgroundColor: "black",
           color: "white",
           fontWeight: "bold",
         }}
         onClick={handleLogin}
-        disabled={!walletExists} // Disable if no wallet is found or password is empty
       >
         Log In
       </Button>
@@ -134,14 +128,26 @@ export default function LoginPage() {
         variant="body1"
         sx={{
           marginTop: 5,
-          color:
-            walletExists === null ? "gray" : walletExists ? "green" : "red",
+          color: walletExists === null ? "gray" : walletExists ? "green" : "red",
           whiteSpace: "pre-line",
           textAlign: "center",
         }}
       >
         {walletStatus}
       </Typography>
+      {errorMessage && (
+        <Typography
+          variant="body2"
+          sx={{
+            color: "red",
+            marginTop: 2,
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          {errorMessage}
+        </Typography>
+      )}
       <Button
         variant="contained"
         color="secondary"
