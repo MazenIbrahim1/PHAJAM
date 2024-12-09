@@ -99,17 +99,29 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	time.Sleep(3 * time.Second) // Simulate delay
 
 	// Unlock wallet
-	unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 3600)
-	if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
-		http.Error(w, `{"error": "Failed to unlock wallet. Check your password."}`, http.StatusUnauthorized)
-		log.Printf("Error unlocking wallet: %v", err)
-		return
-	}
+	// unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 3600)
+	// if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
+	// 	http.Error(w, `{"error": "Failed to unlock wallet. Check your password."}`, http.StatusUnauthorized)
+	// 	log.Printf("Error unlocking wallet: %v", err)
+	// 	return
+	// }
 
 	// Respond with success
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully."})
 	log.Println("Wallet login successful.")
+}
+
+// handle the deletion of an account
+func deleteWallet(w http.ResponseWriter) {
+	if err := manager.DeleteWallet(); err != nil {
+		http.Error(w, "Failed to delete wallet: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with success message
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "Wallet deleted successfully!")
 }
 
 // Logout locks the wallet and stops services.
