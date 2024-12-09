@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Box, TextField } from "@mui/material";
+import { Box, TextField, InputAdornment } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
 export default function Explore() {
@@ -38,18 +39,34 @@ export default function Explore() {
   };
 
   return (
-    <Box sx={{
-      marginLeft: "14vw",
-      marginRight: "1vw"
-    }}>
+    <Box
+      sx={{
+        marginLeft: "14vw",
+        marginRight: "1vw",
+        marginTop: "2vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 2,
+      }}
+    >
       <TextField
-        label="Search by Hash"
         variant="outlined"
-        fullWidth
-        margin="normal"
+        placeholder="Search Hash..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyDown}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          },
+        }}
+        fullWidth
       />
       <DataGrid
         rows={rows}
@@ -66,6 +83,7 @@ export default function Explore() {
         disableColumnMenu
         disableColumnResize
         sx={{
+          width: "100%",
           "& .MuiDataGrid-cell:focus-within": {
             outline: "none",
           },

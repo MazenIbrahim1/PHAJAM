@@ -148,6 +148,7 @@ export default function Files() {
       sx={{
         marginLeft: "14vw",
         marginRight: "1vw",
+        marginTop: "2vh",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -221,8 +222,10 @@ export default function Files() {
                 type="text"
                 fullWidth
                 variant="outlined"
-                InputProps={{
-                  readOnly: true,
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  }
                 }}
                 required
               />
