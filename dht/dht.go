@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	node_id             = "SBU_Id" // give your SBU ID
+	node_id             = "114254605" // give your SBU ID
 	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	// Change the ip address to your public ip address"
@@ -459,54 +459,54 @@ func refreshReservation(node host.Host, interval time.Duration) {
 }
 
 type ProxyInfo struct {
-    PeerID    string `json:"peer_id"`
-    IPAddress string `json:"ip_address"`
-    Port      int    `json:"port"`
+	PeerID    string `json:"peer_id"`
+	IPAddress string `json:"ip_address"`
+	Port      int    `json:"port"`
 }
 
 func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, node host.Host) {
-    // 1. Create a unique proxy key
-    proxyKey := "/orcanet/proxy/" + node.ID().String()
+	// 1. Create a unique proxy key
+	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
-    // 2. Create proxy information (PeerID, IP Address, Port)
-    proxyInfo := ProxyInfo{
-        PeerID:    node.ID().String(),
-        IPAddress: ipAddress,  // Example, replace with actual IP or relay info
-        Port:      8080,
-    }
+	// 2. Create proxy information (PeerID, IP Address, Port)
+	proxyInfo := ProxyInfo{
+		PeerID:    node.ID().String(),
+		IPAddress: ipAddress, // Example, replace with actual IP or relay info
+		Port:      8080,
+	}
 
-    // 3. Serialize proxy information to JSON
-    proxyInfoJSON, err := json.Marshal(proxyInfo)
-    if err != nil {
-        fmt.Printf("Error marshalling proxy info: %v\n", err)
-        return
-    }
+	// 3. Serialize proxy information to JSON
+	proxyInfoJSON, err := json.Marshal(proxyInfo)
+	if err != nil {
+		fmt.Printf("Error marshalling proxy info: %v\n", err)
+		return
+	}
 
 	hash := sha256.Sum256(proxyInfoJSON)
 
-    // 4: Encode the hash into a multihash (SHA2-256 in this case)
-    mh, err := multihash.Encode(hash[:], multihash.SHA2_256)
-    if err != nil {
-        fmt.Printf("Error encoding multihash: %v\n", err)
-        return
-    }
+	// 4: Encode the hash into a multihash (SHA2-256 in this case)
+	mh, err := multihash.Encode(hash[:], multihash.SHA2_256)
+	if err != nil {
+		fmt.Printf("Error encoding multihash: %v\n", err)
+		return
+	}
 
-    // 5: Create the CID from the multihash
-    c := cid.NewCidV1(cid.Raw, mh)
+	// 5: Create the CID from the multihash
+	c := cid.NewCidV1(cid.Raw, mh)
 
-    // 6: Store proxy information in the DHT
-    err = dht.PutValue(ctx, proxyKey, proxyInfoJSON)
-    if err != nil {
-        fmt.Printf("Error storing proxy info in DHT: %v\n", err)
-        return
-    }
+	// 6: Store proxy information in the DHT
+	err = dht.PutValue(ctx, proxyKey, proxyInfoJSON)
+	if err != nil {
+		fmt.Printf("Error storing proxy info in DHT: %v\n", err)
+		return
+	}
 
-    // 7: Provide the proxy information (indicating this peer is a proxy)
-    err = dht.Provide(ctx, c, true)
-    if err != nil {
-        fmt.Printf("Failed to provide proxy info in DHT: %v\n", err)
-        return
-    }
+	// 7: Provide the proxy information (indicating this peer is a proxy)
+	err = dht.Provide(ctx, c, true)
+	if err != nil {
+		fmt.Printf("Failed to provide proxy info in DHT: %v\n", err)
+		return
+	}
 
-    fmt.Println("Proxy registered successfully!")
+	fmt.Println("Proxy registered successfully!")
 }
