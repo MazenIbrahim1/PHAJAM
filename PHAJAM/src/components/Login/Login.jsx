@@ -50,24 +50,25 @@ export default function LoginPage() {
       setWalletStatus("Cannot log in. No wallet address found.");
       return;
     }
+    navigate("/home");
 
-    try {
-      const response = await fetch("http://localhost:8080/wallet/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+    // try {
+    //   const response = await fetch("http://localhost:8080/wallet/login", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ password }),
+    //   });
 
-      if (response.ok) {
-        navigate("/home"); // Navigate to home page
-      } else {
-        const data = await response.json();
-        setErrorMessage(data.message || "Login failed. Please check your password.");
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-      setErrorMessage("An error occurred during login. Please try again.");
-    }
+    //   if (response.ok) {
+    //     navigate("/home"); // Navigate to home page
+    //   } else {
+    //     const data = await response.json();
+    //     setErrorMessage(data.message || "Login failed. Please check your password.");
+    //   }
+    // } catch (error) {
+    //   console.error("Error during login:", error);
+    //   setErrorMessage("An error occurred during login. Please try again.");
+    // }
   };
 
   const handleGenerateKeys = () => {
@@ -125,7 +126,7 @@ export default function LoginPage() {
           fontWeight: "bold",
         }}
         onClick={handleLogin}
-        disabled={!walletExists || !password} // Disable if no wallet is found or password is empty
+        disabled={!walletExists} // Disable if no wallet is found or password is empty
       >
         Log In
       </Button>
@@ -182,7 +183,12 @@ export default function LoginPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeWarningDialog} color="primary" variant="contained" autoFocus>
+          <Button
+            onClick={closeWarningDialog}
+            color="primary"
+            variant="contained"
+            autoFocus
+          >
             Go Back
           </Button>
         </DialogActions>

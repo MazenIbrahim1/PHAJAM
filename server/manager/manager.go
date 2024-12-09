@@ -75,6 +75,7 @@ func CreateWallet(password string) error {
 // WalletExists checks if the wallet file exists on the system.
 func WalletExists() bool {
 	// Determine the wallet path based on the operating system
+	log.Println("Checking wallet")
 	var walletPath string
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -84,8 +85,10 @@ func WalletExists() bool {
 	if runtime.GOOS == "windows" {
 		walletPath = filepath.Join(homeDir, "AppData", "Local", "Btcwallet", "mainnet", "wallet.db")
 	} else if runtime.GOOS == "darwin" {
+		log.Println("darwin")
 		walletPath = filepath.Join(homeDir, "Library", "Application Support", "Btcwallet", "mainnet", "wallet.db")
 	} else {
+		log.Println("cool")
 		walletPath = filepath.Join(homeDir, ".btcwallet", "mainnet", "wallet.db")
 	}
 
