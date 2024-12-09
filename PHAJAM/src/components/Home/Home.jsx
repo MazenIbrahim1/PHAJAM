@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import axios from "axios";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -155,6 +156,26 @@ export default function Home() {
 	
   };
 
+  const handleMine = async () => {
+    try {
+      // Number of blocks to mine (e.g., 5 for demo)
+      const numBlocks = 5;
+  
+      // API call to the backend
+      const response = await axios.post("http://localhost:8080/mine", {
+        num_blocks: numBlocks,
+      });
+  
+      // Handle successful response
+      alert(`Mining started: ${response.data.message}`);
+      console.log("Block hashes:", response.data.block_hash);
+    } catch (error) {
+      // Handle errors
+      alert("Error starting mining: " + error.response?.data?.error || error.message);
+      console.error("Mining error:", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -233,6 +254,7 @@ export default function Home() {
           <Button 
             variant="contained" 
             color="primary" 
+            onClick={handleMine} // Attach the handler here
             sx={{ 
               padding: "18px 36px",  
               fontSize: "1.2rem",  
