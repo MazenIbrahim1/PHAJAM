@@ -113,6 +113,16 @@ func main() {
 	mux.HandleFunc("/getproviders", getProviders)
 	mux.HandleFunc("/upload", handleFileUpload)
 	mux.HandleFunc("/files", handleFetchFiles)
+	mux.HandleFunc("/registerProxy", registerProxy)
+
+	// New handler for returning Peer ID
+	mux.HandleFunc("/getPeerID", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"peerID": node.ID().String(),
+		})
+	})
 
 	fmt.Println("Starting server at port 8080")
 	if err := http.ListenAndServe(":8080", enableCORS(mux)); err != nil {
@@ -189,4 +199,48 @@ func handleFetchFiles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(records)
+}
+
+// register a peer as a proxy
+func registerProxy(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		log.Printf("Invalid request method: %s", r.Method)
+		return
+	}
+
+	var request struct {
+		PeerID string `json:"peerID"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&request)
+	if err != nil {
+		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
+		log.Printf("Error parsing JSON: %v", err)
+		return
+	}
+
+	if request.PeerID == "" {
+		http.Error(w, "PeerID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Store the peerID as a proxy
+	err = StoreProxy(request.PeerID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to store proxy: %v", err), http.StatusInternalServerError)
+		log.Printf("Failed to store proxy: %v", err)
+		return
+	}
+
+	log.Printf("PeerID %s registered as a proxy", request.PeerID)
+
+	// Respond with success!
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Peer registered as a proxy",
+		"peerID": request.PeerID,
+	})
 }
