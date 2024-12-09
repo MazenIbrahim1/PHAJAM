@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, TextField, Button, Link, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Link,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
@@ -76,7 +87,9 @@ export default function LoginPage() {
       >
         Welcome to Dolphin Data Sharing!
       </Typography>
-      <Typography sx={{ marginTop: 1 }}>Log into your account with the password to your wallet.</Typography>
+      <Typography sx={{ marginTop: 1 }}>
+        Log into your account with the password to your wallet.
+      </Typography>
       <TextField
         label="Wallet Password"
         type="password"
@@ -106,7 +119,8 @@ export default function LoginPage() {
         variant="body1"
         sx={{
           marginTop: 5,
-          color: walletExists === null ? "gray" : walletExists ? "green" : "red",
+          color:
+            walletExists === null ? "gray" : walletExists ? "green" : "red",
           whiteSpace: "pre-line",
           textAlign: "center",
         }}
@@ -144,10 +158,13 @@ export default function LoginPage() {
         aria-labelledby="warning-dialog-title"
         aria-describedby="warning-dialog-description"
       >
-        <DialogTitle id="warning-dialog-title">Unable to Create a New Wallet</DialogTitle>
+        <DialogTitle id="warning-dialog-title">
+          Unable to Create a New Wallet
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="warning-dialog-description">
-            A wallet already exists on your device. You cannot create a new wallet unless you delete the existing wallet.
+            A wallet already exists on your device. You cannot create a new
+            wallet unless you delete the existing wallet.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
