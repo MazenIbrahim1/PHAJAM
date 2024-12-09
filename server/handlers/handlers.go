@@ -112,8 +112,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet login successful.")
 }
 
-// handle the deletion of an account
-func deleteWallet(w http.ResponseWriter) {
+// DeleteWallet handles the deletion of an account
+func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	if err := manager.DeleteWallet(); err != nil {
 		http.Error(w, "Failed to delete wallet: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -123,6 +123,7 @@ func deleteWallet(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Wallet deleted successfully!")
 }
+
 
 // Logout locks the wallet and stops services.
 func Logout(w http.ResponseWriter, r *http.Request) {

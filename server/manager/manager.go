@@ -121,6 +121,7 @@ func CreateWallet(password string) (string, error) {
 	return walletSeed, nil
 }
 
+// Delete wallet and account
 func DeleteWallet() error {
 	// Determine the wallet path based on the operating system
 	log.Println("Checking wallet")
