@@ -399,7 +399,8 @@ export default function GenerateKeys() {
       passwordValidations.length &&
       passwordValidations.number &&
       passwordValidations.specialChar &&
-      passwordMatch
+      passwordMatch && // Ensure passwords match
+      password === confirmPassword // Double-check the password match
     );
   };
 
@@ -447,7 +448,10 @@ export default function GenerateKeys() {
           type="password"
           variant="outlined"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setPasswordMatch(e.target.value === password); // Check if passwords match
+          }}
           required
         />
         <Typography
@@ -484,7 +488,7 @@ export default function GenerateKeys() {
         <Button
           variant="contained"
           onClick={handleSavePassword}
-          disabled={!isPasswordValid()}
+          disabled={!isPasswordValid()} // Button enabled only if valid
         >
           Create Wallet
         </Button>
