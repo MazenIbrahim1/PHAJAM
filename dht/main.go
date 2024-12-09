@@ -160,7 +160,7 @@ func main() {
 
 	// New handler for returning Peer ID
 	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
-		registerProxyAsService(ctx, dhtRoute, "", node)
+		registerProxyAsService(ctx, dhtRoute, ip, node)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
