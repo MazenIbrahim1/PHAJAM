@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -21,19 +21,59 @@ import { useTheme } from "../../ThemeContext";
 
 export default function Profile() {
   const { darkMode } = useTheme();
-  
-  const [balance, setBalance] = useState(500);
+
+  const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([
-    { id: 1, type: "Received", amount: 50, date: "2024-10-01T10:30:00", from: "0xabcdef123456", status: "Completed" },
-    { id: 2, type: "Sent", amount: 25, date: "2024-10-05T14:15:00", to: "0x9876543210abcd", status: "Completed" },
-    { id: 3, type: "Sent", amount: 15, date: "2024-10-10T09:45:00", to: "0x3333333333333333", status: "In Progress" },
+    {
+      id: 1,
+      type: "Received",
+      amount: 50,
+      date: "2024-10-01T10:30:00",
+      from: "0xabcdef123456",
+      status: "Completed",
+    },
+    {
+      id: 2,
+      type: "Sent",
+      amount: 25,
+      date: "2024-10-05T14:15:00",
+      to: "0x9876543210abcd",
+      status: "Completed",
+    },
+    {
+      id: 3,
+      type: "Sent",
+      amount: 15,
+      date: "2024-10-10T09:45:00",
+      to: "0x3333333333333333",
+      status: "In Progress",
+    },
   ]);
-  const [address, setAddress] = useState("0x1234567890abcdef1234567890abcdef12345678");
+  const [address, setAddress] = useState(
+    "0x1234567890abcdef1234567890abcdef12345678"
+  );
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const request = await fetch("http://localhost:8080/wallet/balance");
+        if (!request.ok) {
+          throw new Error(`HTTP error! Status: ${request.status}`);
+        }
+        const response = await request.json();
+        setBalance(response.balance);
+      } catch (err) {
+        console.error("Error fetching balance:", err);
+      }
+    };
+
+    fetchBalance();
+  }, []);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(address);
@@ -42,19 +82,21 @@ export default function Profile() {
 
   const handleSendMoney = () => {
     const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
-  
+
     if (isNaN(amountToSend) || amountToSend <= 0) {
       alert("Please enter a valid amount.");
       return;
     }
-  
+
     if (amountToSend > balance) {
       alert("Insufficient balance.");
       return;
     }
-  
-    setBalance((prevBalance) => parseFloat((prevBalance - amountToSend).toFixed(2)));
-  
+
+    setBalance((prevBalance) =>
+      parseFloat((prevBalance - amountToSend).toFixed(2))
+    );
+
     const newTransaction = {
       id: transactions.length + 1,
       type: "Sent",
@@ -63,8 +105,11 @@ export default function Profile() {
       to: recipientAddress,
       status: "Completed",
     };
-    setTransactions((prevTransactions) => [...prevTransactions, newTransaction]);
-  
+    setTransactions((prevTransactions) => [
+      ...prevTransactions,
+      newTransaction,
+    ]);
+
     setRecipientAddress("");
     setAmount("");
     alert("Transaction successful!");
@@ -101,13 +146,19 @@ export default function Profile() {
     })
     .filter((transaction) => {
       const searchTermLower = searchTerm.toLowerCase();
-      const transactionDate = new Date(transaction.date).toLocaleDateString().toLowerCase();
-      const transactionTime = new Date(transaction.date).toLocaleTimeString().toLowerCase();
+      const transactionDate = new Date(transaction.date)
+        .toLocaleDateString()
+        .toLowerCase();
+      const transactionTime = new Date(transaction.date)
+        .toLocaleTimeString()
+        .toLowerCase();
 
       return (
         transaction.type.toLowerCase().includes(searchTermLower) ||
-        (transaction.type === "Received" && transaction.from.toLowerCase().includes(searchTermLower)) ||
-        (transaction.type === "Sent" && transaction.to.toLowerCase().includes(searchTermLower)) ||
+        (transaction.type === "Received" &&
+          transaction.from.toLowerCase().includes(searchTermLower)) ||
+        (transaction.type === "Sent" &&
+          transaction.to.toLowerCase().includes(searchTermLower)) ||
         transactionDate.includes(searchTermLower) ||
         transactionTime.includes(searchTermLower)
       );
@@ -128,24 +179,33 @@ export default function Profile() {
       }}
     >
       {/* Left column */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, maxWidth: "300px" }}> {/* Set a max width for the left column */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          maxWidth: "300px",
+        }}
+      >
+        {" "}
+        {/* Set a max width for the left column */}
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
             textAlign: "center",
             backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           <Typography variant="h6">Wallet Balance</Typography>
-          <Typography variant="h4">{balance.toFixed(2)} DC</Typography>
+          <Typography variant="h4">{balance} DC</Typography>
         </Box>
-  
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
             backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
@@ -166,11 +226,10 @@ export default function Profile() {
             <ContentCopyIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
           </IconButton>
         </Box>
-  
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
             backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
@@ -184,7 +243,8 @@ export default function Profile() {
             value={recipientAddress}
             onChange={(e) => setRecipientAddress(e.target.value)}
             fullWidth
-            sx={{ marginBottom: 2, 
+            sx={{
+              marginBottom: 2,
               backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
               "& .MuiInputBase-input": {
                 color: darkMode ? "#ffffff" : "#000000",
@@ -195,12 +255,14 @@ export default function Profile() {
               "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                 borderColor: darkMode ? "#ffffff" : "#000000",
               },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
             }}
           />
           <TextField
@@ -215,7 +277,9 @@ export default function Profile() {
               }
             }}
             fullWidth
-            sx={{ marginBottom: 2, backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            sx={{
+              marginBottom: 2,
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
               "& .MuiInputBase-input": {
                 color: darkMode ? "#ffffff" : "#000000",
               },
@@ -225,27 +289,36 @@ export default function Profile() {
               "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                 borderColor: darkMode ? "#ffffff" : "#000000",
               },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              }, }}
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+            }}
           />
-          <Button variant="contained" 
-            sx={{backgroundColor: darkMode ? "#f06292": "#000000",
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: darkMode ? "#f06292" : "#000000",
               "&:hover": {
-                backgroundColor: "#7a99d9"}}} 
-                onClick={handleSendMoney} fullWidth>
+                backgroundColor: "#7a99d9",
+              },
+            }}
+            onClick={handleSendMoney}
+            fullWidth
+          >
             Send
           </Button>
         </Box>
       </Box>
-  
+
       <Box
         sx={{
           flex: 2,
-          border: '2px solid #b2dfdb',
+          border: "2px solid #b2dfdb",
           borderRadius: "8px",
           padding: 2,
           height: "600px", // Keep the height for the right column
@@ -262,7 +335,7 @@ export default function Profile() {
           centered
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: darkMode ? "#ffffff" : "#000000", 
+              backgroundColor: darkMode ? "#ffffff" : "#000000",
             },
           }}
         >
@@ -272,7 +345,7 @@ export default function Profile() {
             sx={{
               color: darkMode ? "#ffffff" : "#000000",
               "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
+                color: darkMode ? "#ffffff" : "#000000",
               },
             }}
           />
@@ -282,7 +355,7 @@ export default function Profile() {
             sx={{
               color: darkMode ? "#ffffff" : "#000000",
               "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
+                color: darkMode ? "#ffffff" : "#000000",
               },
             }}
           />
@@ -292,7 +365,7 @@ export default function Profile() {
             sx={{
               color: darkMode ? "#ffffff" : "#000000",
               "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
+                color: darkMode ? "#ffffff" : "#000000",
               },
             }}
           />
@@ -331,15 +404,15 @@ export default function Profile() {
           sx={{
             maxHeight: "400px",
             overflowY: "auto",
-            backgroundColor: darkMode ? "#333" : "#ffffff", 
+            backgroundColor: darkMode ? "#333" : "#ffffff",
             "& .MuiTableCell-root": {
               color: darkMode ? "#ffffff" : "#000000",
               backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
             },
             "& .MuiTableSortLabel-root": {
-              color: darkMode ? "#ffffff" : "#000000", 
+              color: darkMode ? "#ffffff" : "#000000",
               "&.Mui-active": {
-                color: darkMode ? "#ffffff" : "#000000", 
+                color: darkMode ? "#ffffff" : "#000000",
               },
             },
           }}
@@ -357,7 +430,11 @@ export default function Profile() {
                     <TableCell key={column}>
                       <TableSortLabel
                         active={sortConfig.key === column}
-                        direction={sortConfig.key === column ? sortConfig.direction : "asc"}
+                        direction={
+                          sortConfig.key === column
+                            ? sortConfig.direction
+                            : "asc"
+                        }
                         onClick={() => handleSort(column)}
                       >
                         {column.charAt(0).toUpperCase() + column.slice(1)}
@@ -365,7 +442,11 @@ export default function Profile() {
                     </TableCell>
                   ))}
                   <TableCell>
-                    {filter === "Sent" ? "To" : filter === "Received" ? "From" : "Other Wallet Address"}
+                    {filter === "Sent"
+                      ? "To"
+                      : filter === "Received"
+                      ? "From"
+                      : "Other Wallet Address"}
                   </TableCell>
                   <TableCell>Status</TableCell>
                 </TableRow>
@@ -375,11 +456,16 @@ export default function Profile() {
                   <TableRow key={transaction.id}>
                     <TableCell>{transaction.id}</TableCell>
                     <TableCell>{transaction.type}</TableCell>
-                    <TableCell sx={{ width: "80px" }}>{transaction.amount}</TableCell> {/* Smaller space for amount column */}
-                    <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
+                    <TableCell sx={{ width: "80px" }}>
+                      {transaction.amount}
+                    </TableCell>{" "}
+                    {/* Smaller space for amount column */}
+                    <TableCell>
+                      {new Date(transaction.date).toLocaleString()}
+                    </TableCell>
                     <TableCell
                       sx={{
-                        maxWidth: "250px", 
+                        maxWidth: "250px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -387,16 +473,32 @@ export default function Profile() {
                         alignItems: "center",
                       }}
                     >
-                      <span style={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {transaction.type === "Sent" ? transaction.to : transaction.from}
+                      <span
+                        style={{
+                          flexGrow: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {transaction.type === "Sent"
+                          ? transaction.to
+                          : transaction.from}
                       </span>
                       <IconButton
                         onClick={() => {
-                          navigator.clipboard.writeText(transaction.type === "Sent" ? transaction.to : transaction.from);
+                          navigator.clipboard.writeText(
+                            transaction.type === "Sent"
+                              ? transaction.to
+                              : transaction.from
+                          );
                           alert("Wallet address copied to clipboard!");
                         }}
                         size="small"
-                        sx={{ marginLeft: 1, color: darkMode ? "#ffffff" : "#000000" }}
+                        sx={{
+                          marginLeft: 1,
+                          color: darkMode ? "#ffffff" : "#000000",
+                        }}
                       >
                         <ContentCopyIcon fontSize="small" />
                       </IconButton>
@@ -410,5 +512,5 @@ export default function Profile() {
         </Box>
       </Box>
     </Box>
-  );    
+  );
 }
