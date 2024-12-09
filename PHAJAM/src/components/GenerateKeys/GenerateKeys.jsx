@@ -148,7 +148,7 @@
 //               <Typography variant="body2">
 //                 You have been provided with a Dolphincoin Address, Public Key, and Private Key. <br />
 //                 In order to access these, you must first create the password for your account. <br />
-//                 Once you have successfully created your password, your Dolphincoin Address, Public Key, and Private Key will automatically be downloaded onto your device. 
+//                 Once you have successfully created your password, your Dolphincoin Address, Public Key, and Private Key will automatically be downloaded onto your device.
 //               </Typography>
 //               <Typography variant="body2" sx={{ fontWeight: "bold" }}> <br /> MAKE SURE YOU DO NOT LOSE THESE FILES!</Typography>
 //             </Box>
@@ -260,7 +260,7 @@
 //             marginTop: 2,
 //           }}
 //         >
-//           <Button 
+//           <Button
 //             variant="contained"
 //             onClick={handleBackToLogin}
 //             color="secondary">
@@ -274,20 +274,20 @@
 //         <DialogTitle sx={{ fontWeight: "bold" }}>{"Account Created Successfully"}</DialogTitle>
 //         <DialogContent>
 //           <DialogContentText>
-//             Your keys have been downloaded to your device. 
+//             Your keys have been downloaded to your device.
 //             If they did not download or an error occured, click here to download them again.
-//             Please make sure to store them securely. <br /> 
+//             Please make sure to store them securely. <br />
 //             <br />
 //             You can now return to the login page.
 //           </DialogContentText>
 //         </DialogContent>
 //         <DialogActions>
-//           <Button 
+//           <Button
 //             variant="contained"
-//             onClick={downloadAllFiles} 
+//             onClick={downloadAllFiles}
 //             backgroundColor="primary">
 //             Download Again</Button>
-//           <Button 
+//           <Button
 //             variant="contained"
 //             onClick={handleBackToLogin}
 //             backgroundColor="secondary">
@@ -298,7 +298,6 @@
 //     </Box>
 //   );
 // }
-
 
 import React, { useState } from "react";
 import {
@@ -327,6 +326,7 @@ export default function GenerateKeys() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [createSuccess, setCreateSuccess] = useState(false);
+  const [seed, setSeed] = useState(null);
 
   const navigate = useNavigate();
 
@@ -345,11 +345,11 @@ export default function GenerateKeys() {
       setPasswordMatch(false);
       return;
     }
-  
+
     setLoading(true); // Show loading dialog
     setDialogMessage("Creating your wallet. Please wait...");
     setDialogOpen(true);
-  
+
     try {
       // Call backend to create the wallet with the user's password
       const response = await fetch("http://localhost:8080/wallet/create", {
@@ -357,15 +357,28 @@ export default function GenerateKeys() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-  
+
       const data = await response.json();
-  
+      console.log(data);
+      console.log(data.message);
+      console.log(data.seed);
+
       if (response.ok) {
         setCreateSuccess(true);
-        setDialogMessage("Wallet created successfully! You can now log in.");
+        setSeed(data.seed);
+        setDialogMessage(
+          `
+          Wallet created successfully! Your wallet generation seed is :\n ${data.seed} \n
+          Keep your seed in a safe place because you will NOT be able to restore your wallet without it.\n
+          Make sure to keep the seed in a secure location and do not share it with anyone.\n
+          You can now login!
+          `
+        );
       } else {
         setCreateSuccess(false);
-        setDialogMessage(data.error || "Failed to create wallet. Please try again.");
+        setDialogMessage(
+          data.error || "Failed to create wallet. Please try again."
+        );
       }
     } catch (error) {
       console.error("Error creating wallet:", error);
@@ -375,7 +388,6 @@ export default function GenerateKeys() {
       setLoading(false); // Stop loading animation
     }
   };
-  
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -491,7 +503,9 @@ export default function GenerateKeys() {
         <DialogContent>
           <DialogContentText>{dialogMessage}</DialogContentText>
           {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}
+            >
               <CircularProgress />
             </Box>
           )}

@@ -116,6 +116,7 @@ func CreateWallet(password string) (string, error) {
 		return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
 	}
 
+	walletSeed = strings.TrimSpace(walletSeed)
 	log.Println("Wallet creation successful. Wallet seed:", walletSeed)
 	return walletSeed, nil
 }
