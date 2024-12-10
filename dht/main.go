@@ -23,6 +23,7 @@ import (
 var (
 	dhtRoute *dht.IpfsDHT
 	ctx      context.Context
+	node     host.Host
 )
 
 func main() {
@@ -36,7 +37,6 @@ func main() {
 			fmt.Printf("Failed to disconnect MongoDB: %v\n", err)
 		}
 	}()
-	var node host.Host
 	node, dhtRoute, err = createNode()
 	if err != nil {
 		log.Fatalf("Failed to create node: %s", err)
@@ -57,6 +57,8 @@ func main() {
 	go handlePeerExchange(node)
 	//go handleInput(ctx, dhtRoute)
 
+	go receiveDataFromPeer(node)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/getproviders", getProviders)
 	mux.HandleFunc("/upload", handleFileUpload)
@@ -69,8 +71,6 @@ func main() {
 	if err := http.ListenAndServe("0.0.0.0:8080", enableCORS(logRequests(mux))); err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
-
-	// receiveDataFromPeer(node)
 	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
 
 	defer node.Close()
@@ -104,7 +104,6 @@ func enableCORS(next http.Handler) http.Handler {
 }
 
 func provideAllUpload() {
-	fmt.Println("proivdeallupload")
 	records, err := FetchAllFileRecords()
 	if err != nil {
 		log.Printf("Failed to fetch all file records")
@@ -256,7 +255,19 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	provideKey(ctx, dhtRoute, fileHash, true)
+	err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+fileHash, []byte(strconv.FormatFloat(priceFloat, 'f', -1, 64)))
+	fmt.Println("/orcanet/files/" + node.ID().String() + "/" + fileHash)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to put record for key %v and value %v", fileHash, priceFloat), http.StatusInternalServerError)
+		log.Printf("Failed to put record for key %v and value %v: %v\n", fileHash, priceFloat, err)
+		return
+	}
+	err = provideKey(ctx, dhtRoute, fileHash, true)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to provide record for key: %v", fileHash), http.StatusInternalServerError)
+		log.Printf("Filed to provide record for key: %v", fileHash)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

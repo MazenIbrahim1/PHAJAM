@@ -268,7 +268,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				continue
 			}
 			key := args[1]
-			dhtKey := "/orcanet/" + key
+			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
 			res, err := dht.GetValue(ctx, dhtKey)
 			if err != nil {
 				fmt.Printf("Failed to get record: %v\n", err)
