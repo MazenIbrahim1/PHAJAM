@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  TextField,
-  Typography,
-  InputAdornment,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Button,
-} from "@mui/material";
+import { Box, TextField, Typography, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -35,8 +25,9 @@ export default function Explore() {
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [errorDialog, setErrorDialog] = useState({ open: false, message: "" });
   const [offerPrice, setOfferPrice] = useState("");
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false); // New state for error dialog
+  const [errorMessage, setErrorMessage] = useState(""); // New state for error message
 
   const columns = [
     { field: "id", headerName: "Peer ID", flex: 2 },
@@ -55,17 +46,7 @@ export default function Explore() {
         });
 
         if (!response.ok) {
-          if (response.status === 404) {
-            setErrorDialog({
-              open: true,
-              message: "No providers found for the given hash.",
-            });
-          } else {
-            setErrorDialog({
-              open: true,
-              message: "Failed to fetch providers. Please try again later.",
-            });
-          }
+          console.error("Failed to fetch providers");
           return;
         }
 
@@ -73,16 +54,13 @@ export default function Explore() {
         setRows(data);
       } catch (error) {
         console.error("Error fetching providers:", error);
-        setErrorDialog({
-          open: true,
-          message: "An unexpected error occurred. Please try again later.",
-        });
       }
     }
   };
 
-  const handleCloseErrorDialog = () => {
-    setErrorDialog({ open: false, message: "" });
+  // Function to check if a row is selectable
+  const isRowSelectable = (row) => {
+    return row.row.id !== "Me";
   };
 
   useEffect(() => {
@@ -91,6 +69,7 @@ export default function Explore() {
     }
   }, [openDialog]);
 
+  // Handle row click
   const handleRowClick = (params) => {
     const clickedRow = params.row;
     if (clickedRow.id === "Me") {
@@ -101,7 +80,49 @@ export default function Explore() {
   };
 
   const handlePurchase = async (id, hash) => {
-    // (Purchase logic remains the same as in your original code)
+    try {
+      const response = await fetch("http://localhost:8080/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: id, hash: hash }),
+      });
+  
+      // Check if the response is successful
+      if (!response.ok) {
+        if (response.status === 404) {
+          setErrorMessage("Purchase failed: Item not found.");
+        } else {
+          setErrorMessage("An unexpected error occurred.");
+        }
+        setErrorDialogOpen(true);
+        return;
+      }
+  
+      // Extract the filename from the Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "download"; // Default filename
+      if (contentDisposition && contentDisposition.includes("filename=")) {
+        filename = contentDisposition
+          .split("filename=")[1]
+          .replace(/["']/g, ""); // Extract filename and remove quotes
+      }
+  
+      // Create a Blob from the received file data (raw binary data)
+      const blob = await response.blob();
+      // Create a URL for the Blob and trigger the file download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename; // Use the extracted filename
+      link.click(); // Trigger the download
+      URL.revokeObjectURL(url); // Clean up the object URL
+    } catch (error) {
+      console.error("Error purchasing: ", error);
+    } finally {
+      setOpenDialog(false);
+    }
   };
 
   return (
@@ -123,16 +144,20 @@ export default function Explore() {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          },
         }}
         fullWidth
       />
-      <Typography>Choose a provider to start a transaction</Typography>
+      <Typography>
+        Choose a provider to start a transaction
+      </Typography>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -156,26 +181,97 @@ export default function Explore() {
             outline: "none",
           },
         }}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.id} // Ensure unique IDs for each row
         slots={{
-          noRowsOverlay: CustomNoRowsOverlay,
+          noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
         }}
-        onRowClick={handleRowClick}
+        isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
+        sortModel={[{
+          field: "cost",  // The column to sort by
+          sort: "asc",    // "desc" for descending order
+        }]}
+        onRowClick={handleRowClick}  // Handle row click
       />
 
-      <Dialog open={errorDialog.open} onClose={handleCloseErrorDialog}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle sx={{ fontSize: "24px", textAlign: "center" }}>
+          Confirm Purchase
+        </DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+          <Typography>Price: {selectedRow ? selectedRow.cost : "Loading..."} DC</Typography>
+          <Typography>Balance After: 480 DC</Typography>
+          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+            <TextField
+              margin="dense"
+              label="Set Offer Price"
+              type="text"
+              fullWidth
+              variant="outlined"
+              sx={{ flex: 1 }}
+              value={offerPrice} // Controlled input
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numbers, decimal points, and limit to one decimal point
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setOfferPrice(value); // Update state only with valid input
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                }
+              }}
+              required
+            />
+            <Button
+              color="primary"
+              sx={{
+                backgroundColor: offerPrice ? "black" : "gray", // Dynamic color
+                color: "white",
+                ":hover": { backgroundColor: offerPrice ? "#3d3d3d" : "gray" },
+              }}
+              disabled={!offerPrice} // Disable if no value is inputted
+            >
+              Request
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", padding: "16px" }}>
+          <Button
+            onClick={() => setOpenDialog(false)}
+            color="error"
+            sx={{
+              backgroundColor: "red",
+              color: "white",
+              ":hover": { backgroundColor: "#b83127" },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handlePurchase(selectedRow.id, searchQuery)}
+            color="primary"
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              ":hover": { backgroundColor: "#3d3d3d" },
+            }}
+          >
+            Purchase
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)}>
         <DialogTitle>Error</DialogTitle>
         <DialogContent>
-          <Typography>{errorDialog.message}</Typography>
+          <Typography>{errorMessage}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseErrorDialog} color="primary">
+          <Button onClick={() => setErrorDialogOpen(false)} color="primary">
             Close
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Purchase Dialog (same as your original code) */}
     </Box>
   );
 }
