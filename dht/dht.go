@@ -465,12 +465,13 @@ func refreshReservation(node host.Host, interval time.Duration) {
 type ProxyInfo struct {
 	PeerID    string `json:"peer_id"`
 	Name	  string `json:"name"`
+	Location  string `json:"location"`
 	IPAddress string `json:"ip_address"`
 	Price	  string `json:"price"`
 	Port      int    `json:"port"`
 }
 
-func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, name string, price string, node host.Host) {
+func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location string, ipAddress string, name string, price string, node host.Host) {
 	// 1. Create a unique proxy key
 	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
@@ -481,9 +482,10 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 		proxyInfo = &ProxyInfo{
 			PeerID:    node.ID().String(),
 			Name:	   name,
+			Location:  location,
 			IPAddress: ipAddress,
 			Price:	   price,
-			Port:      8080,
+			Port:      50000,
 		}
 	} else {
 		proxyInfo = nil
@@ -534,7 +536,7 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 	}
 
 	if proxyInfo != nil {
-		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n PeerID: %s\n IP Address: %s\n", node_id, node.ID().String(), ipAddress)
+		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n Name: %s\n PeerID: %s\n IP Address: %s\n Port: %s", node_id, name, node.ID().String(), ipAddress, proxyInfo.Port)
 	} else {
 		fmt.Printf("Proxy deregistered successfully!\n NodeID: %s\n PeerID: %s\n", node_id, node.ID().String())
 	}

@@ -66,6 +66,9 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                     {proxy.name}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
+                                    Location: {proxy.location}
+                                </Typography>
+                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
                                     IP: {proxy.ip_address}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>

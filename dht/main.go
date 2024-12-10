@@ -45,6 +45,34 @@ func enableCORS(next http.Handler) http.Handler {
 	})
 }
 
+type GeolocationResponse struct {
+	Region string `json:"region"`
+	Country string `json:country"`
+}
+
+func getGeolocation() (*GeolocationResponse, error) {
+	resp, err := http.Get("https://ipinfo.io/json")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the JSON response
+	var geoInfo GeolocationResponse
+	err = json.Unmarshal(body, &geoInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &geoInfo, nil
+}
+
 func getProviders(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -112,13 +140,23 @@ func getLocalIPv4Address() string {
 
 
 func main() {
-	// Find local IPv4 address
+	// Find local IPv4 address and location
 	ip := getLocalIPv4Address()
 	if ip != "" {
 		fmt.Println("Local IPv4 Address: ", ip)
 	} else {
 		fmt.Println("No local IPv4 address found")
 	}
+
+	location := ""
+	geoInfo, geoErr := getGeolocation()
+	if geoErr != nil {
+		fmt.Printf("Failed to get location: %v\n", geoErr)
+	} else {
+		location = geoInfo.Region + ", " + geoInfo.Country
+	}
+	fmt.Println("Location: ", location)
+
 	
 	err := InitializeDatabase("mongodb://localhost:27017")
 	if err != nil {
@@ -174,10 +212,10 @@ func main() {
 		// Call registerProxyAsService based on the action (register or deregister)
 		if req.Action == "deregister" {
 			// Deregister the proxy by passing an empty string for the IP
-			registerProxyAsService(ctx, dhtRoute, "", "", "", node)
+			registerProxyAsService(ctx, dhtRoute, "", "", "", "", node)
 		} else if req.Action == "register" {
 			// Register the proxy by passing the IP address
-			registerProxyAsService(ctx, dhtRoute, ip, req.Name, req.Price, node)
+			registerProxyAsService(ctx, dhtRoute, location, ip, req.Name, req.Price, node)
 		} else {
 			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return

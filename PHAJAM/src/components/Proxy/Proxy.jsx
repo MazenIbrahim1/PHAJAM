@@ -48,6 +48,12 @@ export default function Proxy() {
 
     fetchProxyStatus();
     fetchProxyList();
+
+    // Set interval to fetch proxy list every 5 seconds
+    const intervalId = setInterval(fetchProxyList, 5000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
   }, [])
 
   // Proxy chosen BEFORE confirmation
@@ -113,9 +119,27 @@ export default function Proxy() {
         
         // const data = await response.json();
         if (response.ok) {
-            setPriceOpened(false);
-            setIsProxy(true);
+            const startProxyResponse = await fetch("http://localhost:50001/startProxy", {
+                method: "POST",
+            });
+
+            if (!startProxyResponse.ok) {
+                const data2 = {
+                    action: "deregister",  // Deregister the proxy
+                };
+                await fetch("http://localhost:8080/registerProxy", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data2),
+                });
+                alert("Failed to start the proxy server!");
+            } else {
+                setIsProxy(true);
+            }
         }
+        setPriceOpened(false);
     } catch (error) {
 
     }
@@ -287,13 +311,20 @@ export default function Proxy() {
                                 body: JSON.stringify(data),
                             });
                             
-                            // const data = await response.json();
                             if (response.ok) {
-                                setIsProxy(false);
-                                setConfirmDisableProxyModeOpened(false);
-                            }
-                        } catch (error) {
+                                const stopProxyResponse = await fetch("http://localhost:50001/stopProxy", {
+                                    method: "POST",
+                                });
                     
+                                if (!stopProxyResponse.ok) {
+                                    alert("Failed to stop the proxy server!");
+                                } else {
+                                    setIsProxy(false);
+                                }
+                            }
+                            setConfirmDisableProxyModeOpened(false);
+                        } catch (error) {
+                            console.error(error);
                         }
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
