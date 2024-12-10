@@ -185,14 +185,16 @@ func receiveDataFromPeer(node host.Host) {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
 			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
-		} else if strings.HasPrefix(string(data), "NAME:") {
+		} else if strings.HasPrefix(string(data), "GETNAME:") {
 			hash := string(data)[5:]
 			fmt.Println("hash: " + hash)
 			record, err := GetFileRecord(hash)
 			if err != nil {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
-			filenameChannel <- record["filename"].(string)
+			sendDataToPeer(node, s.Conn().RemotePeer().String(), "NAME:"+record["filename"].(string))
+		} else if strings.HasPrefix(string(data), "NAME:") {
+			filenameChannel <- string(data)[5:]
 		} else {
 			dataChannel <- data
 		}
