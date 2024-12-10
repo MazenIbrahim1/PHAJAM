@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/MazenIbrahim1/PHAJAM/server/manager" // Adjust this import to match your project structure
+	"github.com/MazenIbrahim1/PHAJAM/server/manager"
 )
+
+// Global var for password
+var (
+	walletPassword string
+	passwordMutex sync.Mutex
+)
+var walletDefaulAddr string
 
 // GetRoot returns a welcome message.
 func GetRoot(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +54,11 @@ func CreateWallet(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to create wallet: %v", err)
 		return
 	}
+
+	// Store the password globally (with mutex for thread safety)
+	passwordMutex.Lock()
+	walletPassword = request.Password
+	passwordMutex.Unlock()
 
 	// Respond with the wallet seed if successful
 	response := struct {
@@ -89,33 +101,102 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Start wallet services
-	if err := manager.StartWalletServer(); err != nil {
-		http.Error(w, `{"error": "Failed to start wallet. Please create a wallet first."}`, http.StatusUnauthorized)
-		log.Printf("Error starting wallet: %v", err)
+	// Validate the provided password
+	passwordMutex.Lock()
+	defer passwordMutex.Unlock()
+
+	if walletPassword != request.Password {
+		w.WriteHeader(http.StatusUnauthorized)
+		response := map[string]interface{}{
+			"message": "Incorrect password",
+			"value":   false,
+		}
+		json.NewEncoder(w).Encode(response)
+		log.Println("Login attempt failed: Incorrect password.")
 		return
 	}
 
-	time.Sleep(3 * time.Second) // Simulate delay
+	// Start wallet services
+	if err := manager.StartWalletServer(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := map[string]interface{}{
+			"message": "Failed to start wallet services.",
+			"value":   false,
+		}
+		json.NewEncoder(w).Encode(response)
+		log.Printf("Error starting wallet services: %v", err)
+		return
+	}
 
 	// Unlock wallet
-	// unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 3600)
-	// if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
-	// 	http.Error(w, `{"error": "Failed to unlock wallet. Check your password."}`, http.StatusUnauthorized)
-	// 	log.Printf("Error unlocking wallet: %v", err)
-	// 	return
-	// }
+	fmt.Println("Unlocking wallet...")
+	timeUnlocked := 3600*5
+	command := fmt.Sprintf("walletpassphrase %s %d", walletPassword, timeUnlocked)
+	_, err := manager.BtcctlCommand(command)
+	if err != nil {
+		fmt.Printf("Error unlocking wallet: %v\n", err)
+	} else {
+		fmt.Println("Wallet unlocked successfully!")
+	}
+
+	// Simulate delay to mimic wallet unlocking (if needed)
+	time.Sleep(3 * time.Second)
 
 	// Respond with success
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully."})
+	response := map[string]interface{}{
+		"message": "Logged in successfully.",
+		"value":   true,
+	}
+	json.NewEncoder(w).Encode(response)
 	log.Println("Wallet login successful.")
 }
+
+// ResetPassword resets the wallet password
+func ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		OldPassword string `json:"oldPassword"`
+		NewPassword string `json:"newPassword"`
+	}
+
+	// Parse JSON body
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Error decoding JSON payload: %v", err)
+		return
+	}
+
+	// Command to change wallet password
+	command := fmt.Sprintf("walletpassphrasechange %s %s", request.OldPassword, request.NewPassword)
+
+	// Call the manager to execute the command
+	_, err := manager.BtcctlCommand(command)
+	if err != nil {
+		http.Error(w, "Failed to change password: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Update password
+	walletPassword = request.NewPassword
+
+	// Response indicating success
+	response := map[string]bool{"success": true}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	log.Println("Wallet password changed successfully.")
+}
+
 
 // DeleteWallet handles the deletion of an account
 func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	if err := manager.DeleteWallet(); err != nil {
 		http.Error(w, "Failed to delete wallet: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := manager.StopWallet(); err != nil {
+		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
+		log.Printf("Error stopping wallet service: %v", err)
 		return
 	}
 
@@ -126,12 +207,6 @@ func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 
 // Logout locks the wallet and stops services.
 func Logout(w http.ResponseWriter, r *http.Request) {
-	if _, err := manager.CallDolphinCmd("walletlock"); err != nil {
-		http.Error(w, `{"error": "Failed to lock wallet"}`, http.StatusInternalServerError)
-		log.Printf("Error locking wallet: %v", err)
-		return
-	}
-
 	if err := manager.StopWallet(); err != nil {
 		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
 		log.Printf("Error stopping wallet service: %v", err)
@@ -156,6 +231,21 @@ func GetNewAddress(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 	log.Println("New wallet address generated successfully.")
+}
+
+func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
+	defaultAddress, err := manager.BtcctlCommand("getaccountaddress default")
+	if err != nil {
+		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	walletDefaulAddr = defaultAddress
+
+	response := map[string]string{"address": defaultAddress}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	log.Println("Default address retrieved successfully.")
 }
 
 // GetBalance retrieves the wallet balance.
@@ -247,24 +337,8 @@ func SendToAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get wallet balance
-	balance, err := manager.GetWalletBalance()
-	if err != nil {
-		http.Error(w, `{"error": "Failed to retrieve balance"}`, http.StatusInternalServerError)
-		log.Printf("Error retrieving wallet balance: %v", err)
-		return
-	}
-
-	// Validate amount
-	amountFloat, err := strconv.ParseFloat(request.Amount, 64)
-	if err != nil || amountFloat > balance {
-		http.Error(w, `{"error": "Insufficient funds or invalid amount"}`, http.StatusBadRequest)
-		log.Printf("Error validating amount: %v", err)
-		return
-	}
-
 	// Send funds
-	txid, err := manager.CallDolphinCmd(fmt.Sprintf("sendtoaddress %s %s", request.Address, request.Amount))
+	txid, err := manager.BtcctlCommand(fmt.Sprintf("sendtoaddress %s %s", request.Address, request.Amount))
 	if err != nil {
 		http.Error(w, `{"error": "Failed to send funds"}`, http.StatusInternalServerError)
 		log.Printf("Error sending funds: %v", err)

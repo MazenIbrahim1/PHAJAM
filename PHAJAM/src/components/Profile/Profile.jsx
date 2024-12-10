@@ -23,8 +23,33 @@ export default function Profile() {
   const { darkMode } = useTheme();
 
   const [balance, setBalance] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [address, setAddress] = useState("0x1234567890abcdef1234567890abcdef12345678");
+  const [transactions, setTransactions] = useState([
+    {
+      id: 1,
+      type: "Received",
+      amount: 50,
+      date: "2024-10-01T10:30:00",
+      from: "0xabcdef123456",
+      status: "Completed",
+    },
+    {
+      id: 2,
+      type: "Sent",
+      amount: 25,
+      date: "2024-10-05T14:15:00",
+      to: "0x9876543210abcd",
+      status: "Completed",
+    },
+    {
+      id: 3,
+      type: "Sent",
+      amount: 15,
+      date: "2024-10-10T09:45:00",
+      to: "0x3333333333333333",
+      status: "In Progress",
+    },
+  ]);
+  const [address, setAddress] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,55 +73,70 @@ export default function Profile() {
       if (!transactionsRequest.ok) {
         throw new Error(`Transactions fetch failed: ${transactionsRequest.status}`);
       }
-      const transactionsResponse = await transactionsRequest.json();
-      setTransactions(transactionsResponse.transactions);
-    } catch (err) {
-      console.error("Error fetching data:", err);
-    }
-  };
+    };
+
+    const fetchAddress = async () => {
+      try {
+        const request = await fetch("http://localhost:8080/wallet/address");
+        if (!request.ok) {
+          throw new Error(`HTTP error! Status: ${request.status}`);
+        }
+        const response = await request.json();
+        setAddress(response.address);
+      } catch (err) {
+        console.error("Error fetching address:", err);
+      }
+    };
+
+    fetchBalance();
+    fetchAddress();
+  }, []);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(address);
     alert("Address copied to clipboard!");
   };
 
-  const handleSendMoney = (e) => {
-    e.preventDefault(); // Prevent any default behavior of the button
-  
-    const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
-  
-    if (!recipientAddress || recipientAddress.length === 0) {
-      alert("Please enter a valid recipient address.");
-      return;
+  const handleSendMoney = async () => {
+    try {
+      const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
+      if (isNaN(amountToSend) || amountToSend <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+      if (amountToSend > balance) {
+        alert("Insufficient balance.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8080/wallet/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: recipientAddress,
+          amount: amountToSend,
+        }),
+      });
+
+      const newTransaction = {
+        id: transactions.length + 1,
+        type: "Sent",
+        amount: amountToSend,
+        date: new Date().toISOString(),
+        to: recipientAddress,
+        status: "Completed",
+      };
+      setTransactions((prevTransactions) => [
+        ...prevTransactions,
+        newTransaction,
+      ]);
+
+      setRecipientAddress("");
+      setAmount("");
+      alert("Transaction successful!");
+    } catch (err) {
+      console.log("Error sending money: ", err);
     }
-  
-    if (isNaN(amountToSend) || amountToSend <= 0) {
-      alert("Please enter a valid amount.");
-      return;
-    }
-  
-    if (amountToSend > balance) {
-      alert("Insufficient balance.");
-      return;
-    }
-  
-    setBalance((prevBalance) => parseFloat((prevBalance - amountToSend).toFixed(2)));
-  
-    const newTransaction = {
-      id: transactions.length + 1,
-      type: "Sent",
-      amount: amountToSend,
-      date: new Date().toISOString(),
-      to: recipientAddress,
-      status: "Completed",
-    };
-  
-    setTransactions((prevTransactions) => [...prevTransactions, newTransaction]);
-  
-    // Reset the input fields
-    setRecipientAddress("");
-    setAmount("");
-    alert("Transaction successful!");
   };
   
 
