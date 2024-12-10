@@ -141,6 +141,40 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet login successful.")
 }
 
+// ResetPassword resets the wallet password
+func ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		OldPassword string `json:"oldPassword"`
+		NewPassword string `json:"newPassword"`
+	}
+
+	// Parse JSON body
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		log.Printf("Error decoding JSON payload: %v", err)
+		return
+	}
+
+	// Command to change wallet password
+	command := fmt.Sprintf("walletpassphrasechange %s %s", request.OldPassword, request.NewPassword)
+
+	// Call the manager to execute the command
+	_, err := manager.BtcctlCommand(command)
+	if err != nil {
+		http.Error(w, "Failed to change password: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Update password
+	walletPassword = request.NewPassword
+
+	// Response indicating success
+	response := map[string]bool{"success": true}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	log.Println("Wallet password changed successfully.")
+}
+
 
 // DeleteWallet handles the deletion of an account
 func DeleteWallet(w http.ResponseWriter, r *http.Request) {

@@ -85,15 +85,29 @@ export default function SettingsPage() {
   };
 
   // Handle password change
-  const handlePasswordChange = () => {
-    console.log("Password updated", {
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
-    setSnackbarMessage("Password updated successfully.");
-    setSnackbarOpen(true);
-    // Add your logic for password update here
+  const handlePasswordChange = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/wallet/password-reset",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            oldPassword: currentPassword,
+            newPassword: newPassword,
+          }),
+        }
+      );
+      console.log("Password updated", {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      setSnackbarMessage("Password updated successfully.");
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.log("Error changing password: ", err);
+    }
   };
 
   // Handle password input change

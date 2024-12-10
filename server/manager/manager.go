@@ -54,75 +54,88 @@ func CallDolphinCmd(cmd string) (string, error) {
 
 // CreateWallet creates a new wallet using the provided password.
 func CreateWallet(password string) (string, error) {
-	log.Println("Executing the create command from btcwallet using pty...")
+    log.Println("Executing the create command from btcwallet using pty...")
 
-	// Command to create the wallet
-	cmd := exec.Command("btcwallet", "--create")
+    // Command to create the wallet
+    cmd := exec.Command("btcwallet", "--create")
 
-	// Create a pseudo-terminal for the command
-	ptyFile, err := pty.Start(cmd)
-	if err != nil {
-		return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
-	}
-	defer ptyFile.Close()
+    // Create a pseudo-terminal for the command
+    ptyFile, err := pty.Start(cmd)
+    if err != nil {
+        return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
+    }
+    defer ptyFile.Close()
 
-	// Buffer for capturing output
-	var outputBuffer strings.Builder
-	var walletSeed string
+    // Buffer for capturing output
+    var outputBuffer strings.Builder
+    var walletSeed string
 
-	// Goroutine to read output in real-time
-	go func() {
-		buf := make([]byte, 1024)
-		for {
-			n, err := ptyFile.Read(buf)
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				log.Printf("Error reading from pty: %v", err)
-				return
-			}
-			output := string(buf[:n])
-			outputBuffer.WriteString(output)
-			log.Println("btcwallet output:", output)
+    // Goroutine to read output in real-time
+    go func() {
+        buf := make([]byte, 1024)
+        for {
+            n, err := ptyFile.Read(buf)
+            if err != nil {
+                if err == io.EOF {
+                    break
+                }
+                log.Printf("Error reading from pty: %v", err)
+                return
+            }
+            output := string(buf[:n])
+            outputBuffer.WriteString(output)
+            log.Println("btcwallet output:", output)
 
-			// Write input as required
-			log.Println("Responding to passphrase prompt...")
-			ptyFile.Write([]byte(password + "\n"))
-			log.Println("Responding to confirm passphrase prompt...")
-			ptyFile.Write([]byte(password + "\n"))
-			log.Println("Responding to additional encryption prompt...")
-			ptyFile.Write([]byte("no\n"))
-			log.Println("Responding to existing seed prompt...")
-			ptyFile.Write([]byte("no\n"))
+            // Responding to expected prompts
+            if strings.Contains(output, "Enter the private passphrase") {
+                log.Println("Responding to passphrase prompt...")
+                ptyFile.Write([]byte(password + "\n"))
+                time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Confirm passphrase") {
+                log.Println("Responding to confirm passphrase prompt...")
+                ptyFile.Write([]byte(password + "\n"))
+                time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Do you want to add an additional layer of encryption") {
+                log.Println("Responding to additional encryption prompt...")
+                ptyFile.Write([]byte("no\n"))
+                time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Do you have an existing wallet seed") {
+                log.Println("Responding to existing seed prompt...")
+                ptyFile.Write([]byte("no\n"))
+                time.Sleep(1 * time.Second)
+            }
 			ptyFile.Write([]byte("OK\n"))
-			if strings.Contains(output, "Your wallet generation seed is:") {
-				log.Println("Capturing wallet seed...")
-				lines := strings.Split(output, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
-						walletSeed = lines[i+1]
-						break
-					}
-				}
-			}
-		}
-	}()
+            if strings.Contains(output, "Your wallet generation seed is:") {
+                log.Println("Capturing wallet seed...")
+                lines := strings.Split(output, "\n")
+                for i, line := range lines {
+                    if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
+                        walletSeed = lines[i+1]
+                        break
+                    }
+                }
+            }
+        }
+    }()
 
-	// Wait for the command to finish
-	if err := cmd.Wait(); err != nil {
-		return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
-	}
+    // Wait for the command to finish
+    if err := cmd.Wait(); err != nil {
+        return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
+    }
 
-	// Check if seed was captured
-	if walletSeed == "" {
-		return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
-	}
+    // Check if seed was captured
+    if walletSeed == "" {
+        return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
+    }
 
-	walletSeed = strings.TrimSpace(walletSeed)
-	log.Println("Wallet creation successful. Wallet seed:", walletSeed)
-	return walletSeed, nil
+    walletSeed = strings.TrimSpace(walletSeed)
+    log.Println("Wallet creation successful. Wallet seed:", walletSeed)
+    return walletSeed, nil
 }
+
 
 // Delete wallet and account
 func DeleteWallet() error {
@@ -214,7 +227,7 @@ func StartWalletServer() (error) {
 	}
 
 	log.Println("Waiting for the wallet server to initialize...")
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	// Log the success message
 	walletPID = cmd.Process.Pid
@@ -300,20 +313,6 @@ func BtcctlCommand(command string) (string, error) {
 	rpcUser := "user"
 	rpcPass := "password"
 	rpcServer := "127.0.0.1:8332"
-
-	// In case we have to create an executable in the directory
-	// wd, err := os.Getwd()
-	// if err != nil {
-	// 	return "", fmt.Errorf("Error getting working directory: %v", err)
-	// }
-
-	// rootPath := filepath.Dir(wd)
-	// btcctlPath := filepath.Join(rootPath, "btcd", "cmd", "btcctl")
-	// fmt.Printf("Executing btcctl at path: %s\n", btcctlPath)
-
-	// if _, err := os.Stat(btcctlPath); os.IsNotExist(err) {
-	// 	return "", fmt.Errorf("btcctl binary not found at %s", btcctlPath)
-	// }
 
 	// Add flags before the command itself
 	params := []string{
