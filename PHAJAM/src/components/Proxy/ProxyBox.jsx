@@ -5,6 +5,8 @@ import { useTheme } from "../../ThemeContext";
 const ProxyBox = ({ proxies, setCurrentProxy }) => {
     const { darkMode } = useTheme(); 
 
+    console.log(proxies)
+
     return (
         <Box
             sx={{

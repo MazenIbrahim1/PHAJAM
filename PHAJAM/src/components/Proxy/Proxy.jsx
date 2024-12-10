@@ -39,7 +39,7 @@ export default function Proxy() {
                 throw new Error("Failed to fetch proxy list");
             }
             const data = await response.json();
-            setProxyInfoList(data);
+            data == null ? setProxyInfoList([]) : setProxyInfoList(data);
             console.log(proxyInfoList);
         } catch (err) {
             console.error(err);
