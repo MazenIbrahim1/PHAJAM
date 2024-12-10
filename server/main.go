@@ -48,7 +48,7 @@ func setupRoutes() {
 	http.HandleFunc("/wallet/create", handlers.CreateWallet)
 	http.HandleFunc("/wallet/add-transaction", handlers.AddTransaction) // New endpoint
 	http.HandleFunc("/wallet/getTransactionHistory", handlers.GetTransactionHistory)
-	// http.HandleFunc("/wallet/privatekey", handlers.GetPrivateKey)
+	http.HandleFunc("/wallet/delete", handlers.DeleteWallet)
 	http.HandleFunc("/wallet/password-reset", handlers.ResetPassword)
 	http.HandleFunc("/wallet/login", handlers.Login)
 	http.HandleFunc("/wallet/logout", handlers.Logout)

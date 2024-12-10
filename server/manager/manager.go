@@ -329,7 +329,7 @@ func BtcctlCommand(command string) (string, error) {
 	fmt.Printf("Executing command: %s", strings.Join(params, " "))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("Error executing btcctl command: %s\nOutput: %s\nError: %v", strings.Join(params, " "), string(output), err)
+		return "", fmt.Errorf("error executing btcctl command: %s\nOutput: %s\nError: %v", strings.Join(params, " "), string(output), err)
 	}
 
 	return strings.TrimSpace(string(output)), nil
@@ -393,14 +393,3 @@ func ListTransactions(account string, count, from int, includeWatchOnly bool) ([
 	log.Println("Transactions fetched successfully.")
 	return transactions, nil
 }
-
-// func DumpPrivateKey(address string) (string, error) {
-// 	cmd := exec.Command("btcctl", "--wallet", "--rpcuser=user", "--rpcpass=password", "--rpcserver=127.0.0.1:8332", "--notls", "dumpprivkey", address)
-
-// 	output, err := cmd.CombinedOutput()
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to dump private key: %v, output: %s", err, string(output))
-// 	}
-
-// 	return strings.TrimSpace(string(output)), nil
-// }

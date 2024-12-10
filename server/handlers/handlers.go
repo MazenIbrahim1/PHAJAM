@@ -18,7 +18,6 @@ var (
 	walletPassword string
 	passwordMutex sync.Mutex
 )
-var walletDefaulAddr string
 
 // GetRoot returns a welcome message.
 func GetRoot(w http.ResponseWriter, r *http.Request) {
@@ -241,8 +240,6 @@ func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	walletDefaulAddr = defaultAddress
-
 	response := map[string]string{"address": defaultAddress}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
@@ -354,22 +351,6 @@ func SendToAddress(w http.ResponseWriter, r *http.Request) {
 	})
 	log.Println("Funds sent successfully.")
 }
-
-// func GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
-// 	// Fetch transactions from the in-memory database
-// 	transactions, err := manager.GetTransactions()
-// 	if err != nil {
-// 		http.Error(w, `{"error": "Failed to retrieve transactions"}`, http.StatusInternalServerError)
-// 		log.Printf("Error retrieving transactions: %v", err)
-// 		return
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(map[string]interface{}{
-// 		"transactions": transactions,
-// 	})
-// 	log.Println("Transaction history retrieved successfully.")
-// }
 
 // GetTransactionHistory retrieves the transaction history from btcwallet.
 func GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
