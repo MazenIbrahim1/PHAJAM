@@ -65,6 +65,7 @@ func main() {
 	mux.HandleFunc("/upload", handleFileUpload)
 	mux.HandleFunc("/files", handleFetchFiles)
 	mux.HandleFunc("/delete", handleDeleteFile)
+	mux.HandleFunc("/purchase", handlePurchase)
 
 	provideAllUpload()
 
@@ -122,7 +123,7 @@ func provideAllUpload() {
 	}
 }
 
-func purchase(w http.ResponseWriter, r *http.Request) {
+func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading req body", http.StatusInternalServerError)
@@ -130,13 +131,17 @@ func purchase(w http.ResponseWriter, r *http.Request) {
 	}
 	var request struct {
 		Id   string `json:"id"`
-		Cost string `json:"cost"`
+		Hash string `json:"hash"`
 	}
+	request.Hash = strings.TrimSpace(request.Hash)
 	err = json.Unmarshal(body, &request)
 	if err != nil {
 		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
 		return
 	}
+	err = sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
+	file := receiveDataFromPeer(node)
+	print(file)
 }
 
 func getProviders(w http.ResponseWriter, r *http.Request) {

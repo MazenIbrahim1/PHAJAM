@@ -74,10 +74,10 @@ export default function Explore() {
     setOpenDialog(true);
   };
 
-  const handlePurchase = (id, cost) => {
+  const handlePurchase = (id, hash) => {
     setOpenDialog(false);
     console.log(id);
-    console.log(cost);
+    console.log(hash);
   }
 
   return (
@@ -204,7 +204,7 @@ export default function Explore() {
             Cancel
           </Button>
           <Button
-            onClick={() => handlePurchase(selectedRow.id, selectedRow.cost)}
+            onClick={() => handlePurchase(selectedRow.id, searchQuery)}
             color="primary"
             sx={{
               backgroundColor: "black",

@@ -163,14 +163,16 @@ func connectToPeerUsingRelay(node host.Host, targetPeerID string) {
 	fmt.Printf("Connected to peer via relay: %s\n", targetPeerID)
 }
 
-func receiveDataFromPeer(node host.Host) {
+func receiveDataFromPeer(node host.Host) []byte {
 	// Set a stream handler to listen for incoming streams on the "/senddata/p2p" protocol
+	var resp []byte
 	node.SetStreamHandler("/senddata/p2p", func(s network.Stream) {
 		defer s.Close()
 		// Create a buffered reader to read data from the stream
-		buf := bufio.NewReader(s)
+		//buf := bufio.NewReader(s)
 		// Read data from the stream
-		data, err := buf.ReadBytes('\n') // Reads until a newline character
+		//data, err := buf.ReadBytes('\n') // Reads until a newline character
+		data, err := io.ReadAll(s)
 		if err != nil {
 			if err == io.EOF {
 				log.Printf("Stream closed by peer: %s", s.Conn().RemotePeer())
@@ -180,13 +182,48 @@ func receiveDataFromPeer(node host.Host) {
 			return
 		}
 		// Print the received data
-		log.Printf("Received data: %s", data)
+		//log.Printf("Received data: %s", data)
+		resp = data
 	})
+	return resp
 }
 
-func sendDataToPeer(node host.Host, targetpeerid string) {
+func sendDataToPeer(node host.Host, targetpeerid string, msg string) error {
 	var ctx = context.Background()
 	targetPeerID := strings.TrimSpace(targetpeerid)
+	relayAddr, err := multiaddr.NewMultiaddr(relay_node_addr)
+	if err != nil {
+		log.Printf("Failed to create relay multiaddr: %v", err)
+		return err
+	}
+	peerMultiaddr := relayAddr.Encapsulate(multiaddr.StringCast("/p2p-circuit/p2p/" + targetPeerID))
+
+	peerinfo, err := peer.AddrInfoFromP2pAddr(peerMultiaddr)
+	if err != nil {
+		log.Fatalf("Failed to parse peer address: %s", err)
+		return err
+	}
+	if err := node.Connect(ctx, *peerinfo); err != nil {
+		log.Printf("Failed to connect to peer %s via relay: %v", peerinfo.ID, err)
+		return err
+	}
+	s, err := node.NewStream(network.WithAllowLimitedConn(ctx, "/senddata/p2p"), peerinfo.ID, "/senddata/p2p")
+	if err != nil {
+		log.Printf("Failed to open stream to %s: %s", peerinfo.ID, err)
+		return err
+	}
+	defer s.Close()
+	_, err = s.Write([]byte(msg))
+	if err != nil {
+		log.Fatalf("Failed to write to stream: %s", err)
+		return err
+	}
+	return nil
+}
+
+func sendFile(node host.Host, target string, filename string) {
+	var ctx = context.Background()
+	targetPeerID := strings.TrimSpace(target)
 	relayAddr, err := multiaddr.NewMultiaddr(relay_node_addr)
 	if err != nil {
 		log.Printf("Failed to create relay multiaddr: %v", err)
@@ -207,15 +244,20 @@ func sendDataToPeer(node host.Host, targetpeerid string) {
 		return
 	}
 	defer s.Close()
-	_, err = s.Write([]byte("sending hello to peer\n"))
+	// Open the file "test.txt"
+	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("Failed to write to stream: %s", err)
+		log.Fatalf("Failed to open file: %s", err)
+		return
 	}
+	defer file.Close()
 
-}
-
-func sendFile(node host.Host, target string, filename string) {
-
+	// Copy the file content to the stream
+	_, err = io.Copy(s, file)
+	if err != nil {
+		log.Fatalf("Failed to send file: %s", err)
+		return
+	}
 }
 
 func handlePeerExchange(node host.Host) {
@@ -407,6 +449,13 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			key := args[1]
 			provideKey(ctx, dht, key, true)
 			fmt.Println("Record stored successfully")
+
+		case "SEND":
+			if len(args) < 2 {
+				fmt.Println("Expected msg")
+				continue
+			}
+			sendFile(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", args[1])
 
 		default:
 			fmt.Println("Expected GET, GET_PROVIDERS, PUT, DELETE, or UPLOAD")
