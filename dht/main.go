@@ -139,9 +139,11 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
 		return
 	}
-	err = sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
-	file := receiveDataFromPeer(node)
-	print(file)
+	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:")
+	data := <-dataChannel
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
