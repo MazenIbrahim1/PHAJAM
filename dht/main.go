@@ -24,6 +24,7 @@ import (
 var (
 	dhtRoute *dht.IpfsDHT
 	ctx      context.Context
+	connectedPeers = make(map[string]struct{})
 )
 
 // CORS middleware
@@ -159,14 +160,83 @@ func main() {
 	mux.HandleFunc("/files", handleFetchFiles)
 
 	// New handler for returning Peer ID
+	type ProxyRequest struct {
+		Action   string `json:"action"`
+	}
+
 	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
-		registerProxyAsService(ctx, dhtRoute, ip, node)
+		var req ProxyRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Call registerProxyAsService based on the action (register or deregister)
+		if req.Action == "deregister" {
+			// Deregister the proxy by passing an empty string for the IP
+			registerProxyAsService(ctx, dhtRoute, "", node)
+		} else if req.Action == "register" {
+			// Register the proxy by passing the IP address
+			registerProxyAsService(ctx, dhtRoute, ip, node)
+		} else {
+			http.Error(w, "Invalid action", http.StatusBadRequest)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Registered as a proxy",
 		})
+	})
+
+	mux.HandleFunc("/isProxy", func(w http.ResponseWriter, r *http.Request) {
+		proxyInfo, err := getProxyInfo(ctx, dhtRoute, node.ID().String())
+		if err != nil {
+			http.Error(w, "Failed to retrieve proxy information", http.StatusInternalServerError)
+			return
+		}
+
+		if proxyInfo == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]bool{
+				"isProxy": false,
+			})
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]bool{
+				"isProxy": true,
+			})	
+		}
+	})
+
+	mux.HandleFunc("/fetchProxyList", func(w http.ResponseWriter, r *http.Request) {
+
+		var proxyInfoList []ProxyInfo
+
+		for peerID := range connectedPeers {
+			proxyInfo, err := getProxyInfo(ctx, dhtRoute, peerID)
+			if err != nil {
+				fmt.Printf("Failed to get proxy info for peer %s: %v\n", peerID, err)
+				continue
+			}
+			if proxyInfo != nil {
+				proxyInfoList = append(proxyInfoList, *proxyInfo)
+			}
+		}
+
+		fmt.Println(proxyInfoList)
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err := json.NewEncoder(w).Encode(proxyInfoList)
+		if err != nil {
+			// Handle error if the encoding fails
+			http.Error(w, "Failed to encode response to JSON", http.StatusInternalServerError)
+		}
 	})
 
 	fmt.Println("Starting server at port 8080")

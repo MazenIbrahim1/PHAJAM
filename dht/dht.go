@@ -109,7 +109,11 @@ func createNode() (host.Host, *dht.IpfsDHT, error) {
 	// Set up notifications for new connections
 	node.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(n network.Network, conn network.Conn) {
-			fmt.Printf("Notification: New peer connected %s\n", conn.RemotePeer().String())
+
+			peerID := conn.RemotePeer().String()
+
+			fmt.Printf("Notification: New peer connected %s\n", peerID)
+			connectedPeers[peerID] = struct{}{}
 		},
 	})
 
@@ -477,6 +481,8 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 			IPAddress: ipAddress, // Example, replace with actual IP or relay info
 			Port:      8080,
 		}
+	} else {
+		proxyInfo = nil
 	}
 
 	// 3. Serialize proxy information to JSON
@@ -523,5 +529,28 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 		}
 	}
 
-	fmt.Printf("Proxy registered successfully!\n NodeID: %s\n PeerID: %s\n IP Address: %s\n", node_id, node.ID().String(), ipAddress)
+	if proxyInfo != nil {
+		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n PeerID: %s\n IP Address: %s\n", node_id, node.ID().String(), ipAddress)
+	} else {
+		fmt.Printf("Proxy deregistered successfully!\n NodeID: %s\n PeerID: %s\n", node_id, node.ID().String())
+	}
+}
+
+func getProxyInfo(ctx context.Context, dht *dht.IpfsDHT, nodeID string) (*ProxyInfo, error) {
+	proxyKey := "/orcanet/proxy/" + nodeID
+
+	value, err := dht.GetValue(ctx, proxyKey)
+	if err != nil {
+		fmt.Printf("Failed retrieving proxy information: %v\n", err)
+		return nil, err
+	}
+
+	var proxyInfo ProxyInfo
+	err = json.Unmarshal(value, &proxyInfo)
+	if err != nil {
+		fmt.Printf("Error unmarshalling proxy info: %v\n", err)
+		return nil, err
+	}
+
+	return &proxyInfo, nil
 }

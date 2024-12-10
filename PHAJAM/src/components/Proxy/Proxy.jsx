@@ -12,6 +12,38 @@ export default function Proxy() {
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
+  useEffect(() => {
+
+    // Check if I am a proxy
+    const fetchProxyStatus = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/isProxy");
+            if (!response.ok) {
+                throw new Error("Failed to fetch proxy status");
+            }
+            const data = await response.json();
+            setIsProxy(data.isProxy);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Fetch list of proxies
+    const fetchProxyList = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/fetchProxyList");
+            if (!response.ok) {
+                throw new Error("Failed to fetch proxy list");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    fetchProxyStatus();
+    fetchProxyList();
+  })
+
   // Proxy chosen BEFORE confirmation
   const [selectedProxy, setSelectedProxy] = useState(null);
 
@@ -55,11 +87,15 @@ export default function Proxy() {
 
     // Register as proxy
     try {
+        const data = {
+            action: "register",  // Register the proxy
+        };
         const response = await fetch("http://localhost:8080/registerProxy", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
+            body: JSON.stringify(data),
         });
         
         // const data = await response.json();
@@ -200,9 +236,27 @@ export default function Proxy() {
                 <Button 
                     variant = "contained"
                     backgroundColor = "black"
-                    onClick = {() => {
-                        setIsProxy(false);
-                        setConfirmDisableProxyModeOpened(false);
+                    onClick = {async () => {
+                        try {
+                            const data = {
+                                action: "deregister",  // Register the proxy
+                            };
+                            const response = await fetch("http://localhost:8080/registerProxy", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(data),
+                            });
+                            
+                            // const data = await response.json();
+                            if (response.ok) {
+                                setIsProxy(false);
+                                setConfirmDisableProxyModeOpened(false);
+                            }
+                        } catch (error) {
+                    
+                        }
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
