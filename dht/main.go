@@ -198,7 +198,7 @@ func main() {
 	type ProxyRequest struct {
 		Action   	string `json:"action"`
 		Name     	string `json:"name"`
-		InitialFee	string `json:initialFee"`
+		InitialFee	string `json:"initialFee"`
 		Price	 	string `json:"price"`
 	}
 
