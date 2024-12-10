@@ -63,6 +63,8 @@ func main() {
 	mux.HandleFunc("/files", handleFetchFiles)
 	mux.HandleFunc("/delete", handleDeleteFile)
 
+	provideAllUpload()
+
 	fmt.Println("Starting server at port 8080")
 	if err := http.ListenAndServe("0.0.0.0:8080", enableCORS(logRequests(mux))); err != nil {
 		fmt.Println("Error starting server: ", err)
@@ -99,6 +101,18 @@ func enableCORS(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func provideAllUpload() {
+	fmt.Println("proivdeallupload")
+	records, err := FetchAllFileRecords()
+	if err != nil {
+		log.Printf("Failed to fetch all file records")
+		return
+	}
+	for _, record := range records {
+		provideKey(ctx, dhtRoute, record["hash"].(string), true)
+	}
 }
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
