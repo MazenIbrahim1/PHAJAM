@@ -538,7 +538,7 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location stri
 	}
 
 	if proxyInfo != nil {
-		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n Name: %s\n PeerID: %s\n IP Address: %s\n Initial Fee: %s DC\nRate: %s DC/MB\nPort: %d", node_id, name, node.ID().String(), ipAddress, proxyInfo.InitialFee, proxyInfo.Price, proxyInfo.Port)
+		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n Name: %s\n PeerID: %s\n IP Address: %s\n Initial Fee: %s DC\n Rate: %s DC/MB\n Port: %d", node_id, name, node.ID().String(), ipAddress, proxyInfo.InitialFee, proxyInfo.Price, proxyInfo.Port)
 	} else {
 		fmt.Printf("Proxy deregistered successfully!\n NodeID: %s\n PeerID: %s\n", node_id, node.ID().String())
 	}
