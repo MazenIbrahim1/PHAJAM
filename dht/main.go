@@ -126,23 +126,28 @@ func provideAllUpload() {
 func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading req body", http.StatusInternalServerError)
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
 	var request struct {
 		Id   string `json:"id"`
 		Hash string `json:"hash"`
 	}
-	request.Hash = strings.TrimSpace(request.Hash)
 	err = json.Unmarshal(body, &request)
 	if err != nil {
-		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
+		http.Error(w, "Error parsing JSON request body", http.StatusBadRequest)
 		return
 	}
+	request.Hash = strings.TrimSpace(request.Hash)
 	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:"+request.Hash)
 	data := <-dataChannel
-	w.Header().Set("Content-Type", "application/octet-stream") // Set content type for raw binary data
-	w.Header().Set("Content-Name", filename)                   // Suggest the filename for download
+
+	// Set headers
+	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data
+	fmt.Println(fileName)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fileName)) // Set filename for download
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.WriteHeader(http.StatusOK)
 
 	// Write the raw file data to the response body

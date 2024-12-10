@@ -81,37 +81,38 @@ export default function Explore() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: id, hash: hash })
+        body: JSON.stringify({ id: id, hash: hash }),
       });
   
       // Check if the response is successful
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
-  
+      console.log(response.headers);
       // Get the filename from the "Content-Disposition" header
-      const contentDisposition = response.headers.get("Content-Name");
+      const contentDisposition = response.headers.get("Content-Disposition");
       console.log(contentDisposition)
-      const filename = contentDisposition
-        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
-        : "downloaded_file"; // Default filename if not found
+      let filename = "downloaded_file"; // Default filename
+      if (contentDisposition && contentDisposition.includes("filename=")) {
+        filename = contentDisposition
+          .split("filename=")[1]
+          .trim()
+          .replace(/^"|"$/g, ""); // Remove quotes around the filename, if any
+      }
   
       // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
-  
       // Create a URL for the Blob and trigger the file download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;  // Use the filename from the header
-      link.click();  // Trigger the download
-      URL.revokeObjectURL(url);  // Clean up the object URL
+      link.download = filename; // Use the filename from the header
+      link.click(); // Trigger the download
+      URL.revokeObjectURL(url); // Clean up the object URL
     } catch (error) {
       console.error("Error purchasing: ", error);
     }
-  }
-  
-  
+  };  
 
   return (
     <Box
