@@ -62,9 +62,9 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                     padding: 2,
                                 }}
                             >
-                                {/* <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
-                                    {proxy.peer_id}
-                                </Typography> */}
+                                <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
+                                    {proxy.name}
+                                </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
                                     IP: {proxy.ip_address}
                                 </Typography>

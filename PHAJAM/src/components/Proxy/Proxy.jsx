@@ -59,7 +59,8 @@ export default function Proxy() {
   // Popup to confirm proxy choice
   const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
 
-  // Price of your proxy
+  // Name and price of your proxy
+  const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [priceError, setPriceError] = useState("");
 
@@ -99,6 +100,7 @@ export default function Proxy() {
     try {
         const data = {
             action: "register",  // Register the proxy
+            name: name,
             price: price,
         };
         const response = await fetch("http://localhost:8080/registerProxy", {
@@ -176,12 +178,12 @@ export default function Proxy() {
                 variant = "h4"
                 sx = {{ fontWeight: "bold" }}
             >
-                {mockProxies.length === 0 ? "NO " : ""} AVAILABLE PROXIES
+                {proxyInfoList.length === 0 ? "NO " : ""} AVAILABLE PROXIES
             </Typography>
         </Box>
         <ProxyBox proxies = {proxyInfoList} setCurrentProxy = {handleSetCurrentProxy} />
         <Dialog open = {priceOpened}>
-            <DialogTitle sx={{ paddingBottom: 0 }}> Set Price </DialogTitle>
+            <DialogTitle sx={{ paddingBottom: 0 }}> Set Proxy Details </DialogTitle>
             <IconButton
                 edge="end"
                 color="inherit"
@@ -193,6 +195,16 @@ export default function Proxy() {
             </IconButton>
             <DialogContent sx={{ paddingTop: 1 }}>
                 <form id = "priceForm" onSubmit = {handleSubmit}>
+                    <TextField
+                        margin = "dense"
+                        label = "Name"
+                        type = "text"
+                        fullWidth
+                        variant = "outlined"
+                        value = {name}
+                        onChange = {(e) => setName(e.target.value)}
+                        required
+                    />
                     <TextField
                         margin = "dense"
                         label = "DC / MB"

@@ -159,6 +159,7 @@ func main() {
 	// New handler for returning Peer ID
 	type ProxyRequest struct {
 		Action   string `json:"action"`
+		Name     string `json:"name"`
 		Price	 string `json:"price"`
 	}
 
@@ -173,10 +174,10 @@ func main() {
 		// Call registerProxyAsService based on the action (register or deregister)
 		if req.Action == "deregister" {
 			// Deregister the proxy by passing an empty string for the IP
-			registerProxyAsService(ctx, dhtRoute, "", req.Price, node)
+			registerProxyAsService(ctx, dhtRoute, "", "", "", node)
 		} else if req.Action == "register" {
 			// Register the proxy by passing the IP address
-			registerProxyAsService(ctx, dhtRoute, ip, "", node)
+			registerProxyAsService(ctx, dhtRoute, ip, req.Name, req.Price, node)
 		} else {
 			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return

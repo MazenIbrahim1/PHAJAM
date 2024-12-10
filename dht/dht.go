@@ -34,7 +34,7 @@ var (
 	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	// Change the ip address to your public ip address"
-	native_bootstrap_node_addr = "/ip4/172.25.245.14/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
+	native_bootstrap_node_addr = "/ip4/172.25.243.151/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 )
 
@@ -469,7 +469,7 @@ type ProxyInfo struct {
 	Port      int    `json:"port"`
 }
 
-func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, price string, node host.Host) {
+func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, name string, price string, node host.Host) {
 	// 1. Create a unique proxy key
 	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
