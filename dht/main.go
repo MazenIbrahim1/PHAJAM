@@ -139,11 +139,11 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
-	sendDataToPeer(node, request.Id, "NAME:"+request.Hash)
-	filename := <-filenameChannel
-	fmt.Println(filename)
-	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
+	sendDataToPeer(node, request.Id, "GETNAME:"+request.Hash)
 	data := <-dataChannel
+	fmt.Println(data)
+	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
+	data = <-dataChannel
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data

@@ -192,9 +192,7 @@ func receiveDataFromPeer(node host.Host) {
 			if err != nil {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
-			sendDataToPeer(node, s.Conn().RemotePeer().String(), "NAME:"+record["filename"].(string))
-		} else if strings.HasPrefix(string(data), "NAME:") {
-			filenameChannel <- string(data)[5:]
+			sendDataToPeer(node, s.Conn().RemotePeer().String(), record["filename"].(string))
 		} else {
 			dataChannel <- data
 		}
