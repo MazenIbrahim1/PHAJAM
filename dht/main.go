@@ -139,7 +139,7 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
-	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:"+request.Hash)
+	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
 	data := <-dataChannel
 
 	// Set headers
