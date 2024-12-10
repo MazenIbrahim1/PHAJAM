@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +17,7 @@ var (
 	walletPassword string
 	passwordMutex sync.Mutex
 )
+var walletDefaulAddr string
 
 // GetRoot returns a welcome message.
 func GetRoot(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +128,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Unlock wallet
+	fmt.Println("Unlocking wallet...")
+	timeUnlocked := 3600*5
+	command := fmt.Sprintf("walletpassphrase %s %d", walletPassword, timeUnlocked)
+	_, err := manager.BtcctlCommand(command)
+	if err != nil {
+		fmt.Printf("Error unlocking wallet: %v\n", err)
+	} else {
+		fmt.Println("Wallet unlocked successfully!")
+	}
+
 	// Simulate delay to mimic wallet unlocking (if needed)
 	time.Sleep(3 * time.Second)
 
@@ -230,6 +241,8 @@ func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	walletDefaulAddr = defaultAddress
+
 	response := map[string]string{"address": defaultAddress}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
@@ -302,24 +315,8 @@ func SendToAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get wallet balance
-	balance, err := manager.GetWalletBalance()
-	if err != nil {
-		http.Error(w, `{"error": "Failed to retrieve balance"}`, http.StatusInternalServerError)
-		log.Printf("Error retrieving wallet balance: %v", err)
-		return
-	}
-
-	// Validate amount
-	amountFloat, err := strconv.ParseFloat(request.Amount, 64)
-	if err != nil || amountFloat > balance {
-		http.Error(w, `{"error": "Insufficient funds or invalid amount"}`, http.StatusBadRequest)
-		log.Printf("Error validating amount: %v", err)
-		return
-	}
-
 	// Send funds
-	txid, err := manager.CallDolphinCmd(fmt.Sprintf("sendtoaddress %s %s", request.Address, request.Amount))
+	txid, err := manager.BtcctlCommand(fmt.Sprintf("sendtoaddress %s %s", request.Address, request.Amount))
 	if err != nil {
 		http.Error(w, `{"error": "Failed to send funds"}`, http.StatusInternalServerError)
 		log.Printf("Error sending funds: %v", err)

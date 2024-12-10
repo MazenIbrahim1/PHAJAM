@@ -296,7 +296,7 @@ func GetWalletBalance() (float64, error) {
 // ValidateAddress checks if a given address is valid
 func ValidateAddress(address string) error {
 	log.Printf("Validating address: %s", address)
-	output, err := CallDolphinCmd(fmt.Sprintf("validateaddress %s", address))
+	output, err := BtcctlCommand(fmt.Sprintf("validateaddress %s", address))
 	if err != nil {
 		return fmt.Errorf("failed to validate address: %w", err)
 	}

@@ -92,39 +92,46 @@ export default function Profile() {
     alert("Address copied to clipboard!");
   };
 
-  const handleSendMoney = () => {
-    const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
+  const handleSendMoney = async () => {
+    try {
+      const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
+      if (isNaN(amountToSend) || amountToSend <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+      if (amountToSend > balance) {
+        alert("Insufficient balance.");
+        return;
+      }
 
-    if (isNaN(amountToSend) || amountToSend <= 0) {
-      alert("Please enter a valid amount.");
-      return;
+      const response = await fetch("http://localhost:8080/wallet/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: recipientAddress,
+          amount: amountToSend,
+        }),
+      });
+
+      const newTransaction = {
+        id: transactions.length + 1,
+        type: "Sent",
+        amount: amountToSend,
+        date: new Date().toISOString(),
+        to: recipientAddress,
+        status: "Completed",
+      };
+      setTransactions((prevTransactions) => [
+        ...prevTransactions,
+        newTransaction,
+      ]);
+
+      setRecipientAddress("");
+      setAmount("");
+      alert("Transaction successful!");
+    } catch (err) {
+      console.log("Error sending money: ", err);
     }
-
-    if (amountToSend > balance) {
-      alert("Insufficient balance.");
-      return;
-    }
-
-    setBalance((prevBalance) =>
-      parseFloat((prevBalance - amountToSend).toFixed(2))
-    );
-
-    const newTransaction = {
-      id: transactions.length + 1,
-      type: "Sent",
-      amount: amountToSend,
-      date: new Date().toISOString(),
-      to: recipientAddress,
-      status: "Completed",
-    };
-    setTransactions((prevTransactions) => [
-      ...prevTransactions,
-      newTransaction,
-    ]);
-
-    setRecipientAddress("");
-    setAmount("");
-    alert("Transaction successful!");
   };
 
   const handleTabChange = (event, newValue) => {
