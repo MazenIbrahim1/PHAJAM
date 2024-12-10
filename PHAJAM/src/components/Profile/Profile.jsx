@@ -57,24 +57,6 @@ export default function Profile() {
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
 
   useEffect(() => {
-    fetchBalanceAndTransactions();
-  }, []);
-
-  const fetchBalanceAndTransactions = async () => {
-    try {
-      const balanceRequest = await fetch("http://localhost:8080/wallet/balance");
-      if (!balanceRequest.ok) {
-        throw new Error(`Balance fetch failed: ${balanceRequest.status}`);
-      }
-      const balanceResponse = await balanceRequest.json();
-      setBalance(balanceResponse.balance);
-
-      const transactionsRequest = await fetch("http://localhost:8080/wallet/getTransactionHistory");
-      if (!transactionsRequest.ok) {
-        throw new Error(`Transactions fetch failed: ${transactionsRequest.status}`);
-      }
-    };
-
     const fetchAddress = async () => {
       try {
         const request = await fetch("http://localhost:8080/wallet/address");
@@ -90,7 +72,23 @@ export default function Profile() {
 
     fetchBalance();
     fetchAddress();
+    fetchTransactions();
   }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const transactionsRequest = await fetch(
+        "http://localhost:8080/wallet/getTransactionHistory"
+      );
+      if (!transactionsRequest.ok) {
+        throw new Error(
+          `Transactions fetch failed: ${transactionsRequest.status}`
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(address);
@@ -138,7 +136,6 @@ export default function Profile() {
       console.log("Error sending money: ", err);
     }
   };
-  
 
   const handleTabChange = (event, newValue) => {
     setFilter(newValue);
@@ -153,8 +150,10 @@ export default function Profile() {
   };
 
   const sortedTransactions = transactions.sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === "asc" ? -1 : 1;
-    if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === "asc" ? 1 : -1;
+    if (a[sortConfig.key] < b[sortConfig.key])
+      return sortConfig.direction === "asc" ? -1 : 1;
+    if (a[sortConfig.key] > b[sortConfig.key])
+      return sortConfig.direction === "asc" ? 1 : -1;
     return 0;
   });
 
@@ -169,7 +168,10 @@ export default function Profile() {
       return (
         transaction.txid?.toLowerCase().includes(searchTermLower) ||
         transaction.to?.toLowerCase().includes(searchTermLower) ||
-        new Date(transaction.date).toLocaleDateString().toLowerCase().includes(searchTermLower)
+        new Date(transaction.date)
+          .toLocaleDateString()
+          .toLowerCase()
+          .includes(searchTermLower)
       );
     });
 
@@ -304,7 +306,6 @@ export default function Profile() {
         </Box>
       </Box>
 
-
       {/* Bottom Row */}
       <Box
         sx={{
@@ -371,19 +372,29 @@ export default function Profile() {
             <TableHead>
               <TableRow>
                 {/* Updated Column Headers */}
-                {["Transaction ID", "Cost", "Time of Transaction", "Type", "Status", "Other Wallet Address"].map(
-                  (column) => (
-                    <TableCell key={column}>
-                      <TableSortLabel
-                        active={sortConfig.key === column.toLowerCase().replace(/ /g, "_")}
-                        direction={sortConfig.direction}
-                        onClick={() => handleSort(column.toLowerCase().replace(/ /g, "_"))}
-                      >
-                        {column}
-                      </TableSortLabel>
-                    </TableCell>
-                  )
-                )}
+                {[
+                  "Transaction ID",
+                  "Cost",
+                  "Time of Transaction",
+                  "Type",
+                  "Status",
+                  "Other Wallet Address",
+                ].map((column) => (
+                  <TableCell key={column}>
+                    <TableSortLabel
+                      active={
+                        sortConfig.key ===
+                        column.toLowerCase().replace(/ /g, "_")
+                      }
+                      direction={sortConfig.direction}
+                      onClick={() =>
+                        handleSort(column.toLowerCase().replace(/ /g, "_"))
+                      }
+                    >
+                      {column}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -391,7 +402,9 @@ export default function Profile() {
                 <TableRow key={transaction.txid}>
                   <TableCell>{transaction.txid}</TableCell>
                   <TableCell>{transaction.amount}</TableCell>
-                  <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
+                  <TableCell>
+                    {new Date(transaction.date).toLocaleString()}
+                  </TableCell>
                   <TableCell>{transaction.type}</TableCell>
                   <TableCell>{transaction.status}</TableCell>
                   <TableCell>{transaction.to}</TableCell>
