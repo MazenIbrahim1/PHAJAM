@@ -81,21 +81,37 @@ export default function Explore() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: id, hash: hash})
-      })
-
+        body: JSON.stringify({ id: id, hash: hash })
+      });
+  
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      // Get the filename from the "Content-Disposition" header
+      const contentDisposition = response.headers.get("Content-Name");
+      console.log(contentDisposition)
+      const filename = contentDisposition
+        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+        : "downloaded_file"; // Default filename if not found
+  
+      // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
-      console.log(blob)
+  
+      // Create a URL for the Blob and trigger the file download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "test.js"; // Set the desired file name
-      link.click(); // Trigger the download
-      URL.revokeObjectURL(url); // Clean up the object URL
+      link.download = filename;  // Use the filename from the header
+      link.click();  // Trigger the download
+      URL.revokeObjectURL(url);  // Clean up the object URL
     } catch (error) {
-      console.error("Error purchasing: ", error)
+      console.error("Error purchasing: ", error);
     }
   }
+  
+  
 
   return (
     <Box

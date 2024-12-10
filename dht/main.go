@@ -139,11 +139,16 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
 		return
 	}
-	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:")
+	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:"+request.Hash)
 	data := <-dataChannel
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/octet-stream") // Set content type for raw binary data
+	w.Header().Set("Content-Name", filename)                   // Suggest the filename for download
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+
+	// Write the raw file data to the response body
+	if _, err := w.Write(data); err != nil {
+		http.Error(w, "Error writing raw data to response", http.StatusInternalServerError)
+	}
 }
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
