@@ -223,6 +223,19 @@ func GetNewAddress(w http.ResponseWriter, r *http.Request) {
 	log.Println("New wallet address generated successfully.")
 }
 
+func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
+	defaultAddress, err := manager.BtcctlCommand("getaccountaddress default")
+	if err != nil {
+		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{"address": defaultAddress}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	log.Println("Default address retrieved successfully.")
+}
+
 // GetBalance retrieves the wallet balance.
 func GetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := manager.BtcctlCommand("getbalance")

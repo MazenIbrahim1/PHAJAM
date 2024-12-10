@@ -49,9 +49,7 @@ export default function Profile() {
       status: "In Progress",
     },
   ]);
-  const [address, setAddress] = useState(
-    "0x1234567890abcdef1234567890abcdef12345678"
-  );
+  const [address, setAddress] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [filter, setFilter] = useState("All");
@@ -72,7 +70,21 @@ export default function Profile() {
       }
     };
 
+    const fetchAddress = async () => {
+      try {
+        const request = await fetch("http://localhost:8080/wallet/address");
+        if (!request.ok) {
+          throw new Error(`HTTP error! Status: ${request.status}`);
+        }
+        const response = await request.json();
+        setAddress(response.address);
+      } catch (err) {
+        console.error("Error fetching address:", err);
+      }
+    };
+
     fetchBalance();
+    fetchAddress();
   }, []);
 
   const handleCopyToClipboard = () => {

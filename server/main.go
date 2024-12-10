@@ -51,6 +51,7 @@ func setupRoutes() {
 	http.HandleFunc("/wallet/login", handlers.Login)
 	http.HandleFunc("/wallet/logout", handlers.Logout)
 	http.HandleFunc("/wallet/address/new", handlers.GetNewAddress)
+	http.HandleFunc("/wallet/address", handlers.GetDefaultAddress)
 	http.HandleFunc("/wallet/balance", handlers.GetBalance)
 	http.HandleFunc("/wallet/mine", handlers.Mine)
 	http.HandleFunc("/wallet/send", handlers.SendToAddress)
