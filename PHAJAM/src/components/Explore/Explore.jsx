@@ -70,6 +70,9 @@ export default function Explore() {
   // Handle row click
   const handleRowClick = (params) => {
     const clickedRow = params.row;
+    if (clickedRow.id === "Me") {
+      return;
+    }
     setSelectedRow(clickedRow);
     setOpenDialog(true);
   };
