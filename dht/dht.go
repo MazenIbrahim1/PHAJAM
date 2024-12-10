@@ -181,8 +181,18 @@ func receiveDataFromPeer(node host.Host) {
 			}
 			return
 		}
+		if strings.HasPrefix(string(data), "REQUEST:") {
+			hash := string(data)[8:]
+			fmt.Println("hash: " + hash)
+			record, err := GetFileRecord(hash)
+			if err != nil {
+				log.Printf("Failed to retrieve hash: %v", hash)
+			}
+			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
+		} else {
+			dataChannel <- data
+		}
 		// Print the received data
-		dataChannel <- data
 		//log.Printf("Received data: %s", data)
 	})
 }
@@ -243,7 +253,6 @@ func sendFile(node host.Host, target string, filename string) {
 		return
 	}
 	defer s.Close()
-	// Open the file "test.txt"
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to open file: %s", err)
