@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from "../../ThemeContext";
 import ProxyBox from "./ProxyBox";
 import proxyInstructionsImage from './proxyInstructions.png'
+import disconnectProxyInstructionsImage from './disconnectProxyInstructions.png'
 
 export default function Proxy() {
 
@@ -62,12 +63,18 @@ export default function Proxy() {
 
   // Proxy used AFTER confirmation
   const [currentProxy, setCurrentProxy] = useState(null);
+
+  // Popup if choosing proxy while already connected to another
+  const [proxyAlreadyConnectedOpened, setProxyAlreadyConnectedOpened] = useState(false);
   
   // Popup to confirm proxy choice
   const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
 
   // Popup for using proxy instructions
-  const [proxyInstructionsOpened, setproxyInstructionsOpened] = useState(false);
+  const [proxyInstructionsOpened, setProxyInstructionsOpened] = useState(false);
+
+  // Popup for disconnecting from proxy instructions
+  const [disconnectProxyInstructionsOpened, setDisconnectProxyInstructionsOpened] = useState(false);
 
   // Name and price of your proxy
   const [name, setName] = useState("");
@@ -95,8 +102,12 @@ export default function Proxy() {
   }
 
   const handleSetCurrentProxy = (proxy) => {
-    setSelectedProxy(proxy);
-    setConfirmProxyOpened(true);
+    if (currentProxy != null) {
+        setProxyAlreadyConnectedOpened(true);
+    } else {
+        setSelectedProxy(proxy);
+        setConfirmProxyOpened(true);    
+    }
     // setCurrentProxy(proxy);
     // setIsProxy(false); // Set isProxy to false whenever a proxy is set
   };
@@ -281,6 +292,27 @@ export default function Proxy() {
                 </Button>
             </DialogActions>
         </Dialog>
+        <Dialog open = {proxyAlreadyConnectedOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Already connected to a proxy </DialogTitle>
+            <Typography 
+                sx={{ textAlign: "left", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+            Error: You cannot connect to multiple proxies. Please disconnect from the current one to proceed.
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setProxyAlreadyConnectedOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    OK
+                </Button>
+            </DialogActions>
+        </Dialog>
         <Dialog open = {confirmProxyOpened}>
             <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Use {selectedProxy == null ? "" : selectedProxy.name} as a proxy </DialogTitle>
             <Typography 
@@ -296,7 +328,7 @@ export default function Proxy() {
                         setCurrentProxy(selectedProxy);
                         setIsProxy(false);
                         setConfirmProxyOpened(false);
-                        setproxyInstructionsOpened(true);
+                        setProxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -339,7 +371,37 @@ export default function Proxy() {
                     backgroundColor = "black"
                     onClick = {() => {
                         setIsProxy(false);
-                        setproxyInstructionsOpened(false);
+                        setProxyInstructionsOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Done
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {disconnectProxyInstructionsOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disconnect from {currentProxy == null ? "" : currentProxy.name} </DialogTitle>
+            <Typography 
+                sx={{ alignContent: "center", textAlign: "center", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+                Please disconnect via your device's proxy settings:<br />
+                <img
+                    src = {disconnectProxyInstructionsImage}
+                    alt = "Disconnect Proxy"
+                    style = {{
+                        display: "block",
+                        width: "100%"
+                    }}
+                />
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setDisconnectProxyInstructionsOpened(false);
+                        setCurrentProxy(null);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -408,8 +470,8 @@ export default function Proxy() {
                     variant = "contained"
                     backgroundColor = "black"
                     onClick = {() => {
-                        setCurrentProxy(null);
                         setConfirmDisconnectProxyOpen(false);
+                        setDisconnectProxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
