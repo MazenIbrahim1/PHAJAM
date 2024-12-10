@@ -139,6 +139,9 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
+	sendDataToPeer(node, request.Id, "NAME:"+request.Hash)
+	filename := <-filenameChannel
+	fmt.Println(filename)
 	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
 	data := <-dataChannel
 
