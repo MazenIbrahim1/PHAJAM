@@ -170,10 +170,7 @@ func receiveDataFromPeer(node host.Host) {
 		defer s.Close()
 		// Create a buffered reader to read data from the stream
 		//buf := bufio.NewReader(s)
-		//buf := bufio.NewReader(s)
 		// Read data from the stream
-		//data, err := buf.ReadBytes('\n') // Reads until a newline character
-		data, err := io.ReadAll(s)
 		//data, err := buf.ReadBytes('\n') // Reads until a newline character
 		data, err := io.ReadAll(s)
 		if err != nil {
