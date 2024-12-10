@@ -30,13 +30,14 @@ import (
 )
 
 var (
-	node_id             = "SBU_Id" // give your SBU ID
+	node_id             = "114640750" // give your SBU ID
 	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	// Change the ip address to your public ip address"
 	native_bootstrap_node_addr = "/ip4/172.25.232.234/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 	dataChannel                = make(chan []byte)
+	fileNameChannel            = make(chan string)
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -188,9 +189,8 @@ func receiveDataFromPeer(node host.Host) {
 			if err != nil {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
-			fileName = record["filename"].(string)
-			fmt.Println(fileName)
-			sendFile(node, s.Conn().RemotePeer().String(), "files/"+fileName)
+			fileNameChannel <- record["filename"].(string)
+			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
 		} else {
 			dataChannel <- data
 		}

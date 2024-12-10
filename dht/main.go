@@ -25,7 +25,6 @@ var (
 	dhtRoute *dht.IpfsDHT
 	ctx      context.Context
 	node     host.Host
-	fileName string
 )
 
 func main() {
@@ -145,7 +144,7 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data
-	fmt.Println(fileName)
+	fileName := <-fileNameChannel
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fileName)) // Set filename for download
 	w.WriteHeader(http.StatusOK)
 
