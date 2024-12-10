@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	node_id             = "114640750" // give your SBU ID
+	node_id             = "SBU_Id" // give your SBU ID
 	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
 	// Change the ip address to your public ip address"
@@ -170,7 +170,10 @@ func receiveDataFromPeer(node host.Host) []byte {
 		defer s.Close()
 		// Create a buffered reader to read data from the stream
 		//buf := bufio.NewReader(s)
+		//buf := bufio.NewReader(s)
 		// Read data from the stream
+		//data, err := buf.ReadBytes('\n') // Reads until a newline character
+		data, err := io.ReadAll(s)
 		//data, err := buf.ReadBytes('\n') // Reads until a newline character
 		data, err := io.ReadAll(s)
 		if err != nil {
@@ -184,6 +187,10 @@ func receiveDataFromPeer(node host.Host) []byte {
 		// Print the received data
 		//log.Printf("Received data: %s", data)
 		resp = data
+		log.Printf("Received data: %s", data)
+		if strings.HasPrefix(string(data), "REQUEST:") {
+
+		}
 	})
 	return resp
 }
