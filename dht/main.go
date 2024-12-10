@@ -138,6 +138,14 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
+	sendDataToPeer(node, request.Id, "EXIST:"+request.Hash)
+	exist := <-dataChannel
+
+	if string(exist) == "false" {
+		http.Error(w, "File is no longer provided", http.StatusNotFound)
+		return
+	}
+
 	sendDataToPeer(node, request.Id, "NAME:"+request.Hash)
 
 	// Retrieve filename from dataChannel
