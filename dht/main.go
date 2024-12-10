@@ -257,7 +257,7 @@ func main() {
 		for peerID := range connectedPeers {
 			proxyInfo, err := getProxyInfo(ctx, dhtRoute, peerID)
 			if err != nil {
-				fmt.Printf("Failed to get proxy info for peer %s: %v\n", peerID, err)
+				// fmt.Printf("Failed to get proxy info for peer %s: %v\n", peerID, err)
 				continue
 			}
 			if proxyInfo != nil {

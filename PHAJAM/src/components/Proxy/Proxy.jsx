@@ -4,6 +4,7 @@ import RouterIcon from '@mui/icons-material/Router';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from "../../ThemeContext";
 import ProxyBox from "./ProxyBox";
+import proxyInstructionsImage from './proxyInstructions.png'
 
 export default function Proxy() {
 
@@ -65,8 +66,12 @@ export default function Proxy() {
   // Popup to confirm proxy choice
   const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
 
+  // Popup for using proxy instructions
+  const [proxyInstructionsOpened, setproxyInstructionsOpened] = useState(false);
+
   // Name and price of your proxy
   const [name, setName] = useState("");
+  const [initialFee, setInitialFee] = useState("");
   const [price, setPrice] = useState("");
   const [priceError, setPriceError] = useState("");
 
@@ -231,7 +236,17 @@ export default function Proxy() {
                     />
                     <TextField
                         margin = "dense"
-                        label = "DC / MB"
+                        label = "Initial Fee (DC)"
+                        type = "text"
+                        fullWidth
+                        variant = "outlined"
+                        value = {initialFee}
+                        onChange = {(e) => setInitialFee(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        margin = "dense"
+                        label = "Rate (DC / MB)"
                         type = "text"
                         fullWidth
                         variant = "outlined"
@@ -273,6 +288,7 @@ export default function Proxy() {
                         setCurrentProxy(selectedProxy);
                         setIsProxy(false);
                         setConfirmProxyOpened(false);
+                        setproxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -289,6 +305,38 @@ export default function Proxy() {
                     fullWidth
                   >
                     Cancel
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {proxyInstructionsOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Set up {currentProxy == null ? "" : currentProxy.name} as your proxy </DialogTitle>
+            <Typography 
+                sx={{ alignContent: "center", textAlign: "center", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+                To connect to your proxy, configure your device's proxy settings:<br />
+                IP: {currentProxy == null ? "" : currentProxy.ip_address} <br />
+                PORT: {currentProxy == null ? "" : currentProxy.port}
+                <img
+                    src = {proxyInstructionsImage}
+                    alt = "Proxy Setup"
+                    style = {{
+                        display: "block",
+                        width: "100%"
+                    }}
+                />
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setIsProxy(false);
+                        setproxyInstructionsOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Done
                 </Button>
             </DialogActions>
         </Dialog>
@@ -410,7 +458,7 @@ export default function Proxy() {
                                 fontSize: "1.5rem"
                             }}
                         >
-                            DISCONNECT FROM {currentProxy.name}
+                            Disconnect from {currentProxy.name}
                         </Typography>
                     </Button>
                 ) : (
@@ -423,7 +471,7 @@ export default function Proxy() {
                             fontSize: "1.5rem"
                         }}
                     >
-                        CURRENT PROXY: {currentProxy.name} ({currentProxy.ip}, {currentProxy.price} DC/MB)
+                        Current Proxy: {currentProxy.name} ({currentProxy.price} DC/MB)
                     </Typography>
                 )}
                 </>

@@ -69,13 +69,10 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                     Location: {proxy.location}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    IP: {proxy.ip_address}
+                                    Initial Fee: {proxy.initialFee} DC
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    Port: {proxy.port}
-                                </Typography>
-                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    Price: {proxy.price} DC/MB
+                                    Rate: {proxy.price} DC/MB
                                 </Typography>
                                 <Button
                                     variant="contained"
