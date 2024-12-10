@@ -112,8 +112,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet login successful.")
 }
 
-// handle the deletion of an account
-func deleteWallet(w http.ResponseWriter) {
+// DeleteWallet handles the deletion of an account
+func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	if err := manager.DeleteWallet(); err != nil {
 		http.Error(w, "Failed to delete wallet: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -180,7 +180,11 @@ func Mine(w http.ResponseWriter, r *http.Request) {
 
 	// Parse JSON body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.NumBlocks <= 0 {
-		http.Error(w, `{"error": "Invalid request payload"}`, http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid request payload or number of blocks",
+		})
 		log.Printf("Invalid request payload: %v", err)
 		return
 	}
@@ -189,18 +193,37 @@ func Mine(w http.ResponseWriter, r *http.Request) {
 	cmd := fmt.Sprintf("generate %d", request.NumBlocks)
 	output, err := manager.CallDolphinCmd(cmd)
 	if err != nil {
-		http.Error(w, `{"error": "Failed to start mining"}`, http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Failed to start mining",
+		})
 		log.Printf("Error starting mining: %v", err)
 		return
 	}
 
+	// Parse the response to get block hashes
 	blockHashes := strings.Split(strings.TrimSpace(output), "\n")
+
+	// Ensure blockHashes is not empty
+	if len(blockHashes) == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Mining succeeded but no block hashes were returned",
+		})
+		log.Println("Mining succeeded but no block hashes were returned")
+		return
+	}
+
+	// Send successful response
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":    "Mining started successfully",
 		"block_hash": blockHashes,
 	})
-	log.Println("Mining started successfully.")
+	log.Println("Mining started successfully:", blockHashes)
 }
 
 // SendToAddress sends funds to a specific address.
