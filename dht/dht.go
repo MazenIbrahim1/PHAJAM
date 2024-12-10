@@ -214,6 +214,10 @@ func sendDataToPeer(node host.Host, targetpeerid string) {
 
 }
 
+func sendFile(node host.Host, target string, filename string) {
+
+}
+
 func handlePeerExchange(node host.Host) {
 	relayInfo, _ := peer.AddrInfoFromString(relay_node_addr)
 	node.SetStreamHandler("/orcanet/p2p", func(s network.Stream) {
