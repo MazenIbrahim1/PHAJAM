@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,9 +12,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/creack/pty"
 )
+
+var walletPID int
 
 // Initialize initializes the DolphinCoin backend services
 func Initialize() error {
@@ -51,75 +55,88 @@ func CallDolphinCmd(cmd string) (string, error) {
 
 // CreateWallet creates a new wallet using the provided password.
 func CreateWallet(password string) (string, error) {
-	log.Println("Executing the create command from btcwallet using pty...")
+    log.Println("Executing the create command from btcwallet using pty...")
 
-	// Command to create the wallet
-	cmd := exec.Command("btcwallet", "--create")
+    // Command to create the wallet
+    cmd := exec.Command("btcwallet", "--create")
 
-	// Create a pseudo-terminal for the command
-	ptyFile, err := pty.Start(cmd)
-	if err != nil {
-		return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
-	}
-	defer ptyFile.Close()
+    // Create a pseudo-terminal for the command
+    ptyFile, err := pty.Start(cmd)
+    if err != nil {
+        return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
+    }
+    defer ptyFile.Close()
 
-	// Buffer for capturing output
-	var outputBuffer strings.Builder
-	var walletSeed string
+    // Buffer for capturing output
+    var outputBuffer strings.Builder
+    var walletSeed string
 
-	// Goroutine to read output in real-time
-	go func() {
-		buf := make([]byte, 1024)
-		for {
-			n, err := ptyFile.Read(buf)
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				log.Printf("Error reading from pty: %v", err)
-				return
-			}
-			output := string(buf[:n])
-			outputBuffer.WriteString(output)
-			log.Println("btcwallet output:", output)
+    // Goroutine to read output in real-time
+    go func() {
+        buf := make([]byte, 1024)
+        for {
+            n, err := ptyFile.Read(buf)
+            if err != nil {
+                if err == io.EOF {
+                    break
+                }
+                log.Printf("Error reading from pty: %v", err)
+                return
+            }
+            output := string(buf[:n])
+            outputBuffer.WriteString(output)
+            log.Println("btcwallet output:", output)
 
-			// Write input as required
-			log.Println("Responding to passphrase prompt...")
-			ptyFile.Write([]byte(password + "\n"))
-			log.Println("Responding to confirm passphrase prompt...")
-			ptyFile.Write([]byte(password + "\n"))
-			log.Println("Responding to additional encryption prompt...")
-			ptyFile.Write([]byte("no\n"))
-			log.Println("Responding to existing seed prompt...")
-			ptyFile.Write([]byte("no\n"))
-			ptyFile.Write([]byte("OK\n"))
-			if strings.Contains(output, "Your wallet generation seed is:") {
-				log.Println("Capturing wallet seed...")
-				lines := strings.Split(output, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
-						walletSeed = lines[i+1]
-						break
-					}
-				}
-			}
-		}
-	}()
+            // Responding to expected prompts
+            if strings.Contains(output, "Enter the private passphrase") {
+                log.Println("Responding to passphrase prompt...")
+                ptyFile.Write([]byte(password + "\n"))
+				time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Confirm passphrase") {
+                log.Println("Responding to confirm passphrase prompt...")
+                ptyFile.Write([]byte(password + "\n"))
+				time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Do you want to add an additional layer of encryption") {
+                log.Println("Responding to additional encryption prompt...")
+                ptyFile.Write([]byte("no\n"))
+				time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Do you have an existing wallet seed") {
+                log.Println("Responding to existing seed prompt...")
+                ptyFile.Write([]byte("no\n"))
+				time.Sleep(1 * time.Second)
+            }
+            if strings.Contains(output, "Your wallet generation seed is:") {
+				ptyFile.Write([]byte("OK\n"))
+                log.Println("Capturing wallet seed...")
+                lines := strings.Split(output, "\n")
+                for i, line := range lines {
+                    if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
+                        walletSeed = lines[i+1]
+                        break
+                    }
+                }
+            }
+        }
+    }()
 
-	// Wait for the command to finish
-	if err := cmd.Wait(); err != nil {
-		return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
-	}
+    // Wait for the command to finish
+    if err := cmd.Wait(); err != nil {
+        return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
+    }
 
-	// Check if seed was captured
-	if walletSeed == "" {
-		return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
-	}
+    // Check if seed was captured
+    if walletSeed == "" {
+        return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
+    }
 
-	walletSeed = strings.TrimSpace(walletSeed)
-	log.Println("Wallet creation successful. Wallet seed:", walletSeed)
-	return walletSeed, nil
+    walletSeed = strings.TrimSpace(walletSeed)
+    log.Println("Wallet creation successful. Wallet seed:", walletSeed)
+    return walletSeed, nil
 }
+
 
 // Delete wallet and account
 func DeleteWallet() error {
@@ -182,45 +199,73 @@ func WalletExists() bool {
 }
 
 // StartWallet starts the DolphinCoin wallet service
-func StartWalletServer() error {
+func StartWalletServer() (error) {
 	log.Println("Starting DolphinCoin wallet service...")
 	rpcUser := "user"
 	rpcPass := "password"
 	rpcConnect := "127.0.0.1:8334"
+	username := "user"
+	password := "password"
 
-	params := []string {
+	params := []string{
 		"--btcdusername=" + rpcUser,
 		"--btcdpassword=" + rpcPass,
 		"--rpcconnect=" + rpcConnect,
 		"--noclienttls",
 		"--noservertls",
+		"--username=" + username,
+		"--password=" + password,
 	}
 
 	// Command to start server with above params
 	cmd := exec.Command("btcwallet", params...)
 	fmt.Printf("Executing command: btcwallet %s", strings.Join(params, " "))
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Failed to start wallet service: %s\nOutput: %s", err.Error(), string(output))
-		return fmt.Errorf("error starting wallet service: %s, output: %s", err.Error(), string(output))
+	// Start the server
+	if err := cmd.Start(); err != nil {
+		log.Printf("Failed to start wallet service: %s", err.Error())
+		return fmt.Errorf("error starting wallet service: %w", err)
 	}
 
+	log.Println("Waiting for the wallet server to initialize...")
+	time.Sleep(1 * time.Second)
+
 	// Log the success message
-	log.Println("DolphinCoin wallet service started successfully.")
-	log.Println(string(output))
+	walletPID = cmd.Process.Pid
+	log.Printf("DolphinCoin wallet service started successfully with PID: %d", walletPID)
+	// log.Println("DolphinCoin wallet service started successfully.")
 	return nil
 }
 
 // StopWallet stops the DolphinCoin wallet service
 func StopWallet() error {
 	log.Println("Stopping DolphinCoin wallet service...")
-	_, err := CallDolphinCmd("stopwallet")
-	if err != nil {
-		return fmt.Errorf("failed to stop wallet service: %w", err)
+
+	// If walletPID is 0, that means the process wasn't started yet or it's already stopped
+	if walletPID == 0 {
+		return errors.New("wallet service not running or already stopped")
 	}
+
+	// Get the process using the stored PID
+	process, err := os.FindProcess(walletPID)
+	if err != nil {
+		return fmt.Errorf("failed to find wallet process with PID %d: %w", walletPID, err)
+	}
+
+	// Attempt to terminate the process gracefully
+	err = process.Kill()  // or process.Signal(syscall.SIGTERM) for a more graceful termination
+	if err != nil {
+		return fmt.Errorf("failed to stop wallet service with PID %d: %w", walletPID, err)
+	}
+
+	log.Printf("DolphinCoin wallet service with PID %d stopped successfully", walletPID)
+
+	// Reset walletPID after stopping the process to avoid accidental attempts to stop a non-existent process
+	walletPID = 0
+
 	return nil
 }
+
 
 // ConfigureMiningAddress configures the given address as the mining address
 func ConfigureMiningAddress(address string) error {
@@ -252,7 +297,7 @@ func GetWalletBalance() (float64, error) {
 // ValidateAddress checks if a given address is valid
 func ValidateAddress(address string) error {
 	log.Printf("Validating address: %s", address)
-	output, err := CallDolphinCmd(fmt.Sprintf("validateaddress %s", address))
+	output, err := BtcctlCommand(fmt.Sprintf("validateaddress %s", address))
 	if err != nil {
 		return fmt.Errorf("failed to validate address: %w", err)
 	}
@@ -269,20 +314,6 @@ func BtcctlCommand(command string) (string, error) {
 	rpcUser := "user"
 	rpcPass := "password"
 	rpcServer := "127.0.0.1:8332"
-
-	// In case we have to create an executable in the directory
-	// wd, err := os.Getwd()
-	// if err != nil {
-	// 	return "", fmt.Errorf("Error getting working directory: %v", err)
-	// }
-
-	// rootPath := filepath.Dir(wd)
-	// btcctlPath := filepath.Join(rootPath, "btcd", "cmd", "btcctl")
-	// fmt.Printf("Executing btcctl at path: %s\n", btcctlPath)
-
-	// if _, err := os.Stat(btcctlPath); os.IsNotExist(err) {
-	// 	return "", fmt.Errorf("btcctl binary not found at %s", btcctlPath)
-	// }
 
 	// Add flags before the command itself
 	params := []string{
@@ -310,3 +341,66 @@ func KillProcesses() error {
 	// Example: Add logic to kill specific DolphinCoin-related processes
 	return nil
 }
+
+var transactionDB = []map[string]interface{}{} // Store transactions in memory
+
+// AddTransaction adds a transaction to the in-memory database
+func AddTransaction(transaction map[string]interface{}) error {
+	log.Println("Adding transaction to the database...")
+	transactionDB = append(transactionDB, transaction)
+	log.Println("Transaction added:", transaction)
+	return nil
+}
+
+// GetTransactions retrieves all transactions from the database
+func GetTransactions() ([]map[string]interface{}, error) {
+	log.Println("Retrieving all transactions from the database...")
+	return transactionDB, nil
+}
+
+// GetTransactionsUnsafe retrieves all transactions from the database without error handling.
+// This function is only used internally for utility purposes like counting transactions.
+func GetTransactionsUnsafe() []map[string]interface{} {
+	return transactionDB
+}
+
+// ListTransactions retrieves a list of transactions from btcwallet using btcctl.
+func ListTransactions(account string, count, from int, includeWatchOnly bool) ([]map[string]interface{}, error) {
+	log.Println("Fetching transaction history from btcwallet...")
+
+	// Build the btcctl command
+	includeWatchOnlyStr := "false"
+	if includeWatchOnly {
+		includeWatchOnlyStr = "true"
+	}
+	command := fmt.Sprintf(
+		"listtransactions %s %d %d %s",
+		account, count, from, includeWatchOnlyStr,
+	)
+
+	// Execute the command
+	output, err := BtcctlCommand(command)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch transactions: %w", err)
+	}
+
+	// Parse the JSON output into a slice of transactions
+	var transactions []map[string]interface{}
+	if err := json.Unmarshal([]byte(output), &transactions); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction data: %w", err)
+	}
+
+	log.Println("Transactions fetched successfully.")
+	return transactions, nil
+}
+
+// func DumpPrivateKey(address string) (string, error) {
+// 	cmd := exec.Command("btcctl", "--wallet", "--rpcuser=user", "--rpcpass=password", "--rpcserver=127.0.0.1:8332", "--notls", "dumpprivkey", address)
+
+// 	output, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to dump private key: %v, output: %s", err, string(output))
+// 	}
+
+// 	return strings.TrimSpace(string(output)), nil
+// }

@@ -10,18 +10,19 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  CircularProgress, // Import spinner component
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState(""); // Track password input
-  const [walletExists, setWalletExists] = useState(null); // Track wallet existence
-  const [walletStatus, setWalletStatus] = useState(""); // Display status
-  const [openWarningDialog, setOpenWarningDialog] = useState(false); // Warning dialog state
-  const [errorMessage, setErrorMessage] = useState(""); // Error message for login
+  const [password, setPassword] = useState("");
+  const [walletExists, setWalletExists] = useState(null);
+  const [walletStatus, setWalletStatus] = useState("");
+  const [openWarningDialog, setOpenWarningDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Track login loading state
 
-  // Fetch wallet status using HTTP request
   const fetchWalletStatus = async () => {
     try {
       const response = await fetch("http://localhost:8080/wallet/check");
@@ -41,41 +42,55 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     if (!walletExists) {
-      setErrorMessage("Cannot log in because no wallet could be found on your local device.");
+      setErrorMessage(
+        "Cannot log in because no wallet could be found on your local device."
+      );
       return;
     }
-    navigate("/home");
 
-    // Example API call for login (commented for now)
-    // try {
-    //   const response = await fetch("http://localhost:8080/wallet/login", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ password }),
-    //   });
+    setLoading(true); // Start loading
+    try {
+      const response = await fetch("http://localhost:8080/wallet/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
 
-    //   if (response.ok) {
-    //     navigate("/home"); // Navigate to home page
-    //   } else {
-    //     const data = await response.json();
-    //     setErrorMessage(data.message || "Login failed. Please check your password.");
-    //   }
-    // } catch (error) {
-    //   console.error("Error during login:", error);
-    //   setErrorMessage("An error occurred during login. Please try again.");
-    // }
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.value === true) {
+          console.log("CORRECT PASSWORD");
+          navigate("/home");
+        } else {
+          console.log("INCORRECT PASSWORD");
+          setErrorMessage(
+            data.message || "Login failed. Please check your password."
+          );
+        }
+      } else {
+        setErrorMessage(
+          data.message || "Login failed. Please check your password."
+        );
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      setErrorMessage("An error occurred during login. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   const handleGenerateKeys = () => {
     if (walletExists) {
-      setOpenWarningDialog(true); // Open warning dialog if a wallet already exists
+      setOpenWarningDialog(true);
     } else {
-      navigate("/generate-keys"); // Directly navigate if no wallet exists
+      navigate("/generate-keys");
     }
   };
 
   const closeWarningDialog = () => {
-    setOpenWarningDialog(false); // Close the warning dialog
+    setOpenWarningDialog(false);
   };
 
   return (
@@ -108,33 +123,36 @@ export default function LoginPage() {
           width: "300px",
           backgroundColor: "white",
         }}
-        disabled={walletExists === null} // Disable if wallet status is not yet fetched
-        // error={!!errorMessage} // Show error state if login fails
-        // helperText={errorMessage} // Display error message below the input
+        disabled={walletExists === null || loading} // Disable during loading
       />
-      <Button
-        variant="contained"
-        size="large"
-        sx={{
-          backgroundColor: "black",
-          color: "white",
-          fontWeight: "bold",
-        }}
-        onClick={handleLogin}
-      >
-        Log In
-      </Button>
-      <Typography
-        variant="body1"
-        sx={{
-          marginTop: 5,
-          color: walletExists === null ? "gray" : walletExists ? "green" : "red",
-          whiteSpace: "pre-line",
-          textAlign: "center",
-        }}
-      >
-        {walletStatus}
-      </Typography>
+      <Box sx={{ position: "relative", marginBottom: 2 }}>
+        <Button
+          variant="contained"
+          size="large"
+          sx={{
+            backgroundColor: "black",
+            color: "white",
+            fontWeight: "bold",
+          }}
+          onClick={handleLogin}
+          disabled={loading} // Disable during loading
+        >
+          {loading ? "Logging In..." : "Log In"}
+        </Button>
+        {loading && (
+          <CircularProgress
+            size={24}
+            sx={{
+              color: "white",
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              marginTop: "-12px",
+              marginLeft: "-12px",
+            }}
+          />
+        )}
+      </Box>
       {errorMessage && (
         <Typography
           variant="body2"

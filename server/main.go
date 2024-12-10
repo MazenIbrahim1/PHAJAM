@@ -25,10 +25,10 @@ func main() {
 	handleGracefulShutdown()
 
 	corsOptions := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"}, // Explicitly specify allowed origins
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"}, // Allowed HTTP methods
+		AllowedOrigins:   []string{"http://localhost:5173"},         // Explicitly specify allowed origins
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},        // Allowed HTTP methods
 		AllowedHeaders:   []string{"Content-Type", "Authorization"}, // Allowed request headers
-		AllowCredentials: true, // Allow credentials (e.g., cookies)
+		AllowCredentials: true,                                      // Allow credentials (e.g., cookies)
 	})
 
 	handler := corsOptions.Handler(http.DefaultServeMux)
@@ -46,10 +46,14 @@ func setupRoutes() {
 	http.HandleFunc("/", handlers.GetRoot)
 	http.HandleFunc("/wallet/check", handlers.CheckWallet)
 	http.HandleFunc("/wallet/create", handlers.CreateWallet)
-	http.HandleFunc("/wallet/delete", handlers.DeleteWallet)
+	http.HandleFunc("/wallet/add-transaction", handlers.AddTransaction) // New endpoint
+	http.HandleFunc("/wallet/getTransactionHistory", handlers.GetTransactionHistory)
+	// http.HandleFunc("/wallet/privatekey", handlers.GetPrivateKey)
+	http.HandleFunc("/wallet/password-reset", handlers.ResetPassword)
 	http.HandleFunc("/wallet/login", handlers.Login)
 	http.HandleFunc("/wallet/logout", handlers.Logout)
 	http.HandleFunc("/wallet/address/new", handlers.GetNewAddress)
+	http.HandleFunc("/wallet/address", handlers.GetDefaultAddress)
 	http.HandleFunc("/wallet/balance", handlers.GetBalance)
 	http.HandleFunc("/wallet/mine", handlers.Mine)
 	http.HandleFunc("/wallet/send", handlers.SendToAddress)
