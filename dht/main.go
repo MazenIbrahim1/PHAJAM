@@ -54,9 +54,9 @@ func main() {
 	connectToPeer(node, relay_node_addr) // connect to relay node
 	makeReservation(node)                // make reservation on relay node
 	go refreshReservation(node, 10*time.Minute)
-	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
+	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
+	connectToPeer(node, bootstrap_node_addr_2)
 	go handlePeerExchange(node)
-	go handleInput(ctx, dhtRoute)
 
 	go receiveDataFromPeer(node)
 
@@ -73,7 +73,6 @@ func main() {
 	if err := http.ListenAndServe("0.0.0.0:8080", enableCORS(logRequests(mux))); err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
-	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
 
 	defer node.Close()
 
@@ -114,11 +113,11 @@ func provideAllUpload() {
 	for _, record := range records {
 		err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), []byte(strconv.FormatFloat(record["cost"].(float64), 'f', -1, 64)))
 		if err != nil {
-			log.Printf("Failed to put %v: %v", "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), record["cost"].(float64))
+			log.Printf("Failed to put %v: %v, err: %v", "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), record["cost"].(float64), err)
 		}
 		err = provideKey(ctx, dhtRoute, record["hash"].(string), true)
 		if err != nil {
-			log.Printf("Failed to provide record for key: %v", record["hash"])
+			log.Printf("Failed to provide record for key: %v, err: %v", record["hash"], err)
 		}
 	}
 }
