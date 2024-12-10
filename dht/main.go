@@ -144,8 +144,6 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 
 	// Set headers
 	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data
-	fileName := <-fileNameChannel
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fileName)) // Set filename for download
 	w.WriteHeader(http.StatusOK)
 
 	// Write the raw file data to the response body

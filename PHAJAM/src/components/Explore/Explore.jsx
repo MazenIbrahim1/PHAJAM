@@ -88,18 +88,6 @@ export default function Explore() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      console.log(response.headers);
-      // Get the filename from the "Content-Disposition" header
-      const contentDisposition = response.headers.get("Content-Disposition");
-      console.log(contentDisposition)
-      let filename = "downloaded_file"; // Default filename
-      if (contentDisposition && contentDisposition.includes("filename=")) {
-        filename = contentDisposition
-          .split("filename=")[1]
-          .trim()
-          .replace(/^"|"$/g, ""); // Remove quotes around the filename, if any
-      }
-  
       // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
       // Create a URL for the Blob and trigger the file download
