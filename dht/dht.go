@@ -37,7 +37,6 @@ var (
 	native_bootstrap_node_addr = "/ip4/172.25.232.234/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 	dataChannel                = make(chan []byte)
-	filenameChannel            = make(chan string)
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -185,7 +184,7 @@ func receiveDataFromPeer(node host.Host) {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
 			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
-		} else if strings.HasPrefix(string(data), "GETNAME:") {
+		} else if strings.HasPrefix(string(data), "NAME:") {
 			hash := string(data)[5:]
 			fmt.Println("hash: " + hash)
 			record, err := GetFileRecord(hash)
