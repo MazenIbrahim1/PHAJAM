@@ -37,7 +37,6 @@ var (
 	native_bootstrap_node_addr = "/ip4/172.25.232.234/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 	dataChannel                = make(chan []byte)
-	fileName                   string
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
