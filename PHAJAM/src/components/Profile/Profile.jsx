@@ -23,32 +23,7 @@ export default function Profile() {
   const { darkMode } = useTheme();
 
   const [balance, setBalance] = useState(null);
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      type: "Received",
-      amount: 50,
-      date: "2024-10-01T10:30:00",
-      from: "0xabcdef123456",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      type: "Sent",
-      amount: 25,
-      date: "2024-10-05T14:15:00",
-      to: "0x9876543210abcd",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      type: "Sent",
-      amount: 15,
-      date: "2024-10-10T09:45:00",
-      to: "0x3333333333333333",
-      status: "In Progress",
-    },
-  ]);
+  const [transactions, setTransactions] = useState([]);
   const [address, setAddress] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
@@ -57,6 +32,18 @@ export default function Profile() {
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
 
   useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/wallet/balance");
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        }
+      } catch (err) {
+        console.log("Error fetching balance: ", err);
+      }
+    };
+
     const fetchAddress = async () => {
       try {
         const request = await fetch("http://localhost:8080/wallet/address");
@@ -330,7 +317,7 @@ export default function Profile() {
               backgroundColor: darkMode ? "#f06292" : "#000000",
               "&:hover": { backgroundColor: "#7a99d9" },
             }}
-            onClick={fetchBalanceAndTransactions}
+            onClick={fetchTransactions}
           >
             Refresh Transactions
           </Button>
