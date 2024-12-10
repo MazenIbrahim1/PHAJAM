@@ -162,11 +162,14 @@ export default function Home() {
     try {
       // Number of blocks to mine (e.g., 5 for demo)
       const numBlocks = 5;
-  
+      console.log("Attempting to mine blocks...");
+
       // API call to the backend
-      const response = await axios.post("http://localhost:8080/mine", {
+      const response = await axios.post("http://localhost:8080/wallet/mine", {
         num_blocks: numBlocks,
       });
+      console.log("Response received:", response.data);
+
   
       // Handle successful response
       alert(`Mining started: ${response.data.message}`);
