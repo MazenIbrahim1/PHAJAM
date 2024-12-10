@@ -95,11 +95,13 @@ export default function Explore() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "temp"; // Use the filename from the header
+      link.download = "download"; // Use the filename from the header
       link.click(); // Trigger the download
       URL.revokeObjectURL(url); // Clean up the object URL
     } catch (error) {
       console.error("Error purchasing: ", error);
+    } finally {
+      setOpenDialog(false)
     }
   };  
 
