@@ -151,9 +151,6 @@ func main() {
 	go handlePeerExchange(node)
 	//go handleInput(ctx, dht)
 
-	// Register current node as a disabled proxy
-	registerProxyAsService(ctx, dhtRoute, "", node)
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/getproviders", getProviders)
 	mux.HandleFunc("/upload", handleFileUpload)
