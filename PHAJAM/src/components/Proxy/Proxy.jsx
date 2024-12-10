@@ -112,6 +112,7 @@ export default function Proxy() {
         const data = {
             action: "register",  // Register the proxy
             name: name,
+            initialFee: initialFee,
             price: price,
         };
         const response = await fetch("http://localhost:8080/registerProxy", {
