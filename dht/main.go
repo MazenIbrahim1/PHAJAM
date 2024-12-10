@@ -219,66 +219,6 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	err := InitializeDatabase("mongodb://localhost:27017")
-	if err != nil {
-		fmt.Printf("Failed to initialize MongoDB: %v\n", err)
-		return
-	}
-	defer func() {
-		if err := DisconnectDatabase(); err != nil {
-			fmt.Printf("Failed to disconnect MongoDB: %v\n", err)
-		}
-	}()
-	var node host.Host
-	node, dhtRoute, err = createNode()
-	if err != nil {
-		log.Fatalf("Failed to create node: %s", err)
-	}
-
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithCancel(context.Background())
-	defer cancel()
-	globalCtx = ctx
-
-	fmt.Println("Node multiaddresses:", node.Addrs())
-	fmt.Println("Node Peer ID:", node.ID())
-
-	connectToPeer(node, relay_node_addr) // connect to relay node
-	makeReservation(node)                // make reservation on realy node
-	go refreshReservation(node, 10*time.Minute)
-	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
-	go handlePeerExchange(node)
-	//go handleInput(ctx, dht)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/getproviders", getProviders)
-	mux.HandleFunc("/upload", handleFileUpload)
-	mux.HandleFunc("/files", handleFetchFiles)
-	mux.HandleFunc("/registerProxy", registerProxy)
-
-	// New handler for returning Peer ID
-	mux.HandleFunc("/getPeerID", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{
-			"peerID": node.ID().String(),
-		})
-	})
-
-	fmt.Println("Starting server at port 8080")
-	if err := http.ListenAndServe(":8080", enableCORS(mux)); err != nil {
-		fmt.Println("Error starting server: ", err)
-	}
-
-	// receiveDataFromPeer(node)
-	// sendDataToPeer(node, "12D3KooWH9ueKgaSabBREoZojztRT9nFi2xPn6F2MworJk494ob9")
-
-	defer node.Close()
-
-	select {}
-}
-
 func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -505,7 +445,6 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-
 // register a peer as a proxy
 func registerProxy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -546,6 +485,6 @@ func registerProxy(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Peer registered as a proxy",
-		"peerID": request.PeerID,
+		"peerID":  request.PeerID,
 	})
 }
