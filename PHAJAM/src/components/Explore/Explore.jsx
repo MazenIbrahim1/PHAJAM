@@ -91,22 +91,31 @@ export default function Explore() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+  
+      // Extract the filename from the Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "download"; // Default filename
+      if (contentDisposition && contentDisposition.includes("filename=")) {
+        filename = contentDisposition
+          .split("filename=")[1]
+          .replace(/["']/g, ""); // Extract filename and remove quotes
+      }
+  
       // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
-      console.log(blob)
       // Create a URL for the Blob and trigger the file download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "download"; // Use the filename from the header
+      link.download = filename; // Use the extracted filename
       link.click(); // Trigger the download
       URL.revokeObjectURL(url); // Clean up the object URL
     } catch (error) {
       console.error("Error purchasing: ", error);
     } finally {
-      setOpenDialog(false)
+      setOpenDialog(false);
     }
-  };  
+  };
 
   return (
     <Box

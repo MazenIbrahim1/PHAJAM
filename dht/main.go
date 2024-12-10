@@ -139,14 +139,19 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
-	sendDataToPeer(node, request.Id, "GETNAME:"+request.Hash)
-	data := <-dataChannel
-	fmt.Println(data)
+	sendDataToPeer(node, request.Id, "NAME:"+request.Hash)
+
+	// Retrieve filename from dataChannel
+	filename := <-dataChannel
+
 	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
-	data = <-dataChannel
+	data := <-dataChannel
 
 	// Set headers
-	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+	w.Header().Set("Content-Type", "application/octet-stream")                                // Indicate raw binary data
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename)) // Send filename
 	w.WriteHeader(http.StatusOK)
 
 	// Write the raw file data to the response body
