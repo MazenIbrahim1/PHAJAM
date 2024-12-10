@@ -190,7 +190,7 @@ func receiveDataFromPeer(node host.Host) {
 			}
 			fileName = record["filename"].(string)
 			fmt.Println(fileName)
-			sendFile(node, s.Conn().RemotePeer().String(), fileName)
+			sendFile(node, s.Conn().RemotePeer().String(), "files/"+fileName)
 		} else {
 			dataChannel <- data
 		}
