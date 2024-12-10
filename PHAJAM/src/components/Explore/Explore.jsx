@@ -88,20 +88,14 @@ export default function Explore() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-  
-      // Get the filename from the Content-Disposition header
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch ? filenameMatch[1] : "download";
-  
       // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
-  
+      console.log(blob)
       // Create a URL for the Blob and trigger the file download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename; // Use the filename from the header
+      link.download = "temp"; // Use the filename from the header
       link.click(); // Trigger the download
       URL.revokeObjectURL(url); // Clean up the object URL
     } catch (error) {

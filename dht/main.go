@@ -140,21 +140,11 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	}
 	request.Hash = strings.TrimSpace(request.Hash)
 	sendDataToPeer(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", "REQUEST:"+request.Hash)
-
-	var filename string
-	select {
-	case filename = <-filenameChannel: // Receive filename from the channel
-		log.Printf("Received filename: %s", filename)
-	case <-time.After(5 * time.Second): // Timeout
-		http.Error(w, "Timeout waiting for filename", http.StatusRequestTimeout)
-		return
-	}
-
-	// Set filename in headers
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
-	w.Header().Set("Content-Type", "application/octet-stream")
-
 	data := <-dataChannel
+
+	// Set headers
+	w.Header().Set("Content-Type", "application/octet-stream") // Indicate raw binary data
+	w.WriteHeader(http.StatusOK)
 
 	// Write the raw file data to the response body
 	if _, err := w.Write(data); err != nil {

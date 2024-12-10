@@ -37,7 +37,6 @@ var (
 	native_bootstrap_node_addr = "/ip4/172.25.232.234/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
 	dataChannel                = make(chan []byte)
-	filenameChannel            = make(chan string)
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -169,6 +168,10 @@ func receiveDataFromPeer(node host.Host) {
 	// Set a stream handler to listen for incoming streams on the "/senddata/p2p" protocol
 	node.SetStreamHandler("/senddata/p2p", func(s network.Stream) {
 		defer s.Close()
+		// Create a buffered reader to read data from the stream
+		//buf := bufio.NewReader(s)
+		// Read data from the stream
+		//data, err := buf.ReadBytes('\n') // Reads until a newline character
 		data, err := io.ReadAll(s)
 		if err != nil {
 			if err == io.EOF {
@@ -185,12 +188,12 @@ func receiveDataFromPeer(node host.Host) {
 			if err != nil {
 				log.Printf("Failed to retrieve hash: %v", hash)
 			}
-			filename := record["filename"].(string)
-			filenameChannel <- filename // Pass the filename to the channel
-			sendFile(node, s.Conn().RemotePeer().String(), "files/"+filename)
+			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
 		} else {
 			dataChannel <- data
 		}
+		// Print the received data
+		//log.Printf("Received data: %s", data)
 	})
 }
 
