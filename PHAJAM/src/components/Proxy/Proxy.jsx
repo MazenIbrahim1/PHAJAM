@@ -146,12 +146,18 @@ export default function Proxy() {
             }
         }
         setPriceOpened(false);
+        setName("");
+        setInitialFee("");
+        setPrice("");
+        setPriceError("");
     } catch (error) {
 
     }
   }
 
   const cancelPrice = () => {
+    setName("");
+    setInitialFee("");
     setPrice("");
     setPriceError("");
     setPriceOpened(false);
@@ -161,13 +167,14 @@ export default function Proxy() {
     event.preventDefault();
 
     // Handle form submission
+
+    const initialFeeValue = parseFloat(initialFee);
     const priceValue = parseFloat(price);
-    if (isNaN(priceValue) || priceValue <= 0) {
-        setPriceError("Error: Invalid Price!");
+    if (isNaN(priceValue) || priceValue <= 0 || isNaN(initialFeeValue) || initialFeeValue <= 0) {
+        setPriceError("Error: Invalid Fee or Price!");
         return
     }
     
-    setPriceError("");
     closePrice();
   }
 
