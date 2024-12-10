@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, TextField, InputAdornment } from "@mui/material";
+import { Box, TextField, Typography, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -25,7 +25,7 @@ export default function Explore() {
   const [rows, setRows] = useState([]);
 
   const columns = [
-    { field: "ID", headerName: "Peer ID", flex: 2 },
+    { field: "id", headerName: "Peer ID", flex: 2 },
     { field: "cost", headerName: "Cost", flex: 1 },
   ];
 
@@ -46,13 +46,17 @@ export default function Explore() {
         }
 
         const data = await response.json();
-
         // Assuming `data` is an array of objects like [{ pid: '...', cost: ... }, ...]
         setRows(data);
       } catch (error) {
         console.error("Error fetching providers:", error);
       }
     }
+  };
+
+  // Function to check if a row is selectable
+  const isRowSelectable = (row) => {
+    return row.row.cost != "N/A"; // If "cost" is "N/A", the row is unselectable
   };
 
   return (
@@ -85,6 +89,9 @@ export default function Explore() {
         }}
         fullWidth
       />
+      <Typography>
+        Choose a provider to start a transaction
+      </Typography>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -105,10 +112,11 @@ export default function Explore() {
             outline: "none",
           },
         }}
-        getRowId={(row) => row.ID} // Ensure unique IDs for each row
+        getRowId={(row) => row.id} // Ensure unique IDs for each row
         slots={{
           noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
         }}
+        isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
       />
     </Box>
   );

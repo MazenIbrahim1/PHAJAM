@@ -55,7 +55,7 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 	connectToPeer(node, native_bootstrap_node_addr) // connect to bootstrap node
 	go handlePeerExchange(node)
-	//go handleInput(ctx, dhtRoute)
+	go handleInput(ctx, dhtRoute)
 
 	go receiveDataFromPeer(node)
 
@@ -110,7 +110,14 @@ func provideAllUpload() {
 		return
 	}
 	for _, record := range records {
-		provideKey(ctx, dhtRoute, record["hash"].(string), true)
+		err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), []byte(strconv.FormatFloat(record["cost"].(float64), 'f', -1, 64)))
+		if err != nil {
+			log.Printf("Failed to put %v: %v", "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), record["cost"].(float64))
+		}
+		err = provideKey(ctx, dhtRoute, record["hash"].(string), true)
+		if err != nil {
+			log.Printf("Failed to provide record for key: %v", record["hash"])
+		}
 	}
 }
 
@@ -143,9 +150,23 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Providers sync: ", providers)
+	var resp = make([]map[string]string, len(providers))
+	for i := range resp {
+		resp[i] = make(map[string]string)
+	}
+	for i, provider := range providers {
+		cost, err := dhtRoute.GetValue(ctx, "/orcanet/files/"+provider.ID.String()+"/"+request.Hash)
+		resp[i]["id"] = provider.ID.String()
+		if err == nil {
+			resp[i]["cost"] = string(cost)
+		} else {
+			resp[i]["cost"] = "N/A"
+		}
+	}
+	fmt.Printf("resp: %v", resp)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(providers); err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
 	}
 }
@@ -256,7 +277,6 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+fileHash, []byte(strconv.FormatFloat(priceFloat, 'f', -1, 64)))
-	fmt.Println("/orcanet/files/" + node.ID().String() + "/" + fileHash)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to put record for key %v and value %v", fileHash, priceFloat), http.StatusInternalServerError)
 		log.Printf("Failed to put record for key %v and value %v: %v\n", fileHash, priceFloat, err)
@@ -265,7 +285,7 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	err = provideKey(ctx, dhtRoute, fileHash, true)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to provide record for key: %v", fileHash), http.StatusInternalServerError)
-		log.Printf("Filed to provide record for key: %v", fileHash)
+		log.Printf("Failed to provide record for key: %v", fileHash)
 		return
 	}
 
@@ -359,7 +379,12 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	provideKey(ctx, dhtRoute, request.Hash, false)
+	err = provideKey(ctx, dhtRoute, request.Hash, false)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to stop providing record for key: %v", request.Hash), http.StatusInternalServerError)
+		log.Printf("Failed to provide record for key: %v", request.Hash)
+		return
+	}
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
