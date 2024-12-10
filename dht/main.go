@@ -150,17 +150,14 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Providers sync: ", providers)
-	var resp = make([]map[string]string, len(providers))
-	for i := range resp {
-		resp[i] = make(map[string]string)
-	}
-	for i, provider := range providers {
+	var resp []map[string]string
+	for _, provider := range providers {
 		cost, err := dhtRoute.GetValue(ctx, "/orcanet/files/"+provider.ID.String()+"/"+request.Hash)
-		resp[i]["id"] = provider.ID.String()
-		if err == nil {
-			resp[i]["cost"] = string(cost)
-		} else {
-			resp[i]["cost"] = "N/A"
+		if err == nil && string(cost) != "null" {
+			var temp = make(map[string]string)
+			temp["id"] = provider.ID.String()
+			temp["cost"] = string(cost)
+			resp = append(resp, temp)
 		}
 	}
 	fmt.Printf("resp: %v", resp)
@@ -379,6 +376,12 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+request.Hash, []byte("null"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to put record for key %v and value null", request.Hash), http.StatusInternalServerError)
+		log.Printf("Failed to put record for key %v and value null: %v\n", request.Hash, err)
+		return
+	}
 	err = provideKey(ctx, dhtRoute, request.Hash, false)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to stop providing record for key: %v", request.Hash), http.StatusInternalServerError)

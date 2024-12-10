@@ -331,7 +331,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			key := args[1]
 			value := args[2]
-			dhtKey := "/orcanet/" + key
+			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
 			log.Println(dhtKey)
 			err := dht.PutValue(ctx, dhtKey, []byte(value))
 			if err != nil {
