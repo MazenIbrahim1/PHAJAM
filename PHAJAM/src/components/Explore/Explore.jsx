@@ -74,10 +74,27 @@ export default function Explore() {
     setOpenDialog(true);
   };
 
-  const handlePurchase = (id, hash) => {
-    setOpenDialog(false);
-    console.log(id);
-    console.log(hash);
+  const handlePurchase = async (id, hash) => {
+    try {
+      const response = await fetch("http://localhost:8080/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: id, hash: hash})
+      })
+
+      const blob = await response.blob();
+      console.log(blob)
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "test.js"; // Set the desired file name
+      link.click(); // Trigger the download
+      URL.revokeObjectURL(url); // Clean up the object URL
+    } catch (error) {
+      console.error("Error purchasing: ", error)
+    }
   }
 
   return (

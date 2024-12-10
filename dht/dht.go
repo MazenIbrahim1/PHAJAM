@@ -36,6 +36,7 @@ var (
 	// Change the ip address to your public ip address"
 	native_bootstrap_node_addr = "/ip4/172.25.232.234/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx                  context.Context
+	dataChannel                = make(chan []byte)
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -163,9 +164,8 @@ func connectToPeerUsingRelay(node host.Host, targetPeerID string) {
 	fmt.Printf("Connected to peer via relay: %s\n", targetPeerID)
 }
 
-func receiveDataFromPeer(node host.Host) []byte {
+func receiveDataFromPeer(node host.Host) {
 	// Set a stream handler to listen for incoming streams on the "/senddata/p2p" protocol
-	var resp []byte
 	node.SetStreamHandler("/senddata/p2p", func(s network.Stream) {
 		defer s.Close()
 		// Create a buffered reader to read data from the stream
@@ -182,10 +182,9 @@ func receiveDataFromPeer(node host.Host) []byte {
 			return
 		}
 		// Print the received data
+		dataChannel <- data
 		//log.Printf("Received data: %s", data)
-		resp = data
 	})
-	return resp
 }
 
 func sendDataToPeer(node host.Host, targetpeerid string, msg string) error {
