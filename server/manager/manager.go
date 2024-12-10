@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -187,7 +188,7 @@ func StartWalletServer() error {
 	rpcPass := "password"
 	rpcConnect := "127.0.0.1:8334"
 
-	params := []string {
+	params := []string{
 		"--btcdusername=" + rpcUser,
 		"--btcdpassword=" + rpcPass,
 		"--rpcconnect=" + rpcConnect,
@@ -309,3 +310,66 @@ func KillProcesses() error {
 	// Example: Add logic to kill specific DolphinCoin-related processes
 	return nil
 }
+
+var transactionDB = []map[string]interface{}{} // Store transactions in memory
+
+// AddTransaction adds a transaction to the in-memory database
+func AddTransaction(transaction map[string]interface{}) error {
+	log.Println("Adding transaction to the database...")
+	transactionDB = append(transactionDB, transaction)
+	log.Println("Transaction added:", transaction)
+	return nil
+}
+
+// GetTransactions retrieves all transactions from the database
+func GetTransactions() ([]map[string]interface{}, error) {
+	log.Println("Retrieving all transactions from the database...")
+	return transactionDB, nil
+}
+
+// GetTransactionsUnsafe retrieves all transactions from the database without error handling.
+// This function is only used internally for utility purposes like counting transactions.
+func GetTransactionsUnsafe() []map[string]interface{} {
+	return transactionDB
+}
+
+// ListTransactions retrieves a list of transactions from btcwallet using btcctl.
+func ListTransactions(account string, count, from int, includeWatchOnly bool) ([]map[string]interface{}, error) {
+	log.Println("Fetching transaction history from btcwallet...")
+
+	// Build the btcctl command
+	includeWatchOnlyStr := "false"
+	if includeWatchOnly {
+		includeWatchOnlyStr = "true"
+	}
+	command := fmt.Sprintf(
+		"listtransactions %s %d %d %s",
+		account, count, from, includeWatchOnlyStr,
+	)
+
+	// Execute the command
+	output, err := BtcctlCommand(command)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch transactions: %w", err)
+	}
+
+	// Parse the JSON output into a slice of transactions
+	var transactions []map[string]interface{}
+	if err := json.Unmarshal([]byte(output), &transactions); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction data: %w", err)
+	}
+
+	log.Println("Transactions fetched successfully.")
+	return transactions, nil
+}
+
+// func DumpPrivateKey(address string) (string, error) {
+// 	cmd := exec.Command("btcctl", "--wallet", "--rpcuser=user", "--rpcpass=password", "--rpcserver=127.0.0.1:8332", "--notls", "dumpprivkey", address)
+
+// 	output, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to dump private key: %v, output: %s", err, string(output))
+// 	}
+
+// 	return strings.TrimSpace(string(output)), nil
+// }
