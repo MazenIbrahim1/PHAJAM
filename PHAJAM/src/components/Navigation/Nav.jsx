@@ -29,9 +29,18 @@ export default function Nav() {
   const isActive = (path) => location.pathname === path;
 
   // Function to handle logout
-  const handleLogout = () => {
-    setDarkMode(false);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/wallet/logout");
+      if (response.ok) {
+        setDarkMode(false);
+        navigate("/");
+      } else {
+        console.log("Error logging out... bruh");
+      }
+    } catch (err) {
+      console.log("Error logging out: ", err);
+    }
   };
 
   return (

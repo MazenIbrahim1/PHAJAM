@@ -16,6 +16,8 @@ import (
 	"github.com/creack/pty"
 )
 
+var walletCommand *exec.Cmd
+
 // Initialize initializes the DolphinCoin backend services
 func Initialize() error {
 	log.Println("Initializing Dolphin Coin backend...")
@@ -55,10 +57,10 @@ func CreateWallet(password string) (string, error) {
 	log.Println("Executing the create command from btcwallet using pty...")
 
 	// Command to create the wallet
-	cmd := exec.Command("btcwallet", "--create")
+	walletCommand = exec.Command("btcwallet", "--create")
 
 	// Create a pseudo-terminal for the command
-	ptyFile, err := pty.Start(cmd)
+	ptyFile, err := pty.Start(walletCommand)
 	if err != nil {
 		return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
 	}
@@ -108,7 +110,7 @@ func CreateWallet(password string) (string, error) {
 	}()
 
 	// Wait for the command to finish
-	if err := cmd.Wait(); err != nil {
+	if err := walletCommand.Wait(); err != nil {
 		return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
 	}
 
@@ -202,11 +204,11 @@ func StartWalletServer() (error) {
 	}
 
 	// Command to start server with above params
-	cmd := exec.Command("btcwallet", params...)
+	walletCommand = exec.Command("btcwallet", params...)
 	fmt.Printf("Executing command: btcwallet %s", strings.Join(params, " "))
 
 	// Start the server
-	if err := cmd.Start(); err != nil {
+	if err := walletCommand.Start(); err != nil {
 		log.Printf("Failed to start wallet service: %s", err.Error())
 		return fmt.Errorf("error starting wallet service: %w", err)
 	}
@@ -219,15 +221,61 @@ func StartWalletServer() (error) {
 	return nil
 }
 
-// StopWallet stops the DolphinCoin wallet service
+// StopWallet stops the DolphinCoin wallet service by killing the btcwallet process
 func StopWallet() error {
 	log.Println("Stopping DolphinCoin wallet service...")
-	_, err := CallDolphinCmd("stopwallet")
-	if err != nil {
-		return fmt.Errorf("failed to stop wallet service: %w", err)
+
+	// If walletCommand is nil, the wallet is not running, return early
+	if walletCommand == nil || walletCommand.Process == nil {
+		return fmt.Errorf("btcwallet is not running.")
 	}
+
+	// Attempt to gracefully stop btcwallet first
+	if err := walletCommand.Process.Signal(os.Interrupt); err != nil {
+		log.Printf("Failed to gracefully stop btcwallet: %v", err)
+		// If gracefully stopping fails, try to kill the process directly
+		return killWalletProcess()
+	}
+
+	// Wait for the process to exit and check for errors
+	err := walletCommand.Wait()
+	if err != nil {
+		log.Printf("btcwallet did not shut down cleanly: %v", err)
+		// If the process didn't exit cleanly, kill it
+		return killWalletProcess()
+	}
+
+	log.Println("btcwallet stopped gracefully.")
+	walletCommand = nil
 	return nil
 }
+
+// killWalletProcess forcefully kills the btcwallet process if it's still running
+func killWalletProcess() error {
+	log.Println("Forcefully killing btcwallet process...")
+
+	// Use ps command to find the process by name (assuming you're on a Unix-like OS)
+	cmd := exec.Command("pgrep", "-f", "btcwallet")
+	out, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("could not find btcwallet process to kill: %v", err)
+	}
+
+	// The output contains the PID of the process, we can now use kill command
+	pids := strings.Fields(string(out))
+	for _, pid := range pids {
+		log.Printf("Killing process with PID: %s", pid)
+		killCmd := exec.Command("kill", "-9", pid)
+		if err := killCmd.Run(); err != nil {
+			log.Printf("Failed to kill process with PID %s: %v", pid, err)
+			return fmt.Errorf("failed to kill btcwallet process with PID %s: %v", pid, err)
+		}
+	}
+
+	log.Println("btcwallet process killed successfully.")
+	return nil
+}
+
 
 // ConfigureMiningAddress configures the given address as the mining address
 func ConfigureMiningAddress(address string) error {

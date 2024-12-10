@@ -157,12 +157,6 @@ func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 
 // Logout locks the wallet and stops services.
 func Logout(w http.ResponseWriter, r *http.Request) {
-	if _, err := manager.CallDolphinCmd("walletlock"); err != nil {
-		http.Error(w, `{"error": "Failed to lock wallet"}`, http.StatusInternalServerError)
-		log.Printf("Error locking wallet: %v", err)
-		return
-	}
-
 	if err := manager.StopWallet(); err != nil {
 		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
 		log.Printf("Error stopping wallet service: %v", err)
