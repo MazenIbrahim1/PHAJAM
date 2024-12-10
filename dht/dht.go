@@ -465,10 +465,11 @@ func refreshReservation(node host.Host, interval time.Duration) {
 type ProxyInfo struct {
 	PeerID    string `json:"peer_id"`
 	IPAddress string `json:"ip_address"`
+	Price	  string `json:"price"`
 	Port      int    `json:"port"`
 }
 
-func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, node host.Host) {
+func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress string, price string, node host.Host) {
 	// 1. Create a unique proxy key
 	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
@@ -478,7 +479,8 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, ipAddress str
 	if ipAddress != "" {
 		proxyInfo = &ProxyInfo{
 			PeerID:    node.ID().String(),
-			IPAddress: ipAddress, // Example, replace with actual IP or relay info
+			IPAddress: ipAddress,
+			Price:	   price,
 			Port:      8080,
 		}
 	} else {

@@ -60,14 +60,14 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                     padding: 2,
                                 }}
                             >
-                                <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
-                                    {proxy.name.toUpperCase()}
+                                {/* <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
+                                    {proxy.peer_id}
+                                </Typography> */}
+                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
+                                    IP: {proxy.ip_address}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    IP: {proxy.ip}
-                                </Typography>
-                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    Location: {proxy.location}
+                                    Port: {proxy.port}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
                                     Price: {proxy.price} DC/MB

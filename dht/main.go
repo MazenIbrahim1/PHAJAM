@@ -162,6 +162,7 @@ func main() {
 	// New handler for returning Peer ID
 	type ProxyRequest struct {
 		Action   string `json:"action"`
+		Price	 string `json:"price"`
 	}
 
 	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
@@ -175,10 +176,10 @@ func main() {
 		// Call registerProxyAsService based on the action (register or deregister)
 		if req.Action == "deregister" {
 			// Deregister the proxy by passing an empty string for the IP
-			registerProxyAsService(ctx, dhtRoute, "", node)
+			registerProxyAsService(ctx, dhtRoute, "", req.Price, node)
 		} else if req.Action == "register" {
 			// Register the proxy by passing the IP address
-			registerProxyAsService(ctx, dhtRoute, ip, node)
+			registerProxyAsService(ctx, dhtRoute, ip, "", node)
 		} else {
 			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return
@@ -228,7 +229,9 @@ func main() {
 			}
 		}
 
-		fmt.Println(proxyInfoList)
+		for _, proxyInfo := range proxyInfoList {
+			fmt.Printf("PeerID: %s\n IP: %s\n Port: %d\n", proxyInfo.PeerID, proxyInfo.IPAddress, proxyInfo.Port)
+		}
 		
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

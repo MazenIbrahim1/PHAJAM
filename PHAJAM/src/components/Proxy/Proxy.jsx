@@ -12,6 +12,9 @@ export default function Proxy() {
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
 
+  // List of available proxies
+  const [proxyInfoList, setProxyInfoList] = useState([]);
+
   useEffect(() => {
 
     // Check if I am a proxy
@@ -35,6 +38,9 @@ export default function Proxy() {
             if (!response.ok) {
                 throw new Error("Failed to fetch proxy list");
             }
+            const data = await response.json();
+            setProxyInfoList(data);
+            console.log(proxyInfoList);
         } catch (err) {
             console.error(err);
         }
@@ -42,7 +48,7 @@ export default function Proxy() {
 
     fetchProxyStatus();
     fetchProxyList();
-  })
+  }, [])
 
   // Proxy chosen BEFORE confirmation
   const [selectedProxy, setSelectedProxy] = useState(null);
@@ -52,6 +58,10 @@ export default function Proxy() {
   
   // Popup to confirm proxy choice
   const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
+
+  // Price of your proxy
+  const [price, setPrice] = useState("");
+  const [priceError, setPriceError] = useState("");
 
   // Popup to set price of your own proxy
   const [priceOpened, setPriceOpened] = useState(false);
@@ -89,6 +99,7 @@ export default function Proxy() {
     try {
         const data = {
             action: "register",  // Register the proxy
+            price: price,
         };
         const response = await fetch("http://localhost:8080/registerProxy", {
             method: "POST",
@@ -109,6 +120,8 @@ export default function Proxy() {
   }
 
   const cancelPrice = () => {
+    setPrice("");
+    setPriceError("");
     setPriceOpened(false);
   }
 
@@ -116,7 +129,13 @@ export default function Proxy() {
     event.preventDefault();
 
     // Handle form submission
-
+    const priceValue = parseFloat(price);
+    if (isNaN(priceValue) || priceValue <= 0) {
+        setPriceError("Error: Invalid Price!");
+        return
+    }
+    
+    setPriceError("");
     closePrice();
   }
 
@@ -160,7 +179,7 @@ export default function Proxy() {
                 {mockProxies.length === 0 ? "NO " : ""} AVAILABLE PROXIES
             </Typography>
         </Box>
-        <ProxyBox proxies = {mockProxies} setCurrentProxy = {handleSetCurrentProxy} />
+        <ProxyBox proxies = {proxyInfoList} setCurrentProxy = {handleSetCurrentProxy} />
         <Dialog open = {priceOpened}>
             <DialogTitle sx={{ paddingBottom: 0 }}> Set Price </DialogTitle>
             <IconButton
@@ -180,10 +199,17 @@ export default function Proxy() {
                         type = "text"
                         fullWidth
                         variant = "outlined"
+                        value = {price}
+                        onChange = {(e) => setPrice(e.target.value)}
                         required
                     />
                 </form>
             </DialogContent>
+            <Typography 
+                sx={{ textAlign: "left", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: -1, marginBottom: 3 }}
+            >
+                {priceError}
+            </Typography>
             <DialogActions>
                 <Button 
                     variant = "contained"
@@ -239,7 +265,7 @@ export default function Proxy() {
                     onClick = {async () => {
                         try {
                             const data = {
-                                action: "deregister",  // Register the proxy
+                                action: "deregister",  // Deregister the proxy
                             };
                             const response = await fetch("http://localhost:8080/registerProxy", {
                                 method: "POST",
@@ -341,7 +367,7 @@ export default function Proxy() {
                                 fontSize: "1.5rem"
                             }}
                         >
-                            DISCONNECT FROM {currentProxy.name.toUpperCase()}
+                            DISCONNECT FROM {currentProxy.name}
                         </Typography>
                     </Button>
                 ) : (
@@ -354,7 +380,7 @@ export default function Proxy() {
                             fontSize: "1.5rem"
                         }}
                     >
-                        CURRENT PROXY: {currentProxy.name.toUpperCase()} ({currentProxy.ip}, {currentProxy.price} DC/MB)
+                        CURRENT PROXY: {currentProxy.name} ({currentProxy.ip}, {currentProxy.price} DC/MB)
                     </Typography>
                 )}
                 </>
