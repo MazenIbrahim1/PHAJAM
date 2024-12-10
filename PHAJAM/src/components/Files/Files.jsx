@@ -31,8 +31,8 @@ export default function Files() {
   const [errorPopup, setErrorPopup] = useState({ open: false, message: "" });
 
   const columns = [
-    { field: "filename", headerName: "File Name", flex: 2 },
-    { field: "hash", headerName: "Hash", flex: 4 },
+    { field: "filename", headerName: "File Name", flex: 3 },
+    { field: "hash", headerName: "Hash", flex: 6 },
     { field: "cost", headerName: "Cost", flex: 1 },
     { field: "timestamp", headerName: "Uploaded At", flex: 2 },
   ];
@@ -148,6 +148,7 @@ export default function Files() {
       sx={{
         marginLeft: "14vw",
         marginRight: "1vw",
+        marginTop: "2vh",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -169,9 +170,9 @@ export default function Files() {
           startIcon={<UploadIcon />}
           onClick={openUpload}
           sx={{
-            backgroundColor: darkMode ? "#f06292" : "#000000",
+            backgroundColor: darkMode ? "white" : "black",
             "&:hover": {
-              backgroundColor: "#7a99d9",
+              backgroundColor: "#3d3d3d",
             },
           }}
         >
@@ -179,7 +180,7 @@ export default function Files() {
         </Button>
       </Box>
       <Typography sx={{ color: "red" }}>
-        *These files still persist even if you delete the files on your computer! Select a file to start deleting instead.
+        *These files still persist even if you delete the files on your computer! Use the delete button instead.
       </Typography>
       <DataTable rows={files} columns={columns} search={search} onDelete={handleDelete} />
 
@@ -209,7 +210,7 @@ export default function Files() {
                 <Button
                   variant="contained"
                   component="span"
-                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem" }}
+                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem", textAlign: "center", backgroundColor: "black", "&:hover": { backgroundColor: "#3d3d3d", },}}
                 >
                   Choose File
                 </Button>
@@ -221,8 +222,10 @@ export default function Files() {
                 type="text"
                 fullWidth
                 variant="outlined"
-                InputProps={{
-                  readOnly: true,
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  }
                 }}
                 required
               />
@@ -234,7 +237,18 @@ export default function Files() {
               fullWidth
               variant="outlined"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numeric and float values
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setPrice(value);
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                }
+              }}
               required
             />
           </form>

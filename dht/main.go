@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ipfs/go-cid"
@@ -23,7 +24,67 @@ import (
 var (
 	dhtRoute *dht.IpfsDHT
 	ctx      context.Context
+	node     host.Host
 )
+
+func main() {
+	err := InitializeDatabase("mongodb://localhost:27017")
+	if err != nil {
+		fmt.Printf("Failed to initialize MongoDB: %v\n", err)
+		return
+	}
+	defer func() {
+		if err := DisconnectDatabase(); err != nil {
+			fmt.Printf("Failed to disconnect MongoDB: %v\n", err)
+		}
+	}()
+	node, dhtRoute, err = createNode()
+	if err != nil {
+		log.Fatalf("Failed to create node: %s", err)
+	}
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	globalCtx = ctx
+
+	fmt.Println("Node multiaddresses:", node.Addrs())
+	fmt.Println("Node Peer ID:", node.ID())
+
+	connectToPeer(node, relay_node_addr) // connect to relay node
+	makeReservation(node)                // make reservation on relay node
+	go refreshReservation(node, 10*time.Minute)
+	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
+	connectToPeer(node, bootstrap_node_addr_2)
+	go handlePeerExchange(node)
+
+	go receiveDataFromPeer(node)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/getproviders", getProviders)
+	mux.HandleFunc("/upload", handleFileUpload)
+	mux.HandleFunc("/files", handleFetchFiles)
+	mux.HandleFunc("/delete", handleDeleteFile)
+	mux.HandleFunc("/purchase", handlePurchase)
+
+	provideAllUpload()
+
+	fmt.Println("Starting server at port 8080")
+	if err := http.ListenAndServe("0.0.0.0:8080", enableCORS(logRequests(mux))); err != nil {
+		fmt.Println("Error starting server: ", err)
+	}
+
+	defer node.Close()
+
+	select {}
+}
+
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received request: Method=%s, URL=%s, RemoteAddr=%s", r.Method, r.URL.String(), r.RemoteAddr)
+		next.ServeHTTP(w, r)
+	})
+}
 
 // CORS middleware
 func enableCORS(next http.Handler) http.Handler {
@@ -43,6 +104,69 @@ func enableCORS(next http.Handler) http.Handler {
 	})
 }
 
+func provideAllUpload() {
+	records, err := FetchAllFileRecords()
+	if err != nil {
+		log.Printf("Failed to fetch all file records")
+		return
+	}
+	for _, record := range records {
+		err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), []byte(strconv.FormatFloat(record["cost"].(float64), 'f', -1, 64)))
+		if err != nil {
+			log.Printf("Failed to put %v: %v, err: %v", "/orcanet/files/"+node.ID().String()+"/"+record["hash"].(string), record["cost"].(float64), err)
+		}
+		err = provideKey(ctx, dhtRoute, record["hash"].(string), true)
+		if err != nil {
+			log.Printf("Failed to provide record for key: %v, err: %v", record["hash"], err)
+		}
+	}
+}
+
+func handlePurchase(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+	var request struct {
+		Id   string `json:"id"`
+		Hash string `json:"hash"`
+	}
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		http.Error(w, "Error parsing JSON request body", http.StatusBadRequest)
+		return
+	}
+	request.Hash = strings.TrimSpace(request.Hash)
+	sendDataToPeer(node, request.Id, "EXIST:"+request.Hash)
+	exist := <-dataChannel
+
+	if string(exist) == "false" {
+		http.Error(w, "File is no longer provided", http.StatusNotFound)
+		return
+	}
+
+	sendDataToPeer(node, request.Id, "NAME:"+request.Hash)
+
+	// Retrieve filename from dataChannel
+	filename := <-dataChannel
+
+	sendDataToPeer(node, request.Id, "REQUEST:"+request.Hash)
+	data := <-dataChannel
+
+	// Set headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+	w.Header().Set("Content-Type", "application/octet-stream")                                // Indicate raw binary data
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename)) // Send filename
+	w.WriteHeader(http.StatusOK)
+
+	// Write the raw file data to the response body
+	if _, err := w.Write(data); err != nil {
+		http.Error(w, "Error writing raw data to response", http.StatusInternalServerError)
+	}
+}
+
 func getProviders(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -57,6 +181,7 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
 		return
 	}
+	request.Hash = strings.TrimSpace(request.Hash)
 	fmt.Println("hash: ", request.Hash)
 	data := []byte(request.Hash)
 	hash := sha256.Sum256(data)
@@ -72,9 +197,24 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Providers sync: ", providers)
+	var resp []map[string]string
+	for _, provider := range providers {
+		cost, err := dhtRoute.GetValue(ctx, "/orcanet/files/"+provider.ID.String()+"/"+request.Hash)
+		if err == nil && string(cost) != "null" {
+			var temp = make(map[string]string)
+			if provider.ID == node.ID() {
+				temp["id"] = "Me"
+			} else {
+				temp["id"] = provider.ID.String()
+			}
+			temp["cost"] = string(cost)
+			resp = append(resp, temp)
+		}
+	}
+	fmt.Printf("resp: %v", resp)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(providers); err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
 	}
 }
@@ -244,7 +384,18 @@ func handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	provideKey(ctx, dhtRoute, fileHash, true)
+	err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+fileHash, []byte(strconv.FormatFloat(priceFloat, 'f', -1, 64)))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to put record for key %v and value %v", fileHash, priceFloat), http.StatusInternalServerError)
+		log.Printf("Failed to put record for key %v and value %v: %v\n", fileHash, priceFloat, err)
+		return
+	}
+	err = provideKey(ctx, dhtRoute, fileHash, true)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to provide record for key: %v", fileHash), http.StatusInternalServerError)
+		log.Printf("Failed to provide record for key: %v", fileHash)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -336,7 +487,18 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	provideKey(ctx, dhtRoute, request.Hash, false)
+	err = dhtRoute.PutValue(ctx, "/orcanet/files/"+node.ID().String()+"/"+request.Hash, []byte("null"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to put record for key %v and value null", request.Hash), http.StatusInternalServerError)
+		log.Printf("Failed to put record for key %v and value null: %v\n", request.Hash, err)
+		return
+	}
+	err = provideKey(ctx, dhtRoute, request.Hash, false)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to stop providing record for key: %v", request.Hash), http.StatusInternalServerError)
+		log.Printf("Failed to provide record for key: %v", request.Hash)
+		return
+	}
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")

@@ -30,12 +30,13 @@ import (
 )
 
 var (
-	node_id             = "114254605" // give your SBU ID
-	relay_node_addr     = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
-	bootstrap_node_addr = "/ip4/130.245.173.222/tcp/61000/p2p/12D3KooWQd1K1k8XA9xVEzSAu7HUCodC7LJB6uW5Kw4VwkRdstPE"
+	node_id               = "114640750" // give your SBU ID
+	relay_node_addr       = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
+	bootstrap_node_addr_1 = "/ip4/130.245.173.221/tcp/6001/p2p/12D3KooWE1xpVccUXZJWZLVWPxXzUJQ7kMqN8UQ2WLn9uQVytmdA"
 	// Change the ip address to your public ip address"
-	native_bootstrap_node_addr = "/ip4/172.25.234.89/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
-	globalCtx                  context.Context
+	bootstrap_node_addr_2 = "/ip4/130.245.173.222/tcp/61020/p2p/12D3KooWM8uovScE5NPihSCKhXe8sbgdJAi88i2aXT2MmwjGWoSX"
+	globalCtx             context.Context
+	dataChannel           = make(chan []byte)
 )
 
 func generatePrivateKeyFromSeed(seed []byte) (crypto.PrivKey, error) {
@@ -167,10 +168,7 @@ func receiveDataFromPeer(node host.Host) {
 	// Set a stream handler to listen for incoming streams on the "/senddata/p2p" protocol
 	node.SetStreamHandler("/senddata/p2p", func(s network.Stream) {
 		defer s.Close()
-		// Create a buffered reader to read data from the stream
-		buf := bufio.NewReader(s)
-		// Read data from the stream
-		data, err := buf.ReadBytes('\n') // Reads until a newline character
+		data, err := io.ReadAll(s)
 		if err != nil {
 			if err == io.EOF {
 				log.Printf("Stream closed by peer: %s", s.Conn().RemotePeer())
@@ -179,14 +177,73 @@ func receiveDataFromPeer(node host.Host) {
 			}
 			return
 		}
-		// Print the received data
-		log.Printf("Received data: %s", data)
+		if strings.HasPrefix(string(data), "REQUEST:") {
+			hash := string(data)[8:]
+			record, err := GetFileRecord(hash)
+			if err != nil {
+				log.Printf("Failed to retrieve hash: %v", hash)
+			}
+			sendFile(node, s.Conn().RemotePeer().String(), "files/"+record["filename"].(string))
+		} else if strings.HasPrefix(string(data), "NAME:") {
+			hash := string(data)[5:]
+			record, err := GetFileRecord(hash)
+			if err != nil {
+				log.Printf("Failed to retrieve hash: %v", hash)
+			}
+			sendDataToPeer(node, s.Conn().RemotePeer().String(), record["filename"].(string))
+		} else if strings.HasPrefix(string(data), "EXIST:") {
+			hash := string(data)[6:]
+			record, err := GetFileRecord(hash)
+			if err != nil {
+				log.Printf("Failed to retrieve hash: %v", hash)
+			}
+			if record == nil {
+				sendDataToPeer(node, s.Conn().RemotePeer().String(), "false")
+			} else {
+				sendDataToPeer(node, s.Conn().RemotePeer().String(), "true")
+			}
+		} else {
+			dataChannel <- data
+		}
 	})
 }
 
-func sendDataToPeer(node host.Host, targetpeerid string) {
+func sendDataToPeer(node host.Host, targetpeerid string, msg string) error {
 	var ctx = context.Background()
 	targetPeerID := strings.TrimSpace(targetpeerid)
+	relayAddr, err := multiaddr.NewMultiaddr(relay_node_addr)
+	if err != nil {
+		log.Printf("Failed to create relay multiaddr: %v", err)
+		return err
+	}
+	peerMultiaddr := relayAddr.Encapsulate(multiaddr.StringCast("/p2p-circuit/p2p/" + targetPeerID))
+
+	peerinfo, err := peer.AddrInfoFromP2pAddr(peerMultiaddr)
+	if err != nil {
+		log.Fatalf("Failed to parse peer address: %s", err)
+		return err
+	}
+	if err := node.Connect(ctx, *peerinfo); err != nil {
+		log.Printf("Failed to connect to peer %s via relay: %v", peerinfo.ID, err)
+		return err
+	}
+	s, err := node.NewStream(network.WithAllowLimitedConn(ctx, "/senddata/p2p"), peerinfo.ID, "/senddata/p2p")
+	if err != nil {
+		log.Printf("Failed to open stream to %s: %s", peerinfo.ID, err)
+		return err
+	}
+	defer s.Close()
+	_, err = s.Write([]byte(msg))
+	if err != nil {
+		log.Fatalf("Failed to write to stream: %s", err)
+		return err
+	}
+	return nil
+}
+
+func sendFile(node host.Host, target string, filename string) {
+	var ctx = context.Background()
+	targetPeerID := strings.TrimSpace(target)
 	relayAddr, err := multiaddr.NewMultiaddr(relay_node_addr)
 	if err != nil {
 		log.Printf("Failed to create relay multiaddr: %v", err)
@@ -207,11 +264,19 @@ func sendDataToPeer(node host.Host, targetpeerid string) {
 		return
 	}
 	defer s.Close()
-	_, err = s.Write([]byte("sending hello to peer\n"))
+	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("Failed to write to stream: %s", err)
+		log.Fatalf("Failed to open file: %s", err)
+		return
 	}
+	defer file.Close()
 
+	// Copy the file content to the stream
+	_, err = io.Copy(s, file)
+	if err != nil {
+		log.Fatalf("Failed to send file: %s", err)
+		return
+	}
 }
 
 func handlePeerExchange(node host.Host) {
@@ -268,7 +333,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 				continue
 			}
 			key := args[1]
-			dhtKey := "/orcanet/" + key
+			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
 			res, err := dht.GetValue(ctx, dhtKey)
 			if err != nil {
 				fmt.Printf("Failed to get record: %v\n", err)
@@ -331,7 +396,7 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			}
 			key := args[1]
 			value := args[2]
-			dhtKey := "/orcanet/" + key
+			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
 			log.Println(dhtKey)
 			err := dht.PutValue(ctx, dhtKey, []byte(value))
 			if err != nil {
@@ -403,6 +468,13 @@ func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
 			key := args[1]
 			provideKey(ctx, dht, key, true)
 			fmt.Println("Record stored successfully")
+
+		case "SEND":
+			if len(args) < 2 {
+				fmt.Println("Expected msg")
+				continue
+			}
+			sendFile(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", args[1])
 
 		default:
 			fmt.Println("Expected GET, GET_PROVIDERS, PUT, DELETE, or UPLOAD")
