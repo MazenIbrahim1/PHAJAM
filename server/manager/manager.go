@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/creack/pty"
 )
@@ -182,11 +183,13 @@ func WalletExists() bool {
 }
 
 // StartWallet starts the DolphinCoin wallet service
-func StartWalletServer() error {
+func StartWalletServer() (error) {
 	log.Println("Starting DolphinCoin wallet service...")
 	rpcUser := "user"
 	rpcPass := "password"
 	rpcConnect := "127.0.0.1:8334"
+	username := "user"
+	password := "password"
 
 	params := []string {
 		"--btcdusername=" + rpcUser,
@@ -194,21 +197,25 @@ func StartWalletServer() error {
 		"--rpcconnect=" + rpcConnect,
 		"--noclienttls",
 		"--noservertls",
+		"--username=" + username,
+		"--password=" + password,
 	}
 
 	// Command to start server with above params
 	cmd := exec.Command("btcwallet", params...)
 	fmt.Printf("Executing command: btcwallet %s", strings.Join(params, " "))
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Failed to start wallet service: %s\nOutput: %s", err.Error(), string(output))
-		return fmt.Errorf("error starting wallet service: %s, output: %s", err.Error(), string(output))
+	// Start the server
+	if err := cmd.Start(); err != nil {
+		log.Printf("Failed to start wallet service: %s", err.Error())
+		return fmt.Errorf("error starting wallet service: %w", err)
 	}
+
+	log.Println("Waiting for the wallet server to initialize...")
+	time.Sleep(5 * time.Second)
 
 	// Log the success message
 	log.Println("DolphinCoin wallet service started successfully.")
-	log.Println(string(output))
 	return nil
 }
 

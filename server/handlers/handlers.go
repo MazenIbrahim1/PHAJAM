@@ -7,9 +7,16 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/MazenIbrahim1/PHAJAM/server/manager" // Adjust this import to match your project structure
+	"github.com/MazenIbrahim1/PHAJAM/server/manager"
+)
+
+// Global var for password
+var (
+	walletPassword string
+	passwordMutex sync.Mutex
 )
 
 // GetRoot returns a welcome message.
@@ -47,6 +54,11 @@ func CreateWallet(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to create wallet: %v", err)
 		return
 	}
+
+	// Store the password globally (with mutex for thread safety)
+	passwordMutex.Lock()
+	walletPassword = request.Password
+	passwordMutex.Unlock()
 
 	// Respond with the wallet seed if successful
 	response := struct {
@@ -89,28 +101,46 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Start wallet services
-	if err := manager.StartWalletServer(); err != nil {
-		http.Error(w, `{"error": "Failed to start wallet. Please create a wallet first."}`, http.StatusUnauthorized)
-		log.Printf("Error starting wallet: %v", err)
+	// Validate the provided password
+	passwordMutex.Lock()
+	defer passwordMutex.Unlock()
+
+	if walletPassword != request.Password {
+		w.WriteHeader(http.StatusUnauthorized)
+		response := map[string]interface{}{
+			"message": "Incorrect password",
+			"value":   false,
+		}
+		json.NewEncoder(w).Encode(response)
+		log.Println("Login attempt failed: Incorrect password.")
 		return
 	}
 
-	time.Sleep(3 * time.Second) // Simulate delay
+	// Start wallet services
+	if err := manager.StartWalletServer(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := map[string]interface{}{
+			"message": "Failed to start wallet services.",
+			"value":   false,
+		}
+		json.NewEncoder(w).Encode(response)
+		log.Printf("Error starting wallet services: %v", err)
+		return
+	}
 
-	// Unlock wallet
-	// unlockCmd := fmt.Sprintf("walletpassphrase %s %d", request.Password, 3600)
-	// if _, err := manager.CallDolphinCmd(unlockCmd); err != nil {
-	// 	http.Error(w, `{"error": "Failed to unlock wallet. Check your password."}`, http.StatusUnauthorized)
-	// 	log.Printf("Error unlocking wallet: %v", err)
-	// 	return
-	// }
+	// Simulate delay to mimic wallet unlocking (if needed)
+	time.Sleep(3 * time.Second)
 
 	// Respond with success
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully."})
+	response := map[string]interface{}{
+		"message": "Logged in successfully.",
+		"value":   true,
+	}
+	json.NewEncoder(w).Encode(response)
 	log.Println("Wallet login successful.")
 }
+
 
 // DeleteWallet handles the deletion of an account
 func DeleteWallet(w http.ResponseWriter, r *http.Request) {
