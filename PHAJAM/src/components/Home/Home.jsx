@@ -160,27 +160,31 @@ export default function Home() {
 
   const handleMine = async () => {
     try {
-      // Number of blocks to mine (e.g., 5 for demo)
+      // Step 1: Fetch a new mining address
+      const addressResponse = await axios.post("http://localhost:8080/wallet/address/new");
+      const miningAddress = addressResponse.data.newAddress;
+      console.log("Mining to address:", miningAddress);
+  
+      // Step 2: Number of blocks to mine
       const numBlocks = 5;
-      console.log("Attempting to mine blocks...");
-
-      // API call to the backend
+  
+      // Step 3: Mine the blocks
       const response = await axios.post("http://localhost:8080/wallet/mine", {
         num_blocks: numBlocks,
+        address: miningAddress, // Include the new mining address
       });
-      console.log("Response received:", response.data);
-
   
-      // Handle successful response
-      alert(`Mining started: ${response.data.message}`);
-      setMinedBlocks(response.data.block_hash); // Update mined blocks
-      console.log("Block hashes:", response.data.block_hash);
+      // Step 4: Handle successful response
+      alert(`Mining completed! ${response.data.message}`);
+      setMinedBlocks(response.data.block_hash); // Update the mined block hashes
+      console.log("Mined block hashes:", response.data.block_hash);
     } catch (error) {
-      // Handle errors
-      alert("Error starting mining: " + error.response?.data?.error || error.message);
+      // Step 5: Handle errors
+      alert("Error during mining: " + (error.response?.data?.error || error.message));
       console.error("Mining error:", error);
     }
   };
+  
 
   return (
     <Box

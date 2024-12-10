@@ -16,7 +16,7 @@ import (
 // Global var for password
 var (
 	walletPassword string
-	passwordMutex sync.Mutex
+	passwordMutex  sync.Mutex
 )
 var walletDefaulAddr string
 
@@ -131,7 +131,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Unlock wallet
 	fmt.Println("Unlocking wallet...")
-	timeUnlocked := 3600*5
+	timeUnlocked := 3600 * 5
 	command := fmt.Sprintf("walletpassphrase %s %d", walletPassword, timeUnlocked)
 	_, err := manager.BtcctlCommand(command)
 	if err != nil {
@@ -187,7 +187,6 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet password changed successfully.")
 }
 
-
 // DeleteWallet handles the deletion of an account
 func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	if err := manager.DeleteWallet(); err != nil {
@@ -221,7 +220,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 // GetNewAddress generates a new wallet address.
 func GetNewAddress(w http.ResponseWriter, r *http.Request) {
-	newAddress, err := manager.CallDolphinCmd("getnewaddress")
+	newAddress, err := manager.BtcctlCommand("getnewaddress")
 	if err != nil {
 		http.Error(w, `{"error": "Failed to generate new address"}`, http.StatusInternalServerError)
 		log.Printf("Error generating new address: %v", err)
@@ -263,58 +262,34 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet balance retrieved successfully.")
 }
 
-// Mine triggers mining of a specified number of blocks.
+// Mine triggers mining by generating a specified number of blocks
 func Mine(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		NumBlocks int `json:"num_blocks"`
 	}
 
-	// Parse JSON body
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.NumBlocks <= 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "Invalid request payload or number of blocks",
-		})
-		log.Printf("Invalid request payload: %v", err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Start mining
+	// Construct the command to start mining
 	cmd := fmt.Sprintf("generate %d", request.NumBlocks)
-	output, err := manager.CallDolphinCmd(cmd)
+	output, err := manager.BtcctlCommand(cmd)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "Failed to start mining",
-		})
-		log.Printf("Error starting mining: %v", err)
+		http.Error(w, "Failed to start mining: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Parse the response to get block hashes
+	// Parse the response to get the block hashes of the mined blocks
 	blockHashes := strings.Split(strings.TrimSpace(output), "\n")
 
-	// Ensure blockHashes is not empty
-	if len(blockHashes) == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "Mining succeeded but no block hashes were returned",
-		})
-		log.Println("Mining succeeded but no block hashes were returned")
-		return
-	}
-
-	// Send successful response
+	// Send response with the mined block hashes
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":    "Mining started successfully",
 		"block_hash": blockHashes,
 	})
-	log.Println("Mining started successfully:", blockHashes)
 }
 
 // SendToAddress sends funds to a specific address.

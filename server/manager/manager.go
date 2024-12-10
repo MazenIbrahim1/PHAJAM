@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,11 +11,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/creack/pty"
 )
+
+var orcaNetCmd *exec.Cmd
 
 var walletPID int
 
@@ -33,110 +36,206 @@ func StopServices() error {
 	return nil
 }
 
-// CallDolphinCmd executes a DolphinCoin CLI command and returns the output
-func CallDolphinCmd(cmd string) (string, error) {
-	args := strings.Split(cmd, " ")
-	command := exec.Command("dolphin-cli", args...)
-
-	// Capture the output
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	command.Stdout = &out
-	command.Stderr = &stderr
-
-	// Execute the command
-	if err := command.Run(); err != nil {
-		log.Printf("Command execution failed: %s", stderr.String())
-		return "", fmt.Errorf("command execution failed: %w", err)
+// StartOrcaNet starts the btcd process with an optional mining address
+func StartOrcaNet(miningAddr string) error {
+	if orcaNetCmd != nil && orcaNetCmd.Process != nil {
+		fmt.Println("btcd is already running.")
+		return nil
 	}
 
-	return out.String(), nil
+	rootPath, err := getExePath()
+	if err != nil {
+		return fmt.Errorf("failed to get executable path: %v", err)
+	}
+	orcaNetPath := filepath.Join(rootPath, "btcd", "btcd")
+
+	if _, err = os.Stat(orcaNetPath); os.IsNotExist(err) {
+		return fmt.Errorf("btcd binary not found at %s", orcaNetPath)
+	}
+
+	rpcUser := "user"
+	rpcPass := "password"
+	addpeer := "130.245.173.221:8333"
+	args := []string{
+		"--rpcuser=" + rpcUser,
+		"--rpcpass=" + rpcPass,
+		"--notls",
+		"--txindex",
+		"--addpeer=" + addpeer,
+	}
+
+	if miningAddr != "" {
+		args = append(args, "--miningaddr="+miningAddr)
+		fmt.Println("Retrieved mining address added to btcd")
+	} else {
+		fmt.Println("Mining address is nothing")
+	}
+
+	orcaNetCmd = exec.Command(orcaNetPath, args...)
+	stdout, err := orcaNetCmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stdout pipe: %v", err)
+	}
+	stderr, err := orcaNetCmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stderr pipe: %v", err)
+	}
+
+	if err := orcaNetCmd.Start(); err != nil {
+		return fmt.Errorf("failed to start btcd: %v", err)
+	}
+
+	go streamOutput(stdout, "btcd")
+	go streamOutput(stderr, "btcd error")
+
+	fmt.Println("btcd started successfully.")
+	return nil
 }
+
+// streamOutput reads the output from a command pipe and prints it with a prefix
+func streamOutput(r io.Reader, prefix string) {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		fmt.Printf("[%s] %s\n", prefix, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading %s stream: %v\n", prefix, err)
+	}
+}
+
+// Get the project root path (parent of the 'server' folder)
+func getExePath() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("could not get working directory: %v", err)
+	}
+	rootPath := filepath.Dir(wd)
+	return rootPath, nil
+}
+
+// StopOrcaNet stops the btcd process if it is running
+func StopOrcaNet() error {
+	if orcaNetCmd != nil && orcaNetCmd.Process != nil {
+		if err := orcaNetCmd.Process.Signal(os.Interrupt); err != nil {
+			return fmt.Errorf("failed to stop btcd: %v", err)
+		}
+
+		// Wait for the process to exit and check for errors
+		if err := orcaNetCmd.Wait(); err != nil {
+			return fmt.Errorf("btcd did not shut down cleanly: %v", err)
+		}
+
+		fmt.Println("btcd stopped.")
+		orcaNetCmd = nil // Reset orcaNetCmd to indicate btcd is no longer running
+	} else {
+		return fmt.Errorf("btcd is not running.")
+	}
+	return nil
+}
+
+// CallDolphinCmd executes a DolphinCoin CLI command and returns the output
+// func CallDolphinCmd(cmd string) (string, error) {
+// 	args := strings.Split(cmd, " ")
+// 	command := exec.Command("dolphin-cli", args...)
+
+// 	// Capture the output
+// 	var out bytes.Buffer
+// 	var stderr bytes.Buffer
+// 	command.Stdout = &out
+// 	command.Stderr = &stderr
+
+// 	// Execute the command
+// 	if err := command.Run(); err != nil {
+// 		log.Printf("Command execution failed: %s", stderr.String())
+// 		return "", fmt.Errorf("command execution failed: %w", err)
+// 	}
+
+// 	return out.String(), nil
+// }
 
 // CreateWallet creates a new wallet using the provided password.
 func CreateWallet(password string) (string, error) {
-    log.Println("Executing the create command from btcwallet using pty...")
+	log.Println("Executing the create command from btcwallet using pty...")
 
-    // Command to create the wallet
-    cmd := exec.Command("btcwallet", "--create")
+	// Command to create the wallet
+	cmd := exec.Command("btcwallet", "--create")
 
-    // Create a pseudo-terminal for the command
-    ptyFile, err := pty.Start(cmd)
-    if err != nil {
-        return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
-    }
-    defer ptyFile.Close()
+	// Create a pseudo-terminal for the command
+	ptyFile, err := pty.Start(cmd)
+	if err != nil {
+		return "", fmt.Errorf("failed to start pty for btcwallet: %w", err)
+	}
+	defer ptyFile.Close()
 
-    // Buffer for capturing output
-    var outputBuffer strings.Builder
-    var walletSeed string
+	// Buffer for capturing output
+	var outputBuffer strings.Builder
+	var walletSeed string
 
-    // Goroutine to read output in real-time
-    go func() {
-        buf := make([]byte, 1024)
-        for {
-            n, err := ptyFile.Read(buf)
-            if err != nil {
-                if err == io.EOF {
-                    break
-                }
-                log.Printf("Error reading from pty: %v", err)
-                return
-            }
-            output := string(buf[:n])
-            outputBuffer.WriteString(output)
-            log.Println("btcwallet output:", output)
+	// Goroutine to read output in real-time
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := ptyFile.Read(buf)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Printf("Error reading from pty: %v", err)
+				return
+			}
+			output := string(buf[:n])
+			outputBuffer.WriteString(output)
+			log.Println("btcwallet output:", output)
 
-            // Responding to expected prompts
-            if strings.Contains(output, "Enter the private passphrase") {
-                log.Println("Responding to passphrase prompt...")
-                ptyFile.Write([]byte(password + "\n"))
+			// Responding to expected prompts
+			if strings.Contains(output, "Enter the private passphrase") {
+				log.Println("Responding to passphrase prompt...")
+				ptyFile.Write([]byte(password + "\n"))
 				time.Sleep(1 * time.Second)
-            }
-            if strings.Contains(output, "Confirm passphrase") {
-                log.Println("Responding to confirm passphrase prompt...")
-                ptyFile.Write([]byte(password + "\n"))
+			}
+			if strings.Contains(output, "Confirm passphrase") {
+				log.Println("Responding to confirm passphrase prompt...")
+				ptyFile.Write([]byte(password + "\n"))
 				time.Sleep(1 * time.Second)
-            }
-            if strings.Contains(output, "Do you want to add an additional layer of encryption") {
-                log.Println("Responding to additional encryption prompt...")
-                ptyFile.Write([]byte("no\n"))
+			}
+			if strings.Contains(output, "Do you want to add an additional layer of encryption") {
+				log.Println("Responding to additional encryption prompt...")
+				ptyFile.Write([]byte("no\n"))
 				time.Sleep(1 * time.Second)
-            }
-            if strings.Contains(output, "Do you have an existing wallet seed") {
-                log.Println("Responding to existing seed prompt...")
-                ptyFile.Write([]byte("no\n"))
+			}
+			if strings.Contains(output, "Do you have an existing wallet seed") {
+				log.Println("Responding to existing seed prompt...")
+				ptyFile.Write([]byte("no\n"))
 				time.Sleep(1 * time.Second)
-            }
-            if strings.Contains(output, "Your wallet generation seed is:") {
+			}
+			if strings.Contains(output, "Your wallet generation seed is:") {
 				ptyFile.Write([]byte("OK\n"))
-                log.Println("Capturing wallet seed...")
-                lines := strings.Split(output, "\n")
-                for i, line := range lines {
-                    if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
-                        walletSeed = lines[i+1]
-                        break
-                    }
-                }
-            }
-        }
-    }()
+				log.Println("Capturing wallet seed...")
+				lines := strings.Split(output, "\n")
+				for i, line := range lines {
+					if strings.Contains(line, "Your wallet generation seed is:") && i+1 < len(lines) {
+						walletSeed = lines[i+1]
+						break
+					}
+				}
+			}
+		}
+	}()
 
-    // Wait for the command to finish
-    if err := cmd.Wait(); err != nil {
-        return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
-    }
+	// Wait for the command to finish
+	if err := cmd.Wait(); err != nil {
+		return "", fmt.Errorf("failed to create wallet: %w. Output: %s", err, outputBuffer.String())
+	}
 
-    // Check if seed was captured
-    if walletSeed == "" {
-        return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
-    }
+	// Check if seed was captured
+	if walletSeed == "" {
+		return "", fmt.Errorf("failed to capture wallet seed. Output: %s", outputBuffer.String())
+	}
 
-    walletSeed = strings.TrimSpace(walletSeed)
-    log.Println("Wallet creation successful. Wallet seed:", walletSeed)
-    return walletSeed, nil
+	walletSeed = strings.TrimSpace(walletSeed)
+	log.Println("Wallet creation successful. Wallet seed:", walletSeed)
+	return walletSeed, nil
 }
-
 
 // Delete wallet and account
 func DeleteWallet() error {
@@ -199,7 +298,7 @@ func WalletExists() bool {
 }
 
 // StartWallet starts the DolphinCoin wallet service
-func StartWalletServer() (error) {
+func StartWalletServer() error {
 	log.Println("Starting DolphinCoin wallet service...")
 	rpcUser := "user"
 	rpcPass := "password"
@@ -253,7 +352,7 @@ func StopWallet() error {
 	}
 
 	// Attempt to terminate the process gracefully
-	err = process.Kill()  // or process.Signal(syscall.SIGTERM) for a more graceful termination
+	err = process.Kill() // or process.Signal(syscall.SIGTERM) for a more graceful termination
 	if err != nil {
 		return fmt.Errorf("failed to stop wallet service with PID %d: %w", walletPID, err)
 	}
@@ -266,32 +365,66 @@ func StopWallet() error {
 	return nil
 }
 
-
 // ConfigureMiningAddress configures the given address as the mining address
+// func ConfigureMiningAddress(address string) error {
+// 	log.Printf("Configuring mining address: %s", address)
+// 	_, err := CallDolphinCmd(fmt.Sprintf("setminingaddress %s", address))
+// 	if err != nil {
+// 		return fmt.Errorf("failed to configure mining address: %w", err)
+// 	}
+// 	return nil
+// }
+
 func ConfigureMiningAddress(address string) error {
-	log.Printf("Configuring mining address: %s", address)
-	_, err := CallDolphinCmd(fmt.Sprintf("setminingaddress %s", address))
-	if err != nil {
-		return fmt.Errorf("failed to configure mining address: %w", err)
+	if err := StopOrcaNet(); err != nil {
+		return fmt.Errorf("failed to stop btcd: %v", err)
+	}
+
+	// Short delay to ensure btcd has shut down completely
+	time.Sleep(5 * time.Second)
+
+	if err := UpdateBtcdConfigWithMiningAddr(address); err != nil {
+		return fmt.Errorf("failed to update btcd config: %v", err)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	if err := StartOrcaNet(address); err != nil {
+		return fmt.Errorf("failed to restart btcd with mining address: %v", err)
 	}
 	return nil
 }
 
 // GetWalletBalance retrieves the current wallet balance
-func GetWalletBalance() (float64, error) {
-	log.Println("Retrieving wallet balance...")
-	output, err := CallDolphinCmd("getbalance")
+// func GetWalletBalance() (float64, error) {
+// 	log.Println("Retrieving wallet balance...")
+// 	output, err := CallDolphinCmd("getbalance")
+// 	if err != nil {
+// 		return 0, fmt.Errorf("failed to retrieve wallet balance: %w", err)
+// 	}
+
+// 	// Parse the balance into a float
+// 	var balance float64
+// 	_, parseErr := fmt.Sscanf(output, "%f", &balance)
+// 	if parseErr != nil {
+// 		return 0, errors.New("failed to parse wallet balance")
+// 	}
+// 	return balance, nil
+// }
+
+// ParseBalanceAndAmount parses balance and amount strings into float64
+func GetWalletBalance(balanceStr, amountStr string) (float64, float64, error) {
+	balance, err := strconv.ParseFloat(balanceStr, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to retrieve wallet balance: %w", err)
+		return 0, 0, fmt.Errorf("invalid balance format: %v", err)
 	}
 
-	// Parse the balance into a float
-	var balance float64
-	_, parseErr := fmt.Sscanf(output, "%f", &balance)
-	if parseErr != nil {
-		return 0, errors.New("failed to parse wallet balance")
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid amount format: %v", err)
 	}
-	return balance, nil
+
+	return balance, amount, nil
 }
 
 // ValidateAddress checks if a given address is valid
@@ -404,3 +537,45 @@ func ListTransactions(account string, count, from int, includeWatchOnly bool) ([
 
 // 	return strings.TrimSpace(string(output)), nil
 // }
+
+// UpdateBtcdConfigWithMiningAddr updates btcd.conf with the specified mining address
+func UpdateBtcdConfigWithMiningAddr(address string) error {
+	// Get the project root path
+	rootPath, err := getExePath()
+	if err != nil {
+		return fmt.Errorf("failed to get project root path: %v", err)
+	}
+
+	// Construct the path to btcd.conf within the btcd directory
+	configPath := filepath.Join(rootPath, "btcd", "sample-btcd.conf")
+
+	// Read the current btcd.conf content
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read btcd.conf: %v", err)
+	}
+
+	// Update or add the mining address line
+	lines := strings.Split(string(content), "\n")
+	var found bool
+	for i, line := range lines {
+		if strings.HasPrefix(line, "miningaddr=") {
+			lines[i] = fmt.Sprintf("miningaddr=%s", address)
+			found = true
+			break
+		}
+	}
+	if !found {
+		// If no mining address was found, add a new line for it
+		lines = append(lines, fmt.Sprintf("miningaddr=%s", address))
+	}
+
+	// Write the updated content back to btcd.conf
+	updatedContent := strings.Join(lines, "\n")
+	if err := os.WriteFile(configPath, []byte(updatedContent), 0644); err != nil {
+		return fmt.Errorf("failed to write to btcd.conf: %v", err)
+	}
+
+	fmt.Println("btcd.conf updated with new mining address:", address)
+	return nil
+}

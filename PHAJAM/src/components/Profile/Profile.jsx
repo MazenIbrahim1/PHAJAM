@@ -24,30 +24,7 @@ export default function Profile() {
 
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      type: "Received",
-      amount: 50,
-      date: "2024-10-01T10:30:00",
-      from: "0xabcdef123456",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      type: "Sent",
-      amount: 25,
-      date: "2024-10-05T14:15:00",
-      to: "0x9876543210abcd",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      type: "Sent",
-      amount: 15,
-      date: "2024-10-10T09:45:00",
-      to: "0x3333333333333333",
-      status: "In Progress",
-    },
+  
   ]);
   const [address, setAddress] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState("");
