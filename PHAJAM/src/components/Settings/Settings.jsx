@@ -177,11 +177,11 @@ export default function SettingsPage() {
             RESET PASSWORD
           </Typography>
           <Typography variant="body2" sx={{ marginBottom: 2 }}>
-            Enter your current password and set a new password.
+            Enter your old password and set a new password.
           </Typography>
           <TextField
             type="text" // Current Password
-            label="Current Password"
+            label="Old Password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             sx={{

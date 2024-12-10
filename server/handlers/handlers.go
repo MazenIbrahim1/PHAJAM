@@ -149,6 +149,12 @@ func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := manager.StopWallet(); err != nil {
+		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
+		log.Printf("Error stopping wallet service: %v", err)
+		return
+	}
+
 	// Respond with success message
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Wallet deleted successfully!")
