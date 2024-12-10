@@ -155,7 +155,11 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		cost, err := dhtRoute.GetValue(ctx, "/orcanet/files/"+provider.ID.String()+"/"+request.Hash)
 		if err == nil && string(cost) != "null" {
 			var temp = make(map[string]string)
-			temp["id"] = provider.ID.String()
+			if provider.ID == node.ID() {
+				temp["id"] = "Me"
+			} else {
+				temp["id"] = provider.ID.String()
+			}
 			temp["cost"] = string(cost)
 			resp = append(resp, temp)
 		}

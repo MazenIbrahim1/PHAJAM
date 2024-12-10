@@ -56,7 +56,7 @@ export default function Explore() {
 
   // Function to check if a row is selectable
   const isRowSelectable = (row) => {
-    return row.row.cost != "N/A"; // If "cost" is "N/A", the row is unselectable
+    return row.row.id !== "Me";
   };
 
   return (
@@ -117,6 +117,12 @@ export default function Explore() {
           noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
         }}
         isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
+        sortModel={[
+          {
+            field: "cost",  // The column to sort by
+            sort: "asc",    // "desc" for descending order
+          },
+        ]}
       />
     </Box>
   );

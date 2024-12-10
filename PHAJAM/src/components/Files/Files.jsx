@@ -31,8 +31,8 @@ export default function Files() {
   const [errorPopup, setErrorPopup] = useState({ open: false, message: "" });
 
   const columns = [
-    { field: "filename", headerName: "File Name", flex: 2 },
-    { field: "hash", headerName: "Hash", flex: 4 },
+    { field: "filename", headerName: "File Name", flex: 3 },
+    { field: "hash", headerName: "Hash", flex: 6 },
     { field: "cost", headerName: "Cost", flex: 1 },
     { field: "timestamp", headerName: "Uploaded At", flex: 2 },
   ];
