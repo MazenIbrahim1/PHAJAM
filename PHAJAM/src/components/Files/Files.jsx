@@ -170,9 +170,9 @@ export default function Files() {
           startIcon={<UploadIcon />}
           onClick={openUpload}
           sx={{
-            backgroundColor: darkMode ? "#f06292" : "#000000",
+            backgroundColor: darkMode ? "white" : "black",
             "&:hover": {
-              backgroundColor: "#7a99d9",
+              backgroundColor: "#3d3d3d",
             },
           }}
         >
@@ -210,7 +210,7 @@ export default function Files() {
                 <Button
                   variant="contained"
                   component="span"
-                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem" }}
+                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem", textAlign: "center", backgroundColor: "black", "&:hover": { backgroundColor: "#3d3d3d", },}}
                 >
                   Choose File
                 </Button>
@@ -237,7 +237,18 @@ export default function Files() {
               fullWidth
               variant="outlined"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numeric and float values
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setPrice(value);
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                }
+              }}
               required
             />
           </form>

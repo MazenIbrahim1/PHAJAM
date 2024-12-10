@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ipfs/go-cid"
@@ -135,6 +136,7 @@ func getProviders(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing JSON req body", http.StatusBadRequest)
 		return
 	}
+	request.Hash = strings.TrimSpace(request.Hash)
 	fmt.Println("hash: ", request.Hash)
 	data := []byte(request.Hash)
 	hash := sha256.Sum256(data)

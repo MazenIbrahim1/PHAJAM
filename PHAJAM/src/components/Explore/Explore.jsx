@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, TextField, Typography, InputAdornment } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, TextField, Typography, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -23,6 +23,9 @@ function CustomNoRowsOverlay() {
 export default function Explore() {
   const [searchQuery, setSearchQuery] = useState("");
   const [rows, setRows] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [offerPrice, setOfferPrice] = useState("");
 
   const columns = [
     { field: "id", headerName: "Peer ID", flex: 2 },
@@ -46,7 +49,6 @@ export default function Explore() {
         }
 
         const data = await response.json();
-        // Assuming `data` is an array of objects like [{ pid: '...', cost: ... }, ...]
         setRows(data);
       } catch (error) {
         console.error("Error fetching providers:", error);
@@ -58,6 +60,25 @@ export default function Explore() {
   const isRowSelectable = (row) => {
     return row.row.id !== "Me";
   };
+
+  useEffect(() => {
+    if (!openDialog) {
+      setOfferPrice("");
+    }
+  }, [openDialog]);
+
+  // Handle row click
+  const handleRowClick = (params) => {
+    const clickedRow = params.row;
+    setSelectedRow(clickedRow);
+    setOpenDialog(true);
+  };
+
+  const handlePurchase = (id, cost) => {
+    setOpenDialog(false);
+    console.log(id);
+    console.log(cost);
+  }
 
   return (
     <Box
@@ -111,19 +132,90 @@ export default function Explore() {
           "& .MuiDataGrid-cell:focus-within": {
             outline: "none",
           },
+          "& .MuiDataGrid-columnHeader:focus-within": {
+            outline: "none",
+          },
         }}
         getRowId={(row) => row.id} // Ensure unique IDs for each row
         slots={{
           noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
         }}
         isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
-        sortModel={[
-          {
-            field: "cost",  // The column to sort by
-            sort: "asc",    // "desc" for descending order
-          },
-        ]}
+        sortModel={[{
+          field: "cost",  // The column to sort by
+          sort: "asc",    // "desc" for descending order
+        }]}
+        onRowClick={handleRowClick}  // Handle row click
       />
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle sx={{ fontSize: "24px", textAlign: "center" }}>
+          Confirm Purchase
+        </DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+          <Typography>Price: {selectedRow ? selectedRow.cost : "Loading..."} DC</Typography>
+          <Typography>Balance After: 480 DC</Typography>
+          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+            <TextField
+              margin="dense"
+              label="Set Offer Price"
+              type="text"
+              fullWidth
+              variant="outlined"
+              sx={{ flex: 1 }}
+              value={offerPrice} // Controlled input
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numbers, decimal points, and limit to one decimal point
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setOfferPrice(value); // Update state only with valid input
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                }
+              }}
+              required
+            />
+            <Button
+              color="primary"
+              sx={{
+                backgroundColor: offerPrice ? "black" : "gray", // Dynamic color
+                color: "white",
+                ":hover": { backgroundColor: offerPrice ? "#3d3d3d" : "gray" },
+              }}
+              disabled={!offerPrice} // Disable if no value is inputted
+            >
+              Request
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", padding: "16px" }}>
+          <Button
+            onClick={() => setOpenDialog(false)}
+            color="error"
+            sx={{
+              backgroundColor: "red",
+              color: "white",
+              ":hover": { backgroundColor: "#b83127" },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handlePurchase(selectedRow.id, selectedRow.cost)}
+            color="primary"
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              ":hover": { backgroundColor: "#3d3d3d" },
+            }}
+          >
+            Purchase
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -30,6 +30,8 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
 
   // Add a delete button column
   const deleteColumn = {
+    field: "delete",
+    headerName: "",
     width: 100,
     renderCell: (params) => (
       <Button
@@ -47,6 +49,7 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
         Delete
       </Button>
     ),
+    sortable: false
   };
 
   const updatedColumns = [...columns, deleteColumn]; // Add the delete column to the columns array
@@ -70,6 +73,9 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
           disableColumnResize
           sx={{
             "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+            },
+            "& .MuiDataGrid-columnHeader:focus-within": {
               outline: "none",
             },
           }}
