@@ -90,22 +90,18 @@ func CreateWallet(password string) (string, error) {
             if strings.Contains(output, "Enter the private passphrase") {
                 log.Println("Responding to passphrase prompt...")
                 ptyFile.Write([]byte(password + "\n"))
-                time.Sleep(1 * time.Second)
             }
             if strings.Contains(output, "Confirm passphrase") {
                 log.Println("Responding to confirm passphrase prompt...")
                 ptyFile.Write([]byte(password + "\n"))
-                time.Sleep(1 * time.Second)
             }
             if strings.Contains(output, "Do you want to add an additional layer of encryption") {
                 log.Println("Responding to additional encryption prompt...")
                 ptyFile.Write([]byte("no\n"))
-                time.Sleep(1 * time.Second)
             }
             if strings.Contains(output, "Do you have an existing wallet seed") {
                 log.Println("Responding to existing seed prompt...")
                 ptyFile.Write([]byte("no\n"))
-                time.Sleep(1 * time.Second)
             }
 			ptyFile.Write([]byte("OK\n"))
             if strings.Contains(output, "Your wallet generation seed is:") {
@@ -227,7 +223,7 @@ func StartWalletServer() (error) {
 	}
 
 	log.Println("Waiting for the wallet server to initialize...")
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Log the success message
 	walletPID = cmd.Process.Pid
