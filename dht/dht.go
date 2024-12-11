@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -316,176 +315,6 @@ func handlePeerExchange(node host.Host) {
 	})
 }
 
-func handleInput(ctx context.Context, dht *dht.IpfsDHT) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("User Input \n ")
-	for {
-		fmt.Print("> ")
-		input, _ := reader.ReadString('\n') // Read input from keyboard
-		input = strings.TrimSpace(input)    // Trim any trailing newline or spaces
-		args := strings.Split(input, " ")
-		if len(args) < 1 {
-			fmt.Println("No command provided")
-			continue
-		}
-		command := args[0]
-		command = strings.ToUpper(command)
-		switch command {
-		case "GET":
-			if len(args) < 2 {
-				fmt.Println("Expected key")
-				continue
-			}
-			key := args[1]
-			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
-			res, err := dht.GetValue(ctx, dhtKey)
-			if err != nil {
-				fmt.Printf("Failed to get record: %v\n", err)
-				continue
-			}
-			if string(res) == "NULL" {
-				fmt.Printf("Record is NULL\n")
-			} else {
-				fmt.Printf("Record: %s\n", res)
-			}
-
-		case "GET_PROVIDERS":
-			if len(args) < 2 {
-				fmt.Println("Expected key")
-				continue
-			}
-			key := args[1]
-			dhtKey := "/orcanet/" + key
-
-			// First, check if the value of the key is NULL or non-existent
-			value, err := dht.GetValue(ctx, dhtKey)
-			if err != nil {
-				fmt.Println(err)
-				//continue
-			}
-			if string(value) == "NULL" {
-				fmt.Println("Key is NULL")
-			}
-			data := []byte(key)
-			hash := sha256.Sum256(data)
-			mh, err := multihash.EncodeName(hash[:], "sha2-256")
-			if err != nil {
-				fmt.Printf("Error encoding multihash: %v\n", err)
-				continue
-			}
-			c := cid.NewCidV1(cid.Raw, mh)
-			/*
-				providers := dht.FindProvidersAsync(ctx, c, 20)
-				fmt.Println("Searching for providers...")
-				for p := range providers {
-					if p.ID == peer.ID("") {
-						break
-					}
-					fmt.Printf("Found provider: %s\n", p.ID.String())
-					for _, addr := range p.Addrs {
-						fmt.Printf(" - Address: %s\n", addr.String())
-					}
-				}
-			*/
-			providerssync, err := dht.FindProviders(ctx, c)
-			fmt.Println("Providers sync:")
-			fmt.Println(providerssync)
-			fmt.Println("err:")
-			fmt.Println(err)
-
-		case "PUT":
-			if len(args) < 3 {
-				fmt.Println("Expected key and value")
-				continue
-			}
-			key := args[1]
-			value := args[2]
-			dhtKey := "/orcanet/files/" + node.ID().String() + "/" + key
-			log.Println(dhtKey)
-			err := dht.PutValue(ctx, dhtKey, []byte(value))
-			if err != nil {
-				fmt.Printf("Failed to put record: %v\n", err)
-				continue
-			}
-			provideKey(ctx, dht, key, true)
-			fmt.Println("Record stored successfully")
-
-		case "DELETE":
-			if len(args) < 2 {
-				fmt.Println("Expected key")
-				continue
-			}
-			key := args[1]
-			dhtKey := "/orcanet/" + key
-
-			// Check if the key exists by trying to retrieve its value
-			value, err := dht.GetValue(ctx, dhtKey)
-			if err != nil {
-				fmt.Println(err)
-				//continue
-			}
-			if string(value) == "NULL" {
-				fmt.Println("Key is NULL")
-			}
-			// Key exists, proceed to delete it
-			err = dht.PutValue(ctx, dhtKey, []byte("NULL"))
-			if err != nil {
-				fmt.Printf("Failed to mark record as deleted: %v\n", err)
-			} else {
-				fmt.Println("Record marked as deleted successfully")
-			}
-			provideKey(ctx, dht, key, false)
-
-		case "UPLOAD":
-			if len(args) < 2 {
-				fmt.Println("Expected file path")
-				continue
-			}
-			filename := args[1]
-			file, err := os.Open(filename)
-			if err != nil {
-				fmt.Printf("Failed to open file: %v\n", err)
-				continue
-			}
-			defer file.Close()
-
-			hasher := sha256.New()
-			if _, err := io.Copy(hasher, file); err != nil {
-				fmt.Printf("Failed to hash file: %v\n", err)
-				continue
-			}
-			fileHash := hex.EncodeToString(hasher.Sum(nil))
-
-			err = StoreFileRecord(fileHash, filename, 0)
-			if err != nil {
-				fmt.Printf("Failed to store file record in MongoDB: %v\n", err)
-				continue
-			}
-
-			fmt.Printf("File uploaded successfully. Hash %s\n", fileHash)
-
-		case "PROVIDE":
-			if len(args) < 2 {
-				fmt.Println("Expected key")
-				continue
-			}
-			key := args[1]
-			provideKey(ctx, dht, key, true)
-			fmt.Println("Record stored successfully")
-
-		case "SEND":
-			if len(args) < 2 {
-				fmt.Println("Expected msg")
-				continue
-			}
-			sendFile(node, "12D3KooWEZPJj6q8TV85zEEwXY9Lr5XwHtZgCR7RKBF1Es5f8GQ1", args[1])
-
-		default:
-			fmt.Println("Expected GET, GET_PROVIDERS, PUT, DELETE, or UPLOAD")
-		}
-	}
-}
-
 func provideKey(ctx context.Context, dht *dht.IpfsDHT, key string, provide bool) error {
 	data := []byte(key)
 	hash := sha256.Sum256(data)
@@ -536,11 +365,11 @@ func refreshReservation(node host.Host, interval time.Duration) {
 
 type ProxyInfo struct {
 	PeerID     string `json:"peer_id"`
-	Name	   string `json:"name"`
+	Name       string `json:"name"`
 	Location   string `json:"location"`
 	IPAddress  string `json:"ip_address"`
 	InitialFee string `json:"initialFee"`
-	Price	   string `json:"price"`
+	Price      string `json:"price"`
 	Port       int    `json:"port"`
 }
 
@@ -554,11 +383,11 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location stri
 	if ipAddress != "" {
 		proxyInfo = &ProxyInfo{
 			PeerID:     node.ID().String(),
-			Name:	    name,
+			Name:       name,
 			Location:   location,
 			IPAddress:  ipAddress,
 			InitialFee: initialFee,
-			Price:	    price,
+			Price:      price,
 			Port:       50000,
 		}
 	} else {

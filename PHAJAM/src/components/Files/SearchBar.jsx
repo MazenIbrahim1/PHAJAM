@@ -20,7 +20,7 @@ const SearchBar = ({ search, setSearch }) => {
         input: {
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }}/>
+              <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
             </InputAdornment>
           ),
         },

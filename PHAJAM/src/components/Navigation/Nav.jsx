@@ -16,23 +16,32 @@ import {
   TravelExplore,
   SentimentSatisfiedAlt,
   Logout,
-} from "@mui/icons-material"; 
+} from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTheme as useThemeContext } from "../../ThemeContext"; 
+import { useTheme as useThemeContext } from "../../ThemeContext";
 
 export default function Nav() {
   // Get the current path
   const location = useLocation();
-  const navigate = useNavigate(); 
-  const { setDarkMode } = useThemeContext(); 
+  const navigate = useNavigate();
+  const { setDarkMode } = useThemeContext();
 
   // Function to check which navigation link is active
   const isActive = (path) => location.pathname === path;
 
   // Function to handle logout
-  const handleLogout = () => {
-    setDarkMode(false); 
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/wallet/logout");
+      if (response.ok) {
+        setDarkMode(false);
+        navigate("/");
+      } else {
+        console.log("Error logging out... bruh");
+      }
+    } catch (err) {
+      console.log("Error logging out: ", err);
+    }
   };
 
   return (
@@ -43,8 +52,8 @@ export default function Nav() {
         "& .MuiDrawer-paper": {
           width: "13vw",
           boxSizing: "border-box",
-          backgroundColor: "#000000", 
-          color: "#ffffff", 
+          backgroundColor: "#000000",
+          color: "#ffffff",
         },
       }}
     >
@@ -67,7 +76,7 @@ export default function Nav() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          height: "100%", 
+          height: "100%",
         }}
       >
         {/* Top List Section */}
@@ -109,9 +118,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/files") ? "#7a99d9" : "transparent", 
+                bgcolor: isActive("/files") ? "#7a99d9" : "transparent",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", 
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
@@ -190,9 +199,9 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/profile") ? "#7a99d9" : "transparent", 
+                bgcolor: isActive("/profile") ? "#7a99d9" : "transparent",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", 
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
@@ -222,20 +231,20 @@ export default function Nav() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: isActive("/settings") ? "#7a99d9" : "transparent", 
+                bgcolor: isActive("/settings") ? "#7a99d9" : "transparent",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", 
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
               divider
             >
               <ListItemIcon>
-                <Settings sx={{ color: "white", fontSize: "1.6rem" }} /> 
+                <Settings sx={{ color: "white", fontSize: "1.6rem" }} />
               </ListItemIcon>
               <ListItemText
                 primary="SETTINGS"
-                primaryTypographyProps={{ fontSize: "0.75rem" }} 
+                primaryTypographyProps={{ fontSize: "0.75rem" }}
               />
             </ListItemButton>
           </ListItem>
@@ -245,23 +254,23 @@ export default function Nav() {
             <ListItemButton
               onClick={handleLogout}
               sx={{
-                height: "8vh", 
+                height: "8vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 "&:hover": {
-                  backgroundColor: "#7a99d9", 
+                  backgroundColor: "#7a99d9",
                 },
                 color: "white",
               }}
               divider
             >
               <ListItemIcon>
-                <Logout sx={{ color: "white", fontSize: "1.6rem" }} /> 
+                <Logout sx={{ color: "white", fontSize: "1.6rem" }} />
               </ListItemIcon>
               <ListItemText
                 primary="LOGOUT"
-                primaryTypographyProps={{ fontSize: "0.75rem" }} 
+                primaryTypographyProps={{ fontSize: "0.75rem" }}
               />
             </ListItemButton>
           </ListItem>

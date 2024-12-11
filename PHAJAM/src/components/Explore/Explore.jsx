@@ -179,16 +179,30 @@ export default function Explore() {
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
                 </InputAdornment>
               ),
             },
           }}
           fullWidth
+          sx={{
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+            borderRadius: "4px",
+            input: {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+          }}
         />
         <Typography
           variant="h5"
-          sx={{ width: "400px", border: "1px solid black", p: 1 }}
+          sx={{
+            width: "400px",
+            border: "1px solid black",
+            p: 1.3,
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          }}
         >
           Wallet Balance: {balance} DC
         </Typography>
