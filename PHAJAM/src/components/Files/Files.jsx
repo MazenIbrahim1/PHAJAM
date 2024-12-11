@@ -9,11 +9,12 @@ import {
   DialogActions,
   TextField,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import UploadIcon from "@mui/icons-material/Upload";
 import CloseIcon from "@mui/icons-material/Close";
-import SearchBar from "./SearchBar";
-import DataTable from "./DataTable";
+import SearchIcon from "@mui/icons-material/Search";
+import { DataGrid } from "@mui/x-data-grid";
 import { useTheme } from "../../ThemeContext";
 
 export default function Files() {
@@ -131,7 +132,6 @@ export default function Files() {
         throw new Error("Failed to delete file");
       }
 
-      // Remove the deleted file from state
       setFiles((prevFiles) => prevFiles.filter((file) => file.hash !== hash));
     } catch (error) {
       console.error("Error deleting file:", error);
@@ -154,38 +154,112 @@ export default function Files() {
         justifyContent: "center",
         alignItems: "center",
         gap: 2,
+        color: darkMode ? "#ffffff" : "#000000",
+        backgroundColor: darkMode ? "#333333" : "#ffffff",
+        padding: "16px",
+        height: "100vh",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          flexDirection: "row",
+          justifyContent: "space-between",
           width: "100%",
-          gap: 1,
+          alignItems: "center",
+          gap: 2,
         }}
       >
-        <SearchBar search={search} setSearch={setSearch} />
+        <TextField
+          variant="outlined"
+          placeholder="Search Files..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
+              </InputAdornment>
+            ),
+          }}
+          fullWidth
+          sx={{
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+            borderRadius: "4px",
+            input: {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+          }}
+        />
         <Button
           variant="contained"
           startIcon={<UploadIcon />}
           onClick={openUpload}
           sx={{
-            backgroundColor: darkMode ? "white" : "black",
-            "&:hover": {
-              backgroundColor: "#3d3d3d",
-            },
+            backgroundColor: darkMode ? "#4a4a4a" : "#000000",
+            color: darkMode ? "#ffffff" : "#ffffff",
+            "&:hover": { backgroundColor: darkMode ? "#3d3d3d" : "#bdbdbd" },
           }}
         >
           Upload
         </Button>
       </Box>
-      <Typography sx={{ color: "red" }}>
+      <Typography sx={{ color: darkMode ? "#ff4444" : "#ff0000" }}>
         *These files still persist even if you delete the files on your computer! Use the delete button instead.
       </Typography>
-      <DataTable rows={files} columns={columns} search={search} onDelete={handleDelete} />
+      <Box
+        sx={{
+          width: "100%",
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <DataGrid
+          rows={files}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 10,
+              },
+            },
+          }}
+          pageSizeOptions={[10]}
+          autoHeight
+          disableColumnMenu
+          disableColumnResize
+          sx={{
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            borderRadius: "8px",
+            "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+            },
+            "& .MuiDataGrid-columnHeader": {
+              color: darkMode ? "#ffffff" : "#000000",
+              backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+            },
+            "& .MuiTablePagination-caption": {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+          }}
+          getRowId={(row) => row.id}
+        />
+      </Box>
 
       {/* Upload File Popup */}
-      <Dialog open={uploadOpened} onClose={closeUpload}>
+      <Dialog
+        open={uploadOpened}
+        onClose={closeUpload}
+        PaperProps={{
+          style: {
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          },
+        }}
+      >
         <DialogTitle>Upload File</DialogTitle>
         <IconButton
           edge="end"
@@ -196,7 +270,7 @@ export default function Files() {
         >
           <CloseIcon />
         </IconButton>
-        <DialogContent sx={{ paddingTop : 1 }}>
+        <DialogContent sx={{ paddingTop: 1 }}>
           <form id="uploadForm" onSubmit={handleSubmit}>
             <input
               type="file"
@@ -210,7 +284,15 @@ export default function Files() {
                 <Button
                   variant="contained"
                   component="span"
-                  sx={{ marginTop: 0.4, marginRight: 1, fontSize: ".75rem", textAlign: "center", backgroundColor: "black", "&:hover": { backgroundColor: "#3d3d3d", },}}
+                  sx={{
+                    marginTop: 0.4,
+                    marginRight: 1,
+                    fontSize: ".75rem",
+                    textAlign: "center",
+                    backgroundColor: darkMode ? "#4a4a4a" : "#000000",
+                    color: darkMode ? "#ffffff" : "#ffffff",
+                    "&:hover": { backgroundColor: darkMode ? "#3d3d3d" : "#bdbdbd" },
+                  }}
                 >
                   Choose File
                 </Button>
@@ -225,7 +307,14 @@ export default function Files() {
                 slotProps={{
                   input: {
                     readOnly: true,
-                  }
+                  },
+                }}
+                sx={{
+                  color: darkMode ? "#ffffff" : "#000000",
+                  backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+                  input: {
+                    color: darkMode ? "#ffffff" : "#000000",
+                  },
                 }}
                 required
               />
@@ -239,15 +328,21 @@ export default function Files() {
               value={price}
               onChange={(e) => {
                 const value = e.target.value;
-                // Allow only numeric and float values
                 if (/^\d*\.?\d*$/.test(value)) {
                   setPrice(value);
                 }
               }}
               slotProps={{
                 input: {
-                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
-                }
+                  inputMode: "decimal",
+                },
+              }}
+              sx={{
+                color: darkMode ? "#ffffff" : "#000000",
+                backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+                input: {
+                  color: darkMode ? "#ffffff" : "#000000",
+                },
               }}
               required
             />
@@ -259,7 +354,14 @@ export default function Files() {
             type="submit"
             form="uploadForm"
             disabled={!file || uploading}
-            sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
+            sx={{
+              right: "3.3%",
+              marginTop: -2,
+              marginBottom: 1,
+              backgroundColor: darkMode ? "#4a4a4a" : "#000000",
+              color: darkMode ? "#ffffff" : "#ffffff",
+              "&:hover": { backgroundColor: darkMode ? "#3d3d3d" : "#bdbdbd" },
+            }}
           >
             Submit
           </Button>
@@ -267,13 +369,31 @@ export default function Files() {
       </Dialog>
 
       {/* Error Popup */}
-      <Dialog open={errorPopup.open} onClose={() => setErrorPopup({ open: false, message: "" })}>
+      <Dialog
+        open={errorPopup.open}
+        onClose={() => setErrorPopup({ open: false, message: "" })}
+        PaperProps={{
+          style: {
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          },
+        }}
+      >
         <DialogTitle>Error</DialogTitle>
         <DialogContent>
           <Typography>{errorPopup.message}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setErrorPopup({ open: false, message: "" })} color="primary" variant="contained">
+          <Button
+            onClick={() => setErrorPopup({ open: false, message: "" })}
+            color="primary"
+            variant="contained"
+            sx={{
+              backgroundColor: darkMode ? "#4a4a4a" : "#000000",
+              color: darkMode ? "#ffffff" : "#ffffff",
+              "&:hover": { backgroundColor: darkMode ? "#3d3d3d" : "#bdbdbd" },
+            }}
+          >
             Close
           </Button>
         </DialogActions>
