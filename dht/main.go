@@ -162,6 +162,8 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename)) // Send filename
 	w.WriteHeader(http.StatusOK)
 
+	// SEND MONEY
+
 	// Write the raw file data to the response body
 	if _, err := w.Write(data); err != nil {
 		http.Error(w, "Error writing raw data to response", http.StatusInternalServerError)
