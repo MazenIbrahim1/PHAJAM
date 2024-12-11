@@ -32,7 +32,7 @@ export default function Nav() {
   // Function to handle logout
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/wallet/logout");
+      const response = await fetch("http://localhost:18080/wallet/logout");
       if (response.ok) {
         setDarkMode(false);
         navigate("/");
