@@ -1,4 +1,4 @@
-Welcome to Dolphin Data Sharing by PHAJAM!
+# Welcome to Dolphin Data Sharing by PHAJAM!
 
 A simple decentralized file-sharing application powered by DolphinCoin.
 
