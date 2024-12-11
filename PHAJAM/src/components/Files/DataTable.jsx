@@ -3,6 +3,24 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { useTheme } from "../../ThemeContext"
 
+function CustomNoRowsOverlay() {
+  const { darkMode } = useTheme();
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        color: darkMode ? "#ffffff" : "gray",
+        fontSize: "16px",
+      }}
+    >
+      No files uploaded
+    </Box>
+  );
+}
+
 const DataTable = ({ rows, columns, search, onDelete }) => {
   const { darkMode } = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
@@ -87,6 +105,9 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
             "& .MuiDataGrid-columnHeader:focus-within": {
               outline: "none",
             },
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay
           }}
         />
       </Box>
