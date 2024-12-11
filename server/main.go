@@ -34,7 +34,7 @@ func main() {
 	handler := corsOptions.Handler(http.DefaultServeMux)
 
 	// Step 4: Start the HTTP server
-	const serverAddr = ":8080"
+	const serverAddr = ":18080"
 	log.Printf("Server is starting on %s...\n", serverAddr)
 	if err := http.ListenAndServe(serverAddr, handler); err != nil {
 		log.Fatalf("Server failed to start: %v", err)

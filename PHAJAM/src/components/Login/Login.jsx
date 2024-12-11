@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   const fetchWalletStatus = async () => {
     try {
-      const response = await fetch("http://localhost:8080/wallet/check");
+      const response = await fetch("http://localhost:18080/wallet/check");
       if (!response.ok) throw new Error("Failed to fetch wallet status");
 
       const data = await response.json();
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
     setLoading(true); // Start loading
     try {
-      const response = await fetch("http://localhost:8080/wallet/login", {
+      const response = await fetch("http://localhost:18080/wallet/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),

@@ -352,7 +352,7 @@ export default function GenerateKeys() {
 
     try {
       // Call backend to create the wallet with the user's password
-      const response = await fetch("http://localhost:8080/wallet/create", {
+      const response = await fetch("http://localhost:18080/wallet/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),

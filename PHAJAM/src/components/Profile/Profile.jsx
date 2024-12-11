@@ -34,7 +34,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const response = await fetch("http://localhost:8080/wallet/balance");
+        const response = await fetch("http://localhost:18080/wallet/balance");
         if (response.ok) {
           const data = await response.json();
           setBalance(data.balance);
@@ -46,7 +46,7 @@ export default function Profile() {
 
     const fetchAddress = async () => {
       try {
-        const request = await fetch("http://localhost:8080/wallet/address");
+        const request = await fetch("http://localhost:18080/wallet/address");
         if (!request.ok) {
           throw new Error(`HTTP error! Status: ${request.status}`);
         }
@@ -65,7 +65,7 @@ export default function Profile() {
   const fetchTransactions = async () => {
     try {
       const transactionsRequest = await fetch(
-        "http://localhost:8080/wallet/getTransactionHistory"
+        "http://localhost:18080/wallet/getTransactionHistory"
       );
       if (!transactionsRequest.ok) {
         throw new Error(
@@ -94,7 +94,7 @@ export default function Profile() {
         return;
       }
 
-      const response = await fetch("http://localhost:8080/wallet/send", {
+      const response = await fetch("http://localhost:18080/wallet/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

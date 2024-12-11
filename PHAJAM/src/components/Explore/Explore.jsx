@@ -40,7 +40,7 @@ export default function Explore() {
   const [selectedRow, setSelectedRow] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false); 
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const columns = [
@@ -80,20 +80,20 @@ export default function Explore() {
     if (!openDialog) {
       setOfferPrice("");
     }
-    // const fetchBalance = async () => {
-    //   try {
-    //     const response = await fetch("http://localhost:8080/wallet/balance");
-    //     if (response.ok) {
-    //       const data = await response.json();
-    //       setBalance(data.balance);
-    //     } else {
-    //       console.error("Error fetching balance");
-    //     }
-    //   } catch (err) {
-    //     console.log(err);
-    //   }
-    // };
-    // fetchBalance();
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch("http://localhost:18080/wallet/balance");
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        } else {
+          console.error("Error fetching balance");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchBalance();
   }, [openDialog]);
 
   const handleRowClick = (params) => {
@@ -179,7 +179,9 @@ export default function Explore() {
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
+                  <SearchIcon
+                    sx={{ color: darkMode ? "#ffffff" : "#000000" }}
+                  />
                 </InputAdornment>
               ),
             },
@@ -252,7 +254,12 @@ export default function Explore() {
       />
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>
+        <DialogTitle
+          sx={{
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          }}
+        >
           Confirm Purchase
         </DialogTitle>
         <DialogContent
@@ -335,11 +342,24 @@ export default function Explore() {
         </DialogActions>
       </Dialog>
       <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)}>
-        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>Error</DialogTitle>
-        <DialogContent sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
-          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>{errorMessage}</Typography>
+        <DialogTitle
+          sx={{
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+          }}
+        >
+          Error
+        </DialogTitle>
+        <DialogContent
+          sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}
+        >
+          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
+            {errorMessage}
+          </Typography>
         </DialogContent>
-        <DialogActions sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
+        <DialogActions
+          sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}
+        >
           <Button
             onClick={() => setErrorDialogOpen(false)}
             color="primary"

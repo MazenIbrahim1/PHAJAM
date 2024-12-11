@@ -60,7 +60,7 @@ export default function SettingsPage() {
   // Handle account deletion
   const handleDeleteAccount = async () => {
     try {
-      const response = await fetch("http://localhost:8080/wallet/delete");
+      const response = await fetch("http://localhost:18080/wallet/delete");
       if (response.ok) {
         console.log("Account deleted");
         setDarkMode(false);
@@ -88,7 +88,7 @@ export default function SettingsPage() {
   const handlePasswordChange = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/wallet/password-reset",
+        "http://localhost:18080/wallet/password-reset",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
