@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -22,6 +32,7 @@ function CustomNoRowsOverlay() {
 
 export default function Explore() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [balance, setBalance] = useState(500);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -67,6 +78,20 @@ export default function Explore() {
     if (!openDialog) {
       setOfferPrice("");
     }
+    // const fetchBalance = async () => {
+    //   try {
+    //     const response = await fetch("http://localhost:8080/wallet/balance");
+    //     if (response.ok) {
+    //       const data = await response.json();
+    //       setBalance(data.balance);
+    //     } else {
+    //       console.error("Error fetching balance");
+    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //   }
+    // };
+    // fetchBalance();
   }, [openDialog]);
 
   // Handle row click
@@ -88,7 +113,7 @@ export default function Explore() {
         },
         body: JSON.stringify({ id: id, hash: hash }),
       });
-  
+
       // Check if the response is successful
       if (!response.ok) {
         if (response.status === 404) {
@@ -99,7 +124,7 @@ export default function Explore() {
         setErrorDialogOpen(true);
         return;
       }
-  
+
       // Extract the filename from the Content-Disposition header
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "download"; // Default filename
@@ -108,7 +133,7 @@ export default function Explore() {
           .split("filename=")[1]
           .replace(/["']/g, ""); // Extract filename and remove quotes
       }
-  
+
       // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
       // Create a URL for the Blob and trigger the file download
@@ -138,26 +163,41 @@ export default function Explore() {
         gap: 2,
       }}
     >
-      <TextField
-        variant="outlined"
-        placeholder="Search Hash..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          },
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
         }}
-        fullWidth
-      />
-      <Typography>
-        Choose a provider to start a transaction
-      </Typography>
+      >
+        <TextField
+          variant="outlined"
+          placeholder="Search Hash..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+        />
+        <Typography
+          variant="h5"
+          sx={{ width: "400px", border: "1px solid black", p: 1 }}
+        >
+          Wallet Balance: {balance} DC
+        </Typography>
+      </Box>
+      <Typography>Choose a provider to start a transaction</Typography>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -186,19 +226,30 @@ export default function Explore() {
           noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
         }}
         isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
-        sortModel={[{
-          field: "cost",  // The column to sort by
-          sort: "asc",    // "desc" for descending order
-        }]}
-        onRowClick={handleRowClick}  // Handle row click
+        sortModel={[
+          {
+            field: "cost", // The column to sort by
+            sort: "asc", // "desc" for descending order
+          },
+        ]}
+        onRowClick={handleRowClick} // Handle row click
       />
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle sx={{ fontSize: "24px", textAlign: "center" }}>
           Confirm Purchase
         </DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-          <Typography>Price: {selectedRow ? selectedRow.cost : "Loading..."} DC</Typography>
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography>
+            Price: {selectedRow ? selectedRow.cost : "Loading..."} DC
+          </Typography>
           <Typography>Balance After: 480 DC</Typography>
           <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
             <TextField
@@ -219,7 +270,7 @@ export default function Explore() {
               slotProps={{
                 input: {
                   inputMode: "decimal", // For mobile keyboards to show decimal keypad
-                }
+                },
               }}
               required
             />
