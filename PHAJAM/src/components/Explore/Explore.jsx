@@ -134,9 +134,7 @@ export default function Explore() {
         alignItems: "center",
         gap: 2,
         color: darkMode ? "#ffffff" : "#000000",
-        backgroundColor: darkMode ? "#333333" : "#ffffff",
-        height: "100vh",
-        padding: "16px",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
       }}
     >
       <TextField
@@ -203,7 +201,7 @@ export default function Explore() {
       />
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>
           Confirm Purchase
         </DialogTitle>
         <DialogContent
@@ -221,43 +219,6 @@ export default function Explore() {
           <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
             Balance After: 480 DC
           </Typography>
-          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
-            <TextField
-              margin="dense"
-              label="Set Offer Price"
-              type="text"
-              fullWidth
-              variant="outlined"
-              sx={{
-                flex: 1,
-                backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-                color: darkMode ? "#ffffff" : "#000000",
-                input: {
-                  color: darkMode ? "#ffffff" : "#000000", // Text color inside TextField
-                },
-              }}
-              value={offerPrice}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setOfferPrice(value);
-                }
-              }}
-            />
-            <Button
-              color="primary"
-              sx={{
-                backgroundColor: offerPrice ? (darkMode ? "#f06292" : "black") : "gray",
-                color: "white",
-                ":hover": {
-                  backgroundColor: offerPrice ? "#7a99d9" : "gray",
-                },
-              }}
-              disabled={!offerPrice}
-            >
-              Request
-            </Button>
-          </Box>
         </DialogContent>
         <DialogActions
           sx={{
@@ -291,7 +252,7 @@ export default function Explore() {
         </DialogActions>
       </Dialog>
       <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)}>
-        <DialogTitle sx={{ color: darkMode ? "#ffffff" : "#000000" }}>Error</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>Error</DialogTitle>
         <DialogContent sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
           <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>{errorMessage}</Typography>
         </DialogContent>

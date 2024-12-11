@@ -9,13 +9,12 @@ import {
   DialogActions,
   TextField,
   IconButton,
-  InputAdornment,
 } from "@mui/material";
 import UploadIcon from "@mui/icons-material/Upload";
 import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
-import { DataGrid } from "@mui/x-data-grid";
 import { useTheme } from "../../ThemeContext";
+import SearchBar from "./SearchBar";
+import DataTable from "./DataTable";
 
 export default function Files() {
   const { darkMode } = useTheme();
@@ -155,42 +154,18 @@ export default function Files() {
         alignItems: "center",
         gap: 2,
         color: darkMode ? "#ffffff" : "#000000",
-        backgroundColor: darkMode ? "#333333" : "#ffffff",
-        padding: "16px",
-        height: "100vh",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "row",
           width: "100%",
-          alignItems: "center",
-          gap: 2,
+          gap: 1,
         }}
       >
-        <TextField
-          variant="outlined"
-          placeholder="Search Files..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
-              </InputAdornment>
-            ),
-          }}
-          fullWidth
-          sx={{
-            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-            color: darkMode ? "#ffffff" : "#000000",
-            borderRadius: "4px",
-            input: {
-              color: darkMode ? "#ffffff" : "#000000",
-            },
-          }}
-        />
+        <SearchBar search={search} setSearch={setSearch} />
         <Button
           variant="contained"
           startIcon={<UploadIcon />}
@@ -207,47 +182,7 @@ export default function Files() {
       <Typography sx={{ color: darkMode ? "#ff4444" : "#ff0000" }}>
         *These files still persist even if you delete the files on your computer! Use the delete button instead.
       </Typography>
-      <Box
-        sx={{
-          width: "100%",
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <DataGrid
-          rows={files}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-              },
-            },
-          }}
-          pageSizeOptions={[10]}
-          autoHeight
-          disableColumnMenu
-          disableColumnResize
-          sx={{
-            color: darkMode ? "#ffffff" : "#000000",
-            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-            borderRadius: "8px",
-            "& .MuiDataGrid-cell:focus-within": {
-              outline: "none",
-            },
-            "& .MuiDataGrid-columnHeader": {
-              color: darkMode ? "#ffffff" : "#000000",
-              backgroundColor: darkMode ? "#333333" : "#f0f0f0",
-            },
-            "& .MuiTablePagination-caption": {
-              color: darkMode ? "#ffffff" : "#000000",
-            },
-          }}
-          getRowId={(row) => row.id}
-        />
-      </Box>
+      <DataTable rows={files} columns={columns} search={search} onDelete={handleDelete} />
 
       {/* Upload File Popup */}
       <Dialog
@@ -311,8 +246,11 @@ export default function Files() {
                 }}
                 sx={{
                   color: darkMode ? "#ffffff" : "#000000",
-                  backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+                  backgroundColor: darkMode ? "#333333" : "#ffffff",
                   input: {
+                    color: darkMode ? "#ffffff" : "#000000",
+                  },
+                  "& .MuiInputLabel-root": {
                     color: darkMode ? "#ffffff" : "#000000",
                   },
                 }}
@@ -339,8 +277,11 @@ export default function Files() {
               }}
               sx={{
                 color: darkMode ? "#ffffff" : "#000000",
-                backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+                backgroundColor: darkMode ? "#333333" : "#ffffff",
                 input: {
+                  color: darkMode ? "#ffffff" : "#000000",
+                },
+                "& .MuiInputLabel-root": {
                   color: darkMode ? "#ffffff" : "#000000",
                 },
               }}

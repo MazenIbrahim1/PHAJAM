@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { useTheme } from "../../ThemeContext"
 
 const DataTable = ({ rows, columns, search, onDelete }) => {
+  const { darkMode } = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
   const [file, setFile] = useState({ hash: "", filename: "" });
 
@@ -72,6 +74,13 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
           disableColumnMenu
           disableColumnResize
           sx={{
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            borderRadius: "8px",
+            "& .MuiDataGrid-columnHeader": {
+              color: darkMode ? "#ffffff" : "#000000",
+              backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+            },
             "& .MuiDataGrid-cell:focus-within": {
               outline: "none",
             },
