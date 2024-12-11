@@ -48,6 +48,16 @@ export default function Explore() {
     { field: "cost", headerName: "Cost", flex: 1 },
   ];
 
+  const updatedColumns = columns.map((col) => {
+    if (col.field === "cost") { // Replace 'cost' with the actual field name of your cost column
+      return {
+        ...col,
+        renderCell: (params) => `${params.value} DC`, // Append " DC" to the cost value
+      };
+    }
+    return col;
+  })
+
   const handleKeyDown = async (e) => {
     if (e.key === "Enter") {
       try {
@@ -210,7 +220,7 @@ export default function Explore() {
       <Typography>Choose a provider to start a transaction</Typography>
       <DataGrid
         rows={rows}
-        columns={columns}
+        columns={updatedColumns}
         initialState={{
           pagination: {
             paginationModel: {
