@@ -49,14 +49,15 @@ export default function Explore() {
   ];
 
   const updatedColumns = columns.map((col) => {
-    if (col.field === "cost") { // Replace 'cost' with the actual field name of your cost column
+    if (col.field === "cost") {
+      // Replace 'cost' with the actual field name of your cost column
       return {
         ...col,
         renderCell: (params) => `${params.value} DC`, // Append " DC" to the cost value
       };
     }
     return col;
-  })
+  });
 
   const handleKeyDown = async (e) => {
     if (e.key === "Enter") {
@@ -209,11 +210,12 @@ export default function Explore() {
         <Typography
           variant="h5"
           sx={{
-            width: "400px",
+            width: "30%",
             border: "1px solid black",
             p: 1.3,
             backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
             color: darkMode ? "#ffffff" : "#000000",
+            textAlign: "center",
           }}
         >
           Wallet Balance: {balance} DC

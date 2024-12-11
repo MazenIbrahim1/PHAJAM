@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -338,6 +339,25 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	// SEND MONEY
+	recipientAddress := "" 
+	cost := ""                                    
+
+	walletServerURL := "http://localhost:18080/wallet/send"
+	paymentRequest := fmt.Sprintf(`{"address": "%s", "amount": "%s"}`, recipientAddress, cost)
+
+	resp, err := http.Post(walletServerURL, "application/json", bytes.NewBuffer([]byte(paymentRequest)))
+	if err != nil {
+		http.Error(w, "Error sending payment request to btcwallet server", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, fmt.Sprintf("Payment failed with status: %s", resp.Status), http.StatusInternalServerError)
+		return
+	}
+
+	log.Println("Payment successful to wallet:", recipientAddress, "Amount:", cost)
 
 	// Write the raw file data to the response body
 	if _, err := w.Write(data); err != nil {
