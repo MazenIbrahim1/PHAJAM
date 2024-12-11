@@ -5,6 +5,8 @@ import { useTheme } from "../../ThemeContext";
 const ProxyBox = ({ proxies, setCurrentProxy }) => {
     const { darkMode } = useTheme(); 
 
+    console.log(proxies)
+
     return (
         <Box
             sx={{
@@ -61,16 +63,16 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
-                                    {proxy.name.toUpperCase()}
-                                </Typography>
-                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    IP: {proxy.ip}
+                                    {proxy.name}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
                                     Location: {proxy.location}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    Price: {proxy.price} DC/MB
+                                    Initial Fee: {proxy.initialFee} DC
+                                </Typography>
+                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
+                                    Rate: {proxy.price} DC/MB
                                 </Typography>
                                 <Button
                                     variant="contained"

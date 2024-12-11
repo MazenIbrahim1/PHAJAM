@@ -4,30 +4,83 @@ import RouterIcon from '@mui/icons-material/Router';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from "../../ThemeContext";
 import ProxyBox from "./ProxyBox";
+import proxyInstructionsImage from './proxyInstructions.png'
+import disconnectProxyInstructionsImage from './disconnectProxyInstructions.png'
 
 export default function Proxy() {
 
   const { darkMode, setDarkMode } = useTheme();
 
-  const [peerID, setPeerID] = useState(null);
-  useEffect(() => {
-    fetch("http://localhost:8080/getPeerID")
-        .then((response) => response.text())
-        .then((data) => setPeerID(data))
-        .catch((error) => console.error("Error fetching peerID: ", error));
-  })
-
   // State for proxy toggle
   const [isProxy, setIsProxy] = useState(false);
+
+  // List of available proxies
+  const [proxyInfoList, setProxyInfoList] = useState([]);
+
+  useEffect(() => {
+
+    // Check if I am a proxy
+    const fetchProxyStatus = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/isProxy");
+            if (!response.ok) {
+                throw new Error("Failed to fetch proxy status");
+            }
+            const data = await response.json();
+            setIsProxy(data.isProxy);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Fetch list of proxies
+    const fetchProxyList = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/fetchProxyList");
+            if (!response.ok) {
+                throw new Error("Failed to fetch proxy list");
+            }
+            const data = await response.json();
+            data == null ? setProxyInfoList([]) : setProxyInfoList(data);
+            console.log(proxyInfoList);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    fetchProxyStatus();
+    fetchProxyList();
+
+    // Set interval to fetch proxy list every 5 seconds
+    const intervalId = setInterval(fetchProxyList, 5000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [])
 
   // Proxy chosen BEFORE confirmation
   const [selectedProxy, setSelectedProxy] = useState(null);
 
   // Proxy used AFTER confirmation
   const [currentProxy, setCurrentProxy] = useState(null);
+
+  // Popup if choosing proxy while already connected to another
+  const [proxyAlreadyConnectedOpened, setProxyAlreadyConnectedOpened] = useState(false);
   
   // Popup to confirm proxy choice
   const [confirmProxyOpened, setConfirmProxyOpened] = useState(false);
+
+  // Popup for using proxy instructions
+  const [proxyInstructionsOpened, setProxyInstructionsOpened] = useState(false);
+
+  // Popup for disconnecting from proxy instructions
+  const [disconnectProxyInstructionsOpened, setDisconnectProxyInstructionsOpened] = useState(false);
+
+  // Name and price of your proxy
+  const [name, setName] = useState("");
+  const [initialFee, setInitialFee] = useState("");
+  const [price, setPrice] = useState("");
+  const [priceError, setPriceError] = useState("");
 
   // Popup to set price of your own proxy
   const [priceOpened, setPriceOpened] = useState(false);
@@ -49,8 +102,12 @@ export default function Proxy() {
   }
 
   const handleSetCurrentProxy = (proxy) => {
-    setSelectedProxy(proxy);
-    setConfirmProxyOpened(true);
+    if (currentProxy != null) {
+        setProxyAlreadyConnectedOpened(true);
+    } else {
+        setSelectedProxy(proxy);
+        setConfirmProxyOpened(true);    
+    }
     // setCurrentProxy(proxy);
     // setIsProxy(false); // Set isProxy to false whenever a proxy is set
   };
@@ -63,25 +120,57 @@ export default function Proxy() {
 
     // Register as proxy
     try {
+        const data = {
+            action: "register",  // Register the proxy
+            name: name,
+            initialFee: initialFee,
+            price: price,
+        };
         const response = await fetch("http://localhost:8080/registerProxy", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ peerID: peerID }),
+            body: JSON.stringify(data),
         });
         
         // const data = await response.json();
         if (response.ok) {
-            setPriceOpened(false);
-            setIsProxy(true);
+            const startProxyResponse = await fetch("http://localhost:50001/startProxy", {
+                method: "POST",
+            });
+
+            if (!startProxyResponse.ok) {
+                const data2 = {
+                    action: "deregister",  // Deregister the proxy
+                };
+                await fetch("http://localhost:8080/registerProxy", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data2),
+                });
+                alert("Failed to start the proxy server!");
+            } else {
+                setIsProxy(true);
+            }
         }
+        setPriceOpened(false);
+        setName("");
+        setInitialFee("");
+        setPrice("");
+        setPriceError("");
     } catch (error) {
 
     }
   }
 
   const cancelPrice = () => {
+    setName("");
+    setInitialFee("");
+    setPrice("");
+    setPriceError("");
     setPriceOpened(false);
   }
 
@@ -90,6 +179,13 @@ export default function Proxy() {
 
     // Handle form submission
 
+    const initialFeeValue = parseFloat(initialFee);
+    const priceValue = parseFloat(price);
+    if (isNaN(priceValue) || priceValue <= 0 || isNaN(initialFeeValue) || initialFeeValue <= 0) {
+        setPriceError("Error: Invalid Fee or Price!");
+        return
+    }
+    
     closePrice();
   }
 
@@ -130,12 +226,12 @@ export default function Proxy() {
                 variant = "h4"
                 sx = {{ fontWeight: "bold" }}
             >
-                {mockProxies.length === 0 ? "NO " : ""} AVAILABLE PROXIES
+                {proxyInfoList.length === 0 ? "NO " : ""} AVAILABLE PROXIES
             </Typography>
         </Box>
-        <ProxyBox proxies = {mockProxies} setCurrentProxy = {handleSetCurrentProxy} />
+        <ProxyBox proxies = {proxyInfoList} setCurrentProxy = {handleSetCurrentProxy} />
         <Dialog open = {priceOpened}>
-            <DialogTitle sx={{ paddingBottom: 0 }}> Set Price </DialogTitle>
+            <DialogTitle sx={{ paddingBottom: 0 }}> Set Proxy Details </DialogTitle>
             <IconButton
                 edge="end"
                 color="inherit"
@@ -149,14 +245,41 @@ export default function Proxy() {
                 <form id = "priceForm" onSubmit = {handleSubmit}>
                     <TextField
                         margin = "dense"
-                        label = "DC / MB"
+                        label = "Name"
                         type = "text"
                         fullWidth
                         variant = "outlined"
+                        value = {name}
+                        onChange = {(e) => setName(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        margin = "dense"
+                        label = "Initial Fee (DC)"
+                        type = "text"
+                        fullWidth
+                        variant = "outlined"
+                        value = {initialFee}
+                        onChange = {(e) => setInitialFee(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        margin = "dense"
+                        label = "Rate (DC / MB)"
+                        type = "text"
+                        fullWidth
+                        variant = "outlined"
+                        value = {price}
+                        onChange = {(e) => setPrice(e.target.value)}
                         required
                     />
                 </form>
             </DialogContent>
+            <Typography 
+                sx={{ textAlign: "left", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: -1, marginBottom: 3 }}
+            >
+                {priceError}
+            </Typography>
             <DialogActions>
                 <Button 
                     variant = "contained"
@@ -166,6 +289,27 @@ export default function Proxy() {
                     sx={{ right: "3.3%", marginTop: -2, marginBottom: 1 }}
                   >
                     Submit
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {proxyAlreadyConnectedOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Already connected to a proxy </DialogTitle>
+            <Typography 
+                sx={{ textAlign: "left", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+            Error: You cannot connect to multiple proxies. Please disconnect from the current one to proceed.
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setProxyAlreadyConnectedOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    OK
                 </Button>
             </DialogActions>
         </Dialog>
@@ -184,6 +328,7 @@ export default function Proxy() {
                         setCurrentProxy(selectedProxy);
                         setIsProxy(false);
                         setConfirmProxyOpened(false);
+                        setProxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -203,15 +348,102 @@ export default function Proxy() {
                 </Button>
             </DialogActions>
         </Dialog>
-        <Dialog open = {confirmDisableProxyModeOpened}>
-            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disable proxy mode </DialogTitle>
+        <Dialog open = {proxyInstructionsOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Set up {currentProxy == null ? "" : currentProxy.name} as your proxy </DialogTitle>
+            <Typography 
+                sx={{ alignContent: "center", textAlign: "center", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+                To connect to your proxy, configure your device's proxy settings:<br />
+                IP: {currentProxy == null ? "" : currentProxy.ip_address} <br />
+                PORT: {currentProxy == null ? "" : currentProxy.port}
+                <img
+                    src = {proxyInstructionsImage}
+                    alt = "Proxy Setup"
+                    style = {{
+                        display: "block",
+                        width: "100%"
+                    }}
+                />
+            </Typography>
             <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
                 <Button 
                     variant = "contained"
                     backgroundColor = "black"
                     onClick = {() => {
                         setIsProxy(false);
-                        setConfirmDisableProxyModeOpened(false);
+                        setProxyInstructionsOpened(false);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Done
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {disconnectProxyInstructionsOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disconnect from {currentProxy == null ? "" : currentProxy.name} </DialogTitle>
+            <Typography 
+                sx={{ alignContent: "center", textAlign: "center", color: "red", fontSize: "0.875rem", wordBreak: "break-word", paddingLeft: 3, paddingRight: 3, marginTop: 1, marginBottom: 1 }}
+            >
+                Please disconnect via your device's proxy settings:<br />
+                <img
+                    src = {disconnectProxyInstructionsImage}
+                    alt = "Disconnect Proxy"
+                    style = {{
+                        display: "block",
+                        width: "100%"
+                    }}
+                />
+            </Typography>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {() => {
+                        setDisconnectProxyInstructionsOpened(false);
+                        setCurrentProxy(null);
+                    }}
+                    sx={{ paddingTop: 1, marginBottom: 1 }}
+                    fullWidth
+                  >
+                    Done
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open = {confirmDisableProxyModeOpened}>
+            <DialogTitle sx={{ textAlign: "center", paddingBottom: 0 }}> Disable proxy mode </DialogTitle>
+            <DialogActions sx = {{justifyContent: "center", paddingLeft: 3, paddingRight: 3}}>
+                <Button 
+                    variant = "contained"
+                    backgroundColor = "black"
+                    onClick = {async () => {
+                        try {
+                            const data = {
+                                action: "deregister",  // Deregister the proxy
+                            };
+                            const response = await fetch("http://localhost:8080/registerProxy", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(data),
+                            });
+                            
+                            if (response.ok) {
+                                const stopProxyResponse = await fetch("http://localhost:50001/stopProxy", {
+                                    method: "POST",
+                                });
+                    
+                                if (!stopProxyResponse.ok) {
+                                    alert("Failed to stop the proxy server!");
+                                } else {
+                                    setIsProxy(false);
+                                }
+                            }
+                            setConfirmDisableProxyModeOpened(false);
+                        } catch (error) {
+                            console.error(error);
+                        }
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -238,8 +470,8 @@ export default function Proxy() {
                     variant = "contained"
                     backgroundColor = "black"
                     onClick = {() => {
-                        setCurrentProxy(null);
                         setConfirmDisconnectProxyOpen(false);
+                        setDisconnectProxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth
@@ -296,7 +528,7 @@ export default function Proxy() {
                                 fontSize: "1.5rem"
                             }}
                         >
-                            DISCONNECT FROM {currentProxy.name.toUpperCase()}
+                            Disconnect from {currentProxy.name}
                         </Typography>
                     </Button>
                 ) : (
@@ -309,7 +541,7 @@ export default function Proxy() {
                             fontSize: "1.5rem"
                         }}
                     >
-                        CURRENT PROXY: {currentProxy.name.toUpperCase()} ({currentProxy.ip}, {currentProxy.price} DC/MB)
+                        Current Proxy: {currentProxy.name} ({currentProxy.price} DC/MB)
                     </Typography>
                 )}
                 </>
