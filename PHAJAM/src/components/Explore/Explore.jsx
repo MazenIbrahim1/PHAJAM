@@ -12,8 +12,10 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTheme } from "../../ThemeContext"; // Assuming useTheme is imported for dark mode context
 
 function CustomNoRowsOverlay() {
+  const { darkMode } = useTheme();
   return (
     <Box
       sx={{
@@ -21,7 +23,7 @@ function CustomNoRowsOverlay() {
         justifyContent: "center",
         alignItems: "center",
         height: "100%",
-        color: "gray",
+        color: darkMode ? "#ffffff" : "gray",
         fontSize: "16px",
       }}
     >
@@ -31,14 +33,15 @@ function CustomNoRowsOverlay() {
 }
 
 export default function Explore() {
+  const { darkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [balance, setBalance] = useState(500);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false); // New state for error dialog
-  const [errorMessage, setErrorMessage] = useState(""); // New state for error message
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState("");
 
   const columns = [
     { field: "id", headerName: "Peer ID", flex: 2 },
@@ -69,7 +72,6 @@ export default function Explore() {
     }
   };
 
-  // Function to check if a row is selectable
   const isRowSelectable = (row) => {
     return row.row.id !== "Me";
   };
@@ -94,7 +96,6 @@ export default function Explore() {
     // fetchBalance();
   }, [openDialog]);
 
-  // Handle row click
   const handleRowClick = (params) => {
     const clickedRow = params.row;
     if (clickedRow.id === "Me") {
@@ -113,8 +114,6 @@ export default function Explore() {
         },
         body: JSON.stringify({ id: id, hash: hash }),
       });
-
-      // Check if the response is successful
       if (!response.ok) {
         if (response.status === 404) {
           setErrorMessage("Purchase failed: Item not found.");
@@ -124,25 +123,20 @@ export default function Explore() {
         setErrorDialogOpen(true);
         return;
       }
-
-      // Extract the filename from the Content-Disposition header
       const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "download"; // Default filename
+      let filename = "download";
       if (contentDisposition && contentDisposition.includes("filename=")) {
         filename = contentDisposition
           .split("filename=")[1]
-          .replace(/["']/g, ""); // Extract filename and remove quotes
+          .replace(/["']/g, "");
       }
-
-      // Create a Blob from the received file data (raw binary data)
       const blob = await response.blob();
-      // Create a URL for the Blob and trigger the file download
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename; // Use the extracted filename
-      link.click(); // Trigger the download
-      URL.revokeObjectURL(url); // Clean up the object URL
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error purchasing: ", error);
     } finally {
@@ -161,6 +155,8 @@ export default function Explore() {
         justifyContent: "center",
         alignItems: "center",
         gap: 2,
+        color: darkMode ? "#ffffff" : "#000000",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
       }}
     >
       <Box
@@ -214,16 +210,22 @@ export default function Explore() {
         disableColumnResize
         sx={{
           width: "100%",
+          color: darkMode ? "#ffffff" : "#000000",
+          backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
           "& .MuiDataGrid-cell:focus-within": {
             outline: "none",
           },
-          "& .MuiDataGrid-columnHeader:focus-within": {
-            outline: "none",
+          "& .MuiDataGrid-columnHeader": {
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+          },
+          "& .MuiTablePagination-caption": {
+            color: darkMode ? "#ffffff" : "#000000", // Pagination text color
           },
         }}
-        getRowId={(row) => row.id} // Ensure unique IDs for each row
+        getRowId={(row) => row.id}
         slots={{
-          noRowsOverlay: CustomNoRowsOverlay, // Custom no-rows message
+          noRowsOverlay: CustomNoRowsOverlay,
         }}
         isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
         sortModel={[
@@ -236,7 +238,7 @@ export default function Explore() {
       />
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ fontSize: "24px", textAlign: "center" }}>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>
           Confirm Purchase
         </DialogTitle>
         <DialogContent
@@ -287,7 +289,13 @@ export default function Explore() {
             </Button>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", padding: "16px" }}>
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            padding: "16px",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
+          }}
+        >
           <Button
             onClick={() => setOpenDialog(false)}
             color="error"
@@ -303,7 +311,7 @@ export default function Explore() {
             onClick={() => handlePurchase(selectedRow.id, searchQuery)}
             color="primary"
             sx={{
-              backgroundColor: "black",
+              backgroundColor: darkMode ? "#000000" : "black",
               color: "white",
               ":hover": { backgroundColor: "#3d3d3d" },
             }}
@@ -313,12 +321,16 @@ export default function Explore() {
         </DialogActions>
       </Dialog>
       <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)}>
-        <DialogTitle>Error</DialogTitle>
-        <DialogContent>
-          <Typography>{errorMessage}</Typography>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>Error</DialogTitle>
+        <DialogContent sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
+          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>{errorMessage}</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setErrorDialogOpen(false)} color="primary">
+        <DialogActions sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
+          <Button
+            onClick={() => setErrorDialogOpen(false)}
+            color="primary"
+            sx={{ color: darkMode ? "#ffffff" : "#000000" }}
+          >
             Close
           </Button>
         </DialogActions>
