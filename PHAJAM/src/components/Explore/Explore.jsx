@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Typography, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, Button } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 import { useTheme } from "../../ThemeContext"; // Assuming useTheme is imported for dark mode context
@@ -25,6 +35,7 @@ function CustomNoRowsOverlay() {
 export default function Explore() {
   const { darkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
+  const [balance, setBalance] = useState(500);
   const [rows, setRows] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -69,6 +80,20 @@ export default function Explore() {
     if (!openDialog) {
       setOfferPrice("");
     }
+    // const fetchBalance = async () => {
+    //   try {
+    //     const response = await fetch("http://localhost:8080/wallet/balance");
+    //     if (response.ok) {
+    //       const data = await response.json();
+    //       setBalance(data.balance);
+    //     } else {
+    //       console.error("Error fetching balance");
+    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //   }
+    // };
+    // fetchBalance();
   }, [openDialog]);
 
   const handleRowClick = (params) => {
@@ -89,7 +114,6 @@ export default function Explore() {
         },
         body: JSON.stringify({ id: id, hash: hash }),
       });
-
       if (!response.ok) {
         if (response.status === 404) {
           setErrorMessage("Purchase failed: Item not found.");
@@ -99,7 +123,6 @@ export default function Explore() {
         setErrorDialogOpen(true);
         return;
       }
-
       const contentDisposition = response.headers.get("Content-Disposition");
       let filename = "download";
       if (contentDisposition && contentDisposition.includes("filename=")) {
@@ -107,7 +130,6 @@ export default function Explore() {
           .split("filename=")[1]
           .replace(/["']/g, "");
       }
-
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -137,32 +159,41 @@ export default function Explore() {
         backgroundColor: darkMode ? "#18191e" : "#ffffff",
       }}
     >
-      <TextField
-        variant="outlined"
-        placeholder="Search Hash..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
-            </InputAdornment>
-          ),
-        }}
-        fullWidth
+      <Box
         sx={{
-          backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-          color: darkMode ? "#ffffff" : "#000000",
-          borderRadius: "4px",
-          input: {
-            color: darkMode ? "#ffffff" : "#000000", // Text color inside TextField
-          },
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
         }}
-      />
-      <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
-        Choose a provider to start a transaction
-      </Typography>
+      >
+        <TextField
+          variant="outlined"
+          placeholder="Search Hash..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
+        />
+        <Typography
+          variant="h5"
+          sx={{ width: "400px", border: "1px solid black", p: 1 }}
+        >
+          Wallet Balance: {balance} DC
+        </Typography>
+      </Box>
+      <Typography>Choose a provider to start a transaction</Typography>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -196,8 +227,14 @@ export default function Explore() {
         slots={{
           noRowsOverlay: CustomNoRowsOverlay,
         }}
-        isRowSelectable={isRowSelectable}
-        onRowClick={handleRowClick}
+        isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
+        sortModel={[
+          {
+            field: "cost", // The column to sort by
+            sort: "asc", // "desc" for descending order
+          },
+        ]}
+        onRowClick={handleRowClick} // Handle row click
       />
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
@@ -210,15 +247,47 @@ export default function Explore() {
             flexDirection: "column",
             alignItems: "center",
             gap: 2,
-            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
-          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
+          <Typography>
             Price: {selectedRow ? selectedRow.cost : "Loading..."} DC
           </Typography>
-          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>
-            Balance After: 480 DC
-          </Typography>
+          <Typography>Balance After: 480 DC</Typography>
+          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+            <TextField
+              margin="dense"
+              label="Set Offer Price"
+              type="text"
+              fullWidth
+              variant="outlined"
+              sx={{ flex: 1 }}
+              value={offerPrice} // Controlled input
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numbers, decimal points, and limit to one decimal point
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setOfferPrice(value); // Update state only with valid input
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                },
+              }}
+              required
+            />
+            <Button
+              color="primary"
+              sx={{
+                backgroundColor: offerPrice ? "black" : "gray", // Dynamic color
+                color: "white",
+                ":hover": { backgroundColor: offerPrice ? "#3d3d3d" : "gray" },
+              }}
+              disabled={!offerPrice} // Disable if no value is inputted
+            >
+              Request
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions
           sx={{
