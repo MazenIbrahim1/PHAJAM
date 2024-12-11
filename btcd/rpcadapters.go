@@ -277,7 +277,7 @@ func (b *rpcSyncMgr) SyncPeerID() int32 {
 	return b.syncMgr.SyncPeerID()
 }
 
-// LocateHeaders returns the hashes of the blocks after the first known block in
+// LocateBlocks returns the hashes of the blocks after the first known block in
 // the provided locators until the provided stop hash or the current tip is
 // reached, up to a max of wire.MaxBlockHeadersPerMsg hashes.
 //

@@ -499,12 +499,7 @@ var TestNet3Params = Params{
 	Name:        "testnet3",
 	Net:         wire.TestNet3,
 	DefaultPort: "18333",
-	DNSSeeds: []DNSSeed{
-		{"testnet-seed.bitcoin.jonasschnelli.ch", true},
-		{"seed.tbtc.petertodd.net", true},
-		{"seed.testnet.bitcoin.sprovoost.nl", true},
-		{"testnet-seed.bluematt.me", false},
-	},
+	DNSSeeds: []DNSSeed{},
 
 	// Chain parameters
 	GenesisBlock:             &testNet3GenesisBlock,
@@ -514,39 +509,17 @@ var TestNet3Params = Params{
 	BIP0034Height:            21111,  // 0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8
 	BIP0065Height:            581885, // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
 	BIP0066Height:            330776, // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-	CoinbaseMaturity:         100,
+	CoinbaseMaturity:         1,
 	SubsidyReductionInterval: 210000,
 	TargetTimespan:           time.Hour * 24 * 14, // 14 days
 	TargetTimePerBlock:       time.Minute * 10,    // 10 minutes
 	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
 	ReduceMinDifficulty:      true,
 	MinDiffReductionTime:     time.Minute * 20, // TargetTimePerBlock * 2
-	GenerateSupported:        false,
+	GenerateSupported:        true,
 
 	// Checkpoints ordered from oldest to newest.
-	Checkpoints: []Checkpoint{
-		{546, newHashFromStr("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
-		{100000, newHashFromStr("00000000009e2958c15ff9290d571bf9459e93b19765c6801ddeccadbb160a1e")},
-		{200000, newHashFromStr("0000000000287bffd321963ef05feab753ebe274e1d78b2fd4e2bfe9ad3aa6f2")},
-		{300001, newHashFromStr("0000000000004829474748f3d1bc8fcf893c88be255e6d7f571c548aff57abf4")},
-		{400002, newHashFromStr("0000000005e2c73b8ecb82ae2dbc2e8274614ebad7172b53528aba7501f5a089")},
-		{500011, newHashFromStr("00000000000929f63977fbac92ff570a9bd9e7715401ee96f2848f7b07750b02")},
-		{600002, newHashFromStr("000000000001f471389afd6ee94dcace5ccc44adc18e8bff402443f034b07240")},
-		{700000, newHashFromStr("000000000000406178b12a4dea3b27e13b3c4fe4510994fd667d7c1e6a3f4dc1")},
-		{800010, newHashFromStr("000000000017ed35296433190b6829db01e657d80631d43f5983fa403bfdb4c1")},
-		{900000, newHashFromStr("0000000000356f8d8924556e765b7a94aaebc6b5c8685dcfa2b1ee8b41acd89b")},
-		{1000007, newHashFromStr("00000000001ccb893d8a1f25b70ad173ce955e5f50124261bbbc50379a612ddf")},
-		{1100007, newHashFromStr("00000000000abc7b2cd18768ab3dee20857326a818d1946ed6796f42d66dd1e8")},
-		{1200007, newHashFromStr("00000000000004f2dc41845771909db57e04191714ed8c963f7e56713a7b6cea")},
-		{1300007, newHashFromStr("0000000072eab69d54df75107c052b26b0395b44f77578184293bf1bb1dbd9fa")},
-		{1354312, newHashFromStr("0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75")},
-		{1580000, newHashFromStr("00000000000000b7ab6ce61eb6d571003fbe5fe892da4c9b740c49a07542462d")},
-		{1692000, newHashFromStr("000000000000056c49030c174179b52a928c870e6e8a822c75973b7970cfbd01")},
-		{1864000, newHashFromStr("000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0")},
-		{2010000, newHashFromStr("0000000000004ae2f3896ca8ecd41c460a35bf6184e145d91558cece1c688a76")},
-		{2143398, newHashFromStr("00000000000163cfb1f97c4e4098a3692c8053ad9cab5ad9c86b338b5c00b8b7")},
-		{2344474, newHashFromStr("0000000000000004877fa2d36316398528de4f347df2f8a96f76613a298ce060")},
-	},
+	Checkpoints: nil,
 
 	// Consensus rule change deployments.
 	//
