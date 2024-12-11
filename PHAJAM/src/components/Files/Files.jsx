@@ -196,7 +196,7 @@ export default function Files() {
         >
           <CloseIcon />
         </IconButton>
-        <DialogContent>
+        <DialogContent sx={{ paddingTop : 1 }}>
           <form id="uploadForm" onSubmit={handleSubmit}>
             <input
               type="file"

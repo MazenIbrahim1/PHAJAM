@@ -57,6 +57,24 @@ func InitializeDatabase(uri string) error {
 		fmt.Printf("Collection '%s' already exists.\n", dbCollection)
 	}
 
+	proxyCollectionExists := false
+	for _, name := range collectionNames {
+		if name == "proxies" {
+			proxyCollectionExists = true
+			break
+		}
+	}
+
+	if !proxyCollectionExists {
+		err = dbClient.Database(dbName).CreateCollection(ctx, "proxies")
+		if err != nil {
+			return fmt.Errorf("failed to create proxies collection: %w", err)
+		}
+		fmt.Printf("Collection 'proxies' created successfully.\n")
+	} else {
+		fmt.Printf("Collection 'proxies' already exists.\n")
+	}
+
 	return nil
 }
 
@@ -134,6 +152,21 @@ func FetchAllFileRecords() ([]map[string]interface{}, error) {
 	return records, nil
 }
 
+func StoreProxy(peerID string) error {
+	collection := dbClient.Database(dbName).Collection("proxies")
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+
+	record := bson.M {
+		"peerID": peerID,
+	}
+
+	_, err := collection.InsertOne(ctx, record)
+	if err != nil {
+		return fmt.Errorf("Failed to insert proxy: %w", err)
+	}
+	return nil
+}
 // DeleteFileRecord deletes a file record by hash
 func DeleteFileRecord(hash string) error {
 	collection := dbClient.Database(dbName).Collection(dbCollection)
