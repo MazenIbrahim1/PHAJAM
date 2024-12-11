@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	node_id               = "114640750" // give your SBU ID
+	node_id               = "114254605" // give your SBU ID
 	relay_node_addr       = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr_1 = "/ip4/130.245.173.221/tcp/6001/p2p/12D3KooWE1xpVccUXZJWZLVWPxXzUJQ7kMqN8UQ2WLn9uQVytmdA"
 	bootstrap_node_addr_2 = "/ip4/130.245.173.222/tcp/61020/p2p/12D3KooWM8uovScE5NPihSCKhXe8sbgdJAi88i2aXT2MmwjGWoSX"
@@ -462,4 +462,42 @@ func getProxyInfo(ctx context.Context, dht *dht.IpfsDHT, nodeID string) (*ProxyI
 	}
 
 	return &proxyInfo, nil
+}
+
+func mapPeerIDtoWallet(ctx context.Context, dht *dht.IpfsDHT, walletAddress string, node host.Host) {
+	// Key is peerID
+	key := "/orcanet/wallet/" + node.ID().String()
+
+	// Serialize wallet address
+	walletAddressJSON, err := json.Marshal(walletAddress)
+	if err != nil {
+		fmt.Printf("Error marshalling wallet address: %v\n", err)
+		return
+	}
+
+	// Store wallet address in DHT
+	err = dht.PutValue(ctx, key, walletAddressJSON)
+	if err != nil {
+		fmt.Printf("Error storing wallet address in DHT: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Wallet address mapped successfully. PeerID: %s\n Wallet Address: %s\n", node.ID().String(), walletAddress)
+}
+
+func getWalletAddress(ctx context.Context, dht *dht.IpfsDHT, peerID string) (string, error) {
+	key := "/orcanet/wallet/" + peerID
+
+	value, err := dht.GetValue(ctx, key)
+	if err != nil {
+		return "", err
+	}
+
+	var walletAddress string
+	err = json.Unmarshal(value, &walletAddress)
+	if err != nil {
+		return "", err
+	}
+
+	return walletAddress, nil
 }

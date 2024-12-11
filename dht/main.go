@@ -68,9 +68,11 @@ func main() {
 	connectToPeer(node, relay_node_addr) // connect to relay node
 	makeReservation(node)                // make reservation on relay node
 	go refreshReservation(node, 10*time.Minute)
-	//connectToPeer(node, native_bootstrap)
+
+	// connectToPeer(node, native_bootstrap)
 	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
-	//connectToPeer(node, bootstrap_node_addr_2)
+	// connectToPeer(node, bootstrap_node_addr_2)
+
 	go handlePeerExchange(node)
 	go receiveDataFromPeer(node)
 	mux := http.NewServeMux()
@@ -188,8 +190,8 @@ func enableCORS(next http.Handler) http.Handler {
 }
 
 type GeolocationResponse struct {
-	Region  string `json:"region"`
-	Country string `json:country"`
+	Region string `json:"region"`
+	Country string `json:"country"`
 }
 
 func getGeolocation() (*GeolocationResponse, error) {
