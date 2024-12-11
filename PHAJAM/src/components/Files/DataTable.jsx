@@ -72,7 +72,15 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
     sortable: false
   };
 
-  const updatedColumns = [...columns, deleteColumn]; // Add the delete column to the columns array
+  const updatedColumns = columns.map((col) => {
+    if (col.field === "cost") { // Replace 'cost' with the actual field name of your cost column
+      return {
+        ...col,
+        renderCell: (params) => `${params.value} DC`, // Append " DC" to the cost value
+      };
+    }
+    return col;
+  }).concat(deleteColumn); // Add the delete column to the columns array
 
   return (
     <>
