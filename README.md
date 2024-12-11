@@ -29,6 +29,7 @@ A simple decentralized file-sharing application powered by DolphinCoin.
 3. Running Servers:
    - BTCD
      ```
+     cd ..
      btcd --configfile=btcd/btcd.conf
      ```
    - Wallet API Server
