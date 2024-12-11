@@ -18,6 +18,7 @@ var (
 	walletPassword string
 	passwordMutex sync.Mutex
 )
+var defaultAddress string
 
 // To test if API is live
 func GetRoot(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +143,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// Unlock wallet
 	time.Sleep(2 * time.Second)
 
+	// Send wallet address to dht
+	// dhtServerUrl := "http://localhost:8080/login"
+	// addrRequest := fmt.Sprintf(`{"address": "%s"}`, defaultAddress)
+
+	// resp, err := http.Post(dhtServerUrl, "application/json", bytes.NewBuffer([]byte(addrRequest)))
+	// if err != nil {
+	// 	http.Error(w, "Error sending payment request to btcwallet server", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer resp.Body.Close()
+
+	// if resp.StatusCode != http.StatusOK {
+	// 	http.Error(w, fmt.Sprintf("Payment failed with status: %s", resp.Status), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// log.Println("Sent wallet address to dht")
+
 	// Respond with success
 	w.WriteHeader(http.StatusOK)
 	response := map[string]interface{}{
@@ -220,11 +239,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 // Getting the wallet address of the default account
 func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
-	defaultAddress, err := manager.BtcctlCommand("getaccountaddress default")
+	defaultAddr, err := manager.BtcctlCommand("getaccountaddress default")
 	if err != nil {
 		http.Error(w, "Failed to retrieve balance: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	defaultAddress = defaultAddr
 
 	response := map[string]string{"address": defaultAddress}
 	w.Header().Set("Content-Type", "application/json")

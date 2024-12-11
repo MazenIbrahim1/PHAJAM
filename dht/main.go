@@ -308,6 +308,8 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Id   string `json:"id"`
 		Hash string `json:"hash"`
+		Cost int `json:"cost"`
+		Address string `json:"address"`
 	}
 	err = json.Unmarshal(body, &request)
 	if err != nil {
@@ -339,11 +341,11 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	// SEND MONEY
-	recipientAddress := "" 
-	cost := ""                                    
+	recipientAddress := request.Address
+	cost := request.Cost                                   
 
 	walletServerURL := "http://localhost:18080/wallet/send"
-	paymentRequest := fmt.Sprintf(`{"address": "%s", "amount": "%s"}`, recipientAddress, cost)
+	paymentRequest := fmt.Sprintf(`{"address": "%s", "amount": "%d"}`, recipientAddress, cost)
 
 	resp, err := http.Post(walletServerURL, "application/json", bytes.NewBuffer([]byte(paymentRequest)))
 	if err != nil {
