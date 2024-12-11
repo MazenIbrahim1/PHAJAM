@@ -119,11 +119,11 @@ func main() {
 
 	go refreshReservation(node, 10*time.Minute)
 
-	connectToPeer(node, native_bootstrap)
+	// connectToPeer(node, native_bootstrap)
 
 	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
 
-	connectToPeer(node, bootstrap_node_addr_2)
+	// connectToPeer(node, bootstrap_node_addr_2)
 
 	go handlePeerExchange(node)
 
@@ -358,7 +358,7 @@ func enableCORS(next http.Handler) http.Handler {
 
 type GeolocationResponse struct {
 	Region string `json:"region"`
-	Country string `json:country"`
+	Country string `json:"country"`
 }
 
 func getGeolocation() (*GeolocationResponse, error) {
@@ -382,6 +382,7 @@ func getGeolocation() (*GeolocationResponse, error) {
 	}
 
 	return &geoInfo, nil
+}
 
 func provideAllUpload() {
 	records, err := FetchAllFileRecords()
@@ -751,48 +752,4 @@ func handleDeleteFile(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-}
-
-// register a peer as a proxy
-func registerProxy(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		log.Printf("Invalid request method: %s", r.Method)
-		return
-	}
-
-	var request struct {
-		PeerID string `json:"peerID"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&request)
-	if err != nil {
-		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
-		log.Printf("Error parsing JSON: %v", err)
-		return
-	}
-
-	if request.PeerID == "" {
-		http.Error(w, "PeerID is required", http.StatusBadRequest)
-		return
-	}
-
-	// Store the peerID as a proxy
-	err = StoreProxy(request.PeerID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to store proxy: %v", err), http.StatusInternalServerError)
-		log.Printf("Failed to store proxy: %v", err)
-		return
-	}
-
-	log.Printf("PeerID %s registered as a proxy", request.PeerID)
-
-	// Respond with success!
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Peer registered as a proxy",
-		"peerID":  request.PeerID,
-	})
 }
