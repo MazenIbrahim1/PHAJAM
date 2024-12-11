@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -21,53 +21,107 @@ import { useTheme } from "../../ThemeContext";
 
 export default function Profile() {
   const { darkMode } = useTheme();
-  
-  const [balance, setBalance] = useState(500);
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: "Received", amount: 50, date: "2024-10-01T10:30:00", from: "0xabcdef123456", status: "Completed" },
-    { id: 2, type: "Sent", amount: 25, date: "2024-10-05T14:15:00", to: "0x9876543210abcd", status: "Completed" },
-    { id: 3, type: "Sent", amount: 15, date: "2024-10-10T09:45:00", to: "0x3333333333333333", status: "In Progress" },
-  ]);
-  const [address, setAddress] = useState("0x1234567890abcdef1234567890abcdef12345678");
+
+  const [balance, setBalance] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [address, setAddress] = useState(null);
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
-  const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState("All");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/wallet/balance");
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        }
+      } catch (err) {
+        console.log("Error fetching balance: ", err);
+      }
+    };
+
+    const fetchAddress = async () => {
+      try {
+        const request = await fetch("http://localhost:8080/wallet/address");
+        if (!request.ok) {
+          throw new Error(`HTTP error! Status: ${request.status}`);
+        }
+        const response = await request.json();
+        setAddress(response.address);
+      } catch (err) {
+        console.error("Error fetching address:", err);
+      }
+    };
+
+    fetchBalance();
+    fetchAddress();
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const transactionsRequest = await fetch(
+        "http://localhost:8080/wallet/getTransactionHistory"
+      );
+      if (!transactionsRequest.ok) {
+        throw new Error(
+          `Transactions fetch failed: ${transactionsRequest.status}`
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(address);
     alert("Address copied to clipboard!");
   };
 
-  const handleSendMoney = () => {
-    const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
-  
-    if (isNaN(amountToSend) || amountToSend <= 0) {
-      alert("Please enter a valid amount.");
-      return;
+  const handleSendMoney = async () => {
+    try {
+      const amountToSend = parseFloat(parseFloat(amount).toFixed(2));
+      if (isNaN(amountToSend) || amountToSend <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+      if (amountToSend > balance) {
+        alert("Insufficient balance.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8080/wallet/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: recipientAddress,
+          amount: amountToSend,
+        }),
+      });
+
+      const newTransaction = {
+        id: transactions.length + 1,
+        type: "Sent",
+        amount: amountToSend,
+        date: new Date().toISOString(),
+        to: recipientAddress,
+        status: "Completed",
+      };
+      setTransactions((prevTransactions) => [
+        ...prevTransactions,
+        newTransaction,
+      ]);
+
+      setRecipientAddress("");
+      setAmount("");
+      alert("Transaction successful!");
+    } catch (err) {
+      console.log("Error sending money: ", err);
     }
-  
-    if (amountToSend > balance) {
-      alert("Insufficient balance.");
-      return;
-    }
-  
-    setBalance((prevBalance) => parseFloat((prevBalance - amountToSend).toFixed(2)));
-  
-    const newTransaction = {
-      id: transactions.length + 1,
-      type: "Sent",
-      amount: amountToSend,
-      date: new Date().toISOString(),
-      to: recipientAddress,
-      status: "Completed",
-    };
-    setTransactions((prevTransactions) => [...prevTransactions, newTransaction]);
-  
-    setRecipientAddress("");
-    setAmount("");
-    alert("Transaction successful!");
   };
 
   const handleTabChange = (event, newValue) => {
@@ -79,17 +133,14 @@ export default function Profile() {
     if (sortConfig.key === column && sortConfig.direction === "asc") {
       direction = "desc";
     }
-
     setSortConfig({ key: column, direction });
   };
 
-  const sortedTransactions = [...transactions].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
+  const sortedTransactions = transactions.sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key])
       return sortConfig.direction === "asc" ? -1 : 1;
-    }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
+    if (a[sortConfig.key] > b[sortConfig.key])
       return sortConfig.direction === "asc" ? 1 : -1;
-    }
     return 0;
   });
 
@@ -101,15 +152,13 @@ export default function Profile() {
     })
     .filter((transaction) => {
       const searchTermLower = searchTerm.toLowerCase();
-      const transactionDate = new Date(transaction.date).toLocaleDateString().toLowerCase();
-      const transactionTime = new Date(transaction.date).toLocaleTimeString().toLowerCase();
-
       return (
-        transaction.type.toLowerCase().includes(searchTermLower) ||
-        (transaction.type === "Received" && transaction.from.toLowerCase().includes(searchTermLower)) ||
-        (transaction.type === "Sent" && transaction.to.toLowerCase().includes(searchTermLower)) ||
-        transactionDate.includes(searchTermLower) ||
-        transactionTime.includes(searchTermLower)
+        transaction.txid?.toLowerCase().includes(searchTermLower) ||
+        transaction.to?.toLowerCase().includes(searchTermLower) ||
+        new Date(transaction.date)
+          .toLocaleDateString()
+          .toLowerCase()
+          .includes(searchTermLower)
       );
     });
 
@@ -117,37 +166,56 @@ export default function Profile() {
     <Box
       sx={{
         display: "flex",
-        justifyContent: "space-between",
+        flexDirection: "column",
         padding: 4,
         gap: 4,
         maxWidth: "1200px",
         margin: "0 auto",
-        paddingLeft: "13vw",
         color: darkMode ? "#ffffff" : "#000000",
         backgroundColor: darkMode ? "#18191e" : "#ffffff",
+        marginLeft: "14%",
       }}
     >
-      {/* Left column */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, maxWidth: "300px" }}> {/* Set a max width for the left column */}
+      {/* Top Row */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        {/* Wallet Balance */}
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
             textAlign: "center",
+            flex: 1,
             backgroundColor: darkMode ? "#333333" : "#ffffff",
+            minHeight: "150px", // Ensure consistent height
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center", // Align content vertically
           }}
         >
           <Typography variant="h6">Wallet Balance</Typography>
-          <Typography variant="h4">{balance.toFixed(2)} DC</Typography>
+          <Typography variant="h4">{balance} DC</Typography>
         </Box>
-  
+
+        {/* Wallet Address */}
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
+            flex: 2,
             backgroundColor: darkMode ? "#333333" : "#ffffff",
+            minHeight: "150px", // Ensure consistent height
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center", // Align content vertically
           }}
         >
           <Typography variant="h6">Wallet Address</Typography>
@@ -156,7 +224,7 @@ export default function Profile() {
             sx={{
               overflow: "hidden",
               textOverflow: "ellipsis",
-              maxWidth: "200px",
+              maxWidth: "100%",
               marginTop: "8px",
             }}
           >
@@ -166,40 +234,33 @@ export default function Profile() {
             <ContentCopyIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
           </IconButton>
         </Box>
-  
+
+        {/* Send Money */}
         <Box
           sx={{
             padding: 2,
-            border: '2px solid #b2dfdb', 
+            border: "2px solid #b2dfdb",
             borderRadius: "8px",
+            flex: 2,
             backgroundColor: darkMode ? "#333333" : "#ffffff",
+            minHeight: "150px", // Ensure consistent height
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center", // Align content vertically
           }}
         >
-          <Typography variant="h6" gutterBottom>
-            Send Money
-          </Typography>
+          <Typography variant="h6">Send Money</Typography>
           <TextField
             label="Recipient Wallet Address"
             variant="outlined"
             value={recipientAddress}
             onChange={(e) => setRecipientAddress(e.target.value)}
             fullWidth
-            sx={{ marginBottom: 2, 
+            sx={{
+              marginBottom: 2,
               backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
               "& .MuiInputBase-input": {
                 color: darkMode ? "#ffffff" : "#000000",
-              },
-              "& .MuiInputLabel-root": {
-                color: darkMode ? "#ffffff" : "#000000",
-              },
-              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
               },
             }}
           />
@@ -208,207 +269,138 @@ export default function Profile() {
             variant="outlined"
             type="number"
             value={amount}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^\d*\.?\d{0,2}$/.test(value)) {
-                setAmount(value);
-              }
-            }}
+            onChange={(e) => setAmount(e.target.value)}
             fullWidth
-            sx={{ marginBottom: 2, backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            sx={{
+              marginBottom: 2,
+              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
               "& .MuiInputBase-input": {
                 color: darkMode ? "#ffffff" : "#000000",
               },
-              "& .MuiInputLabel-root": {
-                color: darkMode ? "#ffffff" : "#000000",
-              },
-              "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              }, }}
+            }}
           />
-          <Button variant="contained" 
-            sx={{backgroundColor: darkMode ? "#f06292": "#000000",
-              "&:hover": {
-                backgroundColor: "#7a99d9"}}} 
-                onClick={handleSendMoney} fullWidth>
+
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: darkMode ? "#f06292" : "#000000",
+              "&:hover": { backgroundColor: "#7a99d9" },
+            }}
+            onClick={handleSendMoney}
+          >
             Send
           </Button>
         </Box>
       </Box>
-  
+
+      {/* Bottom Row */}
       <Box
         sx={{
-          flex: 2,
-          border: '2px solid #b2dfdb',
+          border: "2px solid #b2dfdb",
           borderRadius: "8px",
           padding: 2,
-          height: "600px", // Keep the height for the right column
-          overflow: "hidden", // Prevent overflow if necessary
           backgroundColor: darkMode ? "#333333" : "#ffffff",
         }}
       >
-        <Typography variant="h5" gutterBottom>
-          Your Transactions
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 2,
+          }}
+        >
+          <Typography variant="h5">Your Transactions</Typography>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: darkMode ? "#f06292" : "#000000",
+              "&:hover": { backgroundColor: "#7a99d9" },
+            }}
+            onClick={fetchTransactions}
+          >
+            Refresh Transactions
+          </Button>
+        </Box>
         <Tabs
           value={filter}
           onChange={handleTabChange}
           centered
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: darkMode ? "#ffffff" : "#000000", 
+              backgroundColor: darkMode ? "#ffffff" : "#000000",
             },
           }}
         >
-          <Tab
-            label="All"
-            value="All"
-            sx={{
-              color: darkMode ? "#ffffff" : "#000000",
-              "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
-              },
-            }}
-          />
-          <Tab
-            label="Sent"
-            value="Sent"
-            sx={{
-              color: darkMode ? "#ffffff" : "#000000",
-              "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
-              },
-            }}
-          />
-          <Tab
-            label="Received"
-            value="Received"
-            sx={{
-              color: darkMode ? "#ffffff" : "#000000",
-              "&.Mui-selected": {
-                color: darkMode ? "#ffffff" : "#000000", 
-              },
-            }}
-          />
+          <Tab label="All" value="All" />
+          <Tab label="Sent" value="Sent" />
+          <Tab label="Received" value="Received" />
         </Tabs>
-
         <TextField
-          label="Search transactions by either other person's wallet address or by date"
+          label="Search transactions"
           variant="outlined"
           fullWidth
           sx={{
             marginY: 2,
             backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-            "& .MuiInputBase-input": {
-              color: darkMode ? "#ffffff" : "#000000",
-            },
-            "& .MuiInputLabel-root": {
-              color: darkMode ? "#ffffff" : "#000000",
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&:hover fieldset": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-            },
           }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-
-        <Box
+        <TableContainer
+          component={Paper}
           sx={{
             maxHeight: "400px",
             overflowY: "auto",
-            backgroundColor: darkMode ? "#333" : "#ffffff", 
-            "& .MuiTableCell-root": {
-              color: darkMode ? "#ffffff" : "#000000",
-              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-            },
-            "& .MuiTableSortLabel-root": {
-              color: darkMode ? "#ffffff" : "#000000", 
-              "&.Mui-active": {
-                color: darkMode ? "#ffffff" : "#000000", 
-              },
-            },
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
           }}
         >
-          <TableContainer
-            component={Paper}
-            sx={{
-              backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  {["id", "type", "amount", "date"].map((column) => (
-                    <TableCell key={column}>
-                      <TableSortLabel
-                        active={sortConfig.key === column}
-                        direction={sortConfig.key === column ? sortConfig.direction : "asc"}
-                        onClick={() => handleSort(column)}
-                      >
-                        {column.charAt(0).toUpperCase() + column.slice(1)}
-                      </TableSortLabel>
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    {filter === "Sent" ? "To" : filter === "Received" ? "From" : "Other Wallet Address"}
-                  </TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>{transaction.id}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell sx={{ width: "80px" }}>{transaction.amount}</TableCell> {/* Smaller space for amount column */}
-                    <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
-                    <TableCell
-                      sx={{
-                        maxWidth: "250px", 
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
+          <Table>
+            <TableHead>
+              <TableRow>
+                {/* Updated Column Headers */}
+                {[
+                  "Transaction ID",
+                  "Cost",
+                  "Time of Transaction",
+                  "Type",
+                  "Status",
+                  "Other Wallet Address",
+                ].map((column) => (
+                  <TableCell key={column}>
+                    <TableSortLabel
+                      active={
+                        sortConfig.key ===
+                        column.toLowerCase().replace(/ /g, "_")
+                      }
+                      direction={sortConfig.direction}
+                      onClick={() =>
+                        handleSort(column.toLowerCase().replace(/ /g, "_"))
+                      }
                     >
-                      <span style={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {transaction.type === "Sent" ? transaction.to : transaction.from}
-                      </span>
-                      <IconButton
-                        onClick={() => {
-                          navigator.clipboard.writeText(transaction.type === "Sent" ? transaction.to : transaction.from);
-                          alert("Wallet address copied to clipboard!");
-                        }}
-                        size="small"
-                        sx={{ marginLeft: 1, color: darkMode ? "#ffffff" : "#000000" }}
-                      >
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                    <TableCell>{transaction.status}</TableCell>
-                  </TableRow>
+                      {column}
+                    </TableSortLabel>
+                  </TableCell>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedTransactions.map((transaction) => (
+                <TableRow key={transaction.txid}>
+                  <TableCell>{transaction.txid}</TableCell>
+                  <TableCell>{transaction.amount}</TableCell>
+                  <TableCell>
+                    {new Date(transaction.date).toLocaleString()}
+                  </TableCell>
+                  <TableCell>{transaction.type}</TableCell>
+                  <TableCell>{transaction.status}</TableCell>
+                  <TableCell>{transaction.to}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
     </Box>
-  );    
+  );
 }

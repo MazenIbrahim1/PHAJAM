@@ -1,5 +1,4 @@
-
-import { 
+import {
   Box,
   Typography,
   Button,
@@ -59,12 +58,19 @@ export default function SettingsPage() {
   };
 
   // Handle account deletion
-  const handleDeleteAccount = () => {
-    console.log("Account deleted");
-    setDarkMode(false);
-    setSnackbarMessage("Account deleted successfully.");
-    setSnackbarOpen(true); 
-    window.location.href = "/";
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/wallet/delete");
+      if (response.ok) {
+        console.log("Account deleted");
+        setDarkMode(false);
+        setSnackbarMessage("Account deleted successfully.");
+        setSnackbarOpen(true);
+        window.location.href = "/";
+      }
+    } catch (err) {
+      console.log("Error deleting account");
+    }
   };
 
   // Password validation function
@@ -79,11 +85,29 @@ export default function SettingsPage() {
   };
 
   // Handle password change
-  const handlePasswordChange = () => {
-    console.log("Password updated", { currentPassword, newPassword, confirmPassword });
-    setSnackbarMessage("Password updated successfully.");
-    setSnackbarOpen(true); 
-    // Add your logic for password update here
+  const handlePasswordChange = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/wallet/password-reset",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            oldPassword: currentPassword,
+            newPassword: newPassword,
+          }),
+        }
+      );
+      console.log("Password updated", {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      setSnackbarMessage("Password updated successfully.");
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.log("Error changing password: ", err);
+    }
   };
 
   // Handle password input change
@@ -153,7 +177,7 @@ export default function SettingsPage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "auto",
-            border: '2px solid #b2dfdb',
+            border: "2px solid #b2dfdb",
           }}
         >
           <Typography
@@ -167,11 +191,11 @@ export default function SettingsPage() {
             RESET PASSWORD
           </Typography>
           <Typography variant="body2" sx={{ marginBottom: 2 }}>
-            Enter your current password and set a new password.
+            Enter your old password and set a new password.
           </Typography>
           <TextField
             type="text" // Current Password
-            label="Current Password"
+            label="Old Password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             sx={{
@@ -186,12 +210,14 @@ export default function SettingsPage() {
               "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                 borderColor: darkMode ? "#ffffff" : "#000000",
               },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
             }}
             fullWidth
           />
@@ -213,12 +239,14 @@ export default function SettingsPage() {
               "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                 borderColor: darkMode ? "#ffffff" : "#000000",
               },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
             }}
             fullWidth
           />
@@ -240,12 +268,14 @@ export default function SettingsPage() {
               "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
                 borderColor: darkMode ? "#ffffff" : "#000000",
               },
-              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
-              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-                borderColor: darkMode ? "#ffffff" : "#000000",
-              },
+              "&:hover .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
+              "&.Mui-focused .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                {
+                  borderColor: darkMode ? "#ffffff" : "#000000",
+                },
             }}
             fullWidth
           />
@@ -293,7 +323,7 @@ export default function SettingsPage() {
             disabled={!isSaveButtonEnabled()}
             sx={{
               marginTop: 2,
-              backgroundColor: darkMode ? "#f06292": "#000000",
+              backgroundColor: darkMode ? "#f06292" : "#000000",
               "&:hover": {
                 backgroundColor: "#7a99d9",
               },
@@ -324,7 +354,7 @@ export default function SettingsPage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "125px",
-            border: '2px solid #b2dfdb',
+            border: "2px solid #b2dfdb",
           }}
         >
           <Typography
@@ -338,9 +368,16 @@ export default function SettingsPage() {
             THEME SETTINGS
           </Typography>
           <Typography variant="body2" sx={{ marginBottom: 1 }}>
-            Toggle between light and dark mode to customize the appearance of the application.
+            Toggle between light and dark mode to customize the appearance of
+            the application.
           </Typography>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
             <FormControlLabel
               control={
                 <Switch
@@ -384,7 +421,7 @@ export default function SettingsPage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "125px",
-            border: '2px solid #b2dfdb',
+            border: "2px solid #b2dfdb",
           }}
         >
           <Typography
@@ -398,17 +435,23 @@ export default function SettingsPage() {
             DELETE ACCOUNT
           </Typography>
           <Typography variant="body2" sx={{ marginBottom: 1 }}>
-            Permanently delete your account and all associated data. This action cannot be undone.
+            Permanently delete your account and all associated data. This action
+            cannot be undone.
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button variant="contained" color="error" onClick={handleOpenDialog}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleOpenDialog}
+            >
               Delete Account
             </Button>
             <Dialog open={open} onClose={handleCloseDialog}>
               <DialogTitle>Confirm Account Deletion</DialogTitle>
               <DialogContent>
                 <DialogContentText>
-                  Are you sure you want to permanently delete your account? This action cannot be undone.
+                  Are you sure you want to permanently delete your account? This
+                  action cannot be undone.
                 </DialogContentText>
               </DialogContent>
               <DialogActions>

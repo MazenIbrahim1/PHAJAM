@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import axios from "axios";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -26,6 +27,8 @@ ChartJS.register(
 
 export default function Home() {
   const { darkMode, setDarkMode } = useTheme();
+  const [minedBlocks, setMinedBlocks] = useState([]); // Store mined block hashes
+
   const transactions = [  //all the transactions in table (dummy data)
     {
       from: '0000000',
@@ -155,6 +158,27 @@ export default function Home() {
 	
   };
 
+  const handleMine = async () => {
+    try {
+      // Number of blocks to mine (e.g., 5 for demo)
+      const numBlocks = 5;
+  
+      // API call to the backend
+      const response = await axios.post("http://localhost:8080/mine", {
+        num_blocks: numBlocks,
+      });
+  
+      // Handle successful response
+      alert(`Mining started: ${response.data.message}`);
+      setMinedBlocks(response.data.block_hash); // Update mined blocks
+      console.log("Block hashes:", response.data.block_hash);
+    } catch (error) {
+      // Handle errors
+      alert("Error starting mining: " + error.response?.data?.error || error.message);
+      console.error("Mining error:", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -167,112 +191,148 @@ export default function Home() {
         justifyContent: "center",
         alignItems: "center",
         position: 'relative',
-        minHeight: '100vh', //   the page takes the full viewport height!!
+        minHeight: '100vh', // The page takes the full viewport height
       }}
     >
       {/* Page Title */}
-      <Typography variant="h3" sx={{ mb: "16px", mt: "16px", color: darkMode ? "#ffffff" : "#000000"}}> 
+      <Typography variant="h3" sx={{ mb: "16px", mt: "16px", color: darkMode ? "#ffffff" : "#000000" }}>
         Welcome to Dolphin Data Sharing!
       </Typography>
-
+  
       {/* Box with Chart on the left and Mine section on the right */}
       <Box
         sx={{
           mt: 4,
           width: '100%',
-          display: 'flex', // Flex layout for side by side boxes 
+          display: 'flex', // Flex layout for side-by-side boxes
           justifyContent: 'space-between',
-		  backgroundColor: darkMode ? "#333333" : "#ffffff",
+          backgroundColor: darkMode ? "#333333" : "#ffffff",
         }}
       >
         {/* Outlined Box around Line Chart */}
-        <Box 
-          sx={{ 
-            width: '60%', 
-            height: '250px', 
-            border: '2px solid #b2dfdb', // light teal outline around da boxes 
-            borderRadius: '12px', 
+        <Box
+          sx={{
+            width: '60%',
+            height: '250px',
+            border: '2px solid #b2dfdb', // Light teal outline around the boxes
+            borderRadius: '12px',
             padding: '16px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // subtle shadow around da boxesss
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Subtle shadow around the boxes
           }}
-        > 
+        >
           <Line data={data} options={options} />
-
         </Box>
-
-        {/* Outlined Box around "Mine Here" Section  */}
+  
+        {/* Outlined Box around "Mine Here" Section */}
         <Box
           sx={{
             width: '35%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            border: '2px solid #b2dfdb', 
-            borderRadius: '12px', 
+            border: '2px solid #b2dfdb',
+            borderRadius: '12px',
             padding: '16px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
-			backgroundColor: darkMode ? "#333333" : "#ffffff",
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
-          
           <Box
             component="img"
-            src="src/assets/logo.png" //adding logo to the mine section 
+            src="src/assets/logo.png" // Adding logo to the mine section
             alt="Logo"
             sx={{
-              width: '100px', 
-              height: 'auto', 
-              mb: '16px' 
+              width: '100px',
+              height: 'auto',
+              mb: '16px',
             }}
           />
-          
+  
           <Typography variant="h4" sx={{ mb: "16px", color: darkMode ? "#ffffff" : "#000000" }}>
             Start Mining
           </Typography>
-
-          <Button 
-            variant="contained" 
-            color="primary" 
-            sx={{ 
-              padding: "18px 36px",  
-              fontSize: "1.2rem",  
+  
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleMine} // Attach the handler here
+            sx={{
+              padding: "18px 36px",
+              fontSize: "1.2rem",
               borderRadius: "8px",
-			  width: "200px", 
-    		  height: "70px",
-			  backgroundColor: darkMode ? "#f06292": "#000000",
+              width: "200px",
+              height: "70px",
+              backgroundColor: darkMode ? "#f06292" : "#000000",
               "&:hover": {
                 backgroundColor: "#7a99d9",
-			  }
+              },
             }}
           >
             Mine Dolphin Coin!
           </Button>
         </Box>
       </Box>
-
-      
-      <Box 
+  
+      {/* Outlined Box to Display Mined Blocks */}
+      <Box
         sx={{
-          mt: 4, 
-          width: '80vw', 
-          border: '2px solid #b2dfdb', 
-          borderRadius: '12px', 
+          mt: 4,
+          width: '80%',
+          border: '2px solid #b2dfdb',
+          borderRadius: '12px',
           padding: '16px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
-		  backgroundColor: darkMode ? "#333" : "#ffffff",
-		  "& .MuiTableCell-root": {
-			color: darkMode ? "#ffffff" : "#000000", 
-			backgroundColor: darkMode ? "#4a4a4a" : "#ffffff", 
-		  },
-		  "& .MuiTableSortLabel-root": {
-			color: darkMode ? "#ffffff" : "#000000", 
-			"&.Mui-active": {
-			  color: darkMode ? "#ffffff" : "#000000", 
-			},
-		  },
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          backgroundColor: darkMode ? "#333" : "#ffffff",
         }}
       >
-        <TableContainer component={Paper} sx={{ maxHeight: '300px', overflow: 'auto', backgroundColor: darkMode ? "#4a4a4a" : "#ffffff", }}>
+        <Typography variant="h5" sx={{ mb: 2, color: darkMode ? "#ffffff" : "#000000" }}>
+          Mined Blocks
+        </Typography>
+        {minedBlocks.length > 0 ? (
+          <TableContainer component={Paper} sx={{ maxHeight: '300px', overflow: 'auto' }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Block Hash</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {minedBlocks.map((hash, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{hash}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Typography>No blocks mined yet.</Typography>
+        )}
+      </Box>
+  
+      {/* Outlined Box for Transaction History */}
+      <Box
+        sx={{
+          mt: 4,
+          width: '80vw',
+          border: '2px solid #b2dfdb',
+          borderRadius: '12px',
+          padding: '16px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          backgroundColor: darkMode ? "#333" : "#ffffff",
+          "& .MuiTableCell-root": {
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+          },
+          "& .MuiTableSortLabel-root": {
+            color: darkMode ? "#ffffff" : "#000000",
+            "&.Mui-active": {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+          },
+        }}
+      >
+        <TableContainer component={Paper} sx={{ maxHeight: '300px', overflow: 'auto', backgroundColor: darkMode ? "#4a4a4a" : "#ffffff" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow sx={{ backgroundColor: '#e0f7fa' }}>
@@ -282,7 +342,7 @@ export default function Home() {
                 <TableCell>From</TableCell>
                 <TableCell>To</TableCell>
                 <TableCell>File Size</TableCell>
-                <TableCell>Price (DolphinCoin)</TableCell> 
+                <TableCell>Price (DolphinCoin)</TableCell>
                 <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
@@ -295,7 +355,7 @@ export default function Home() {
                   <TableCell>{transaction.from}</TableCell>
                   <TableCell>{transaction.to}</TableCell>
                   <TableCell>{transaction.fileSize}</TableCell>
-                  <TableCell>{transaction.price}</TableCell> 
+                  <TableCell>{transaction.price}</TableCell>
                   <TableCell>{transaction.status}</TableCell>
                 </TableRow>
               ))}
@@ -305,4 +365,5 @@ export default function Home() {
       </Box>
     </Box>
   );
+  
 }
