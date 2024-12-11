@@ -69,8 +69,8 @@ func main() {
 	makeReservation(node)                // make reservation on relay node
 	go refreshReservation(node, 10*time.Minute)
 
-	// connectToPeer(node, native_bootstrap)
-	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
+	connectToPeer(node, native_bootstrap)
+	// connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
 	// connectToPeer(node, bootstrap_node_addr_2)
 
 	go handlePeerExchange(node)
@@ -87,6 +87,7 @@ func main() {
 		Name       string `json:"name"`
 		InitialFee string `json:"initialFee"`
 		Price      string `json:"price"`
+		WalletAddress string `json:"walletAddress"`
 	}
 	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
 		var req ProxyRequest
@@ -98,10 +99,10 @@ func main() {
 		// Call registerProxyAsService based on the action (register or deregister)
 		if req.Action == "deregister" {
 			// Deregister the proxy by passing an empty string for the IP
-			registerProxyAsService(ctx, dhtRoute, "", "", "", "", "", node)
+			registerProxyAsService(ctx, dhtRoute, "", "", "", "", "", "", node)
 		} else if req.Action == "register" {
 			// Register the proxy by passing the IP address
-			registerProxyAsService(ctx, dhtRoute, location, ip, req.Name, req.InitialFee, req.Price, node)
+			registerProxyAsService(ctx, dhtRoute, location, ip, req.WalletAddress, req.Name, req.InitialFee, req.Price, node)
 		} else {
 			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return
@@ -131,6 +132,68 @@ func main() {
 				"isProxy": true,
 			})
 		}
+	})
+	mux.HandleFunc("/mapPeerIDtoWallet", func(w http.ResponseWriter, r *http.Request) {
+		var requestBody struct {
+			WalletAddress string `json:"walletAddress"`
+		}
+	
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+	
+		if requestBody.WalletAddress == "" {
+			http.Error(w, "Wallet address is required", http.StatusBadRequest)
+			return
+		}
+	
+		// Call mapPeerIDtoWallet function
+		mapPeerIDtoWallet(ctx, dhtRoute, requestBody.WalletAddress, node)
+	
+		// Respond with success
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Wallet address mapped successfully",
+			"peerID":  node.ID().String(),
+			"wallet":  requestBody.WalletAddress,
+		})
+	})
+	mux.HandleFunc("/getWalletAddress", func(w http.ResponseWriter, r *http.Request) {
+		var requestBody struct {
+			PeerID string `json:"peerID"`
+		}
+		
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		if requestBody.PeerID == "" {
+			http.Error(w, "PeerID is required", http.StatusBadRequest)
+			return
+		}
+
+		proxyInfo, err := getProxyInfo(ctx, dhtRoute, requestBody.PeerID)
+		if err != nil {
+			http.Error(w, "Failed to get wallet address", http.StatusInternalServerError)
+			return
+		}
+
+		if proxyInfo == nil {
+			http.Error(w, "No proxy information found for the provided PeerID", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"peerID":      requestBody.PeerID,
+			"wallet":      proxyInfo.Wallet,
+		})
 	})
 	mux.HandleFunc("/fetchProxyList", func(w http.ResponseWriter, r *http.Request) {
 		var proxyInfoList []ProxyInfo
