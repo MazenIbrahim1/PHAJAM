@@ -34,19 +34,16 @@ A simple decentralized file-sharing application powered by DolphinCoin.
      ```
    - Wallet API Server
      ```
-     cd ..
      cd server
      go run .
      ```
    - DHT Server
      ```
-     cd ..
      cd dht
      go run .
      ```
    - Proxy server
      ```
-     cd ..
      cd proxy
      go run runProxy.go
      ```
