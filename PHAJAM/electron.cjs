@@ -13,7 +13,7 @@ const createWindow = () => {
     },
   });
   win.maximize();
-  win.setMenu(null);
+  //win.setMenu(null);
   if (process.env.NODE_ENV === "development") {
     win.loadURL("http://localhost:5173");
   } else {

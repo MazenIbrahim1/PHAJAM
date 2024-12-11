@@ -13,12 +13,14 @@ const SearchBar = ({ search, setSearch }) => {
       placeholder = "Search Files..."
       value = {search}
       onChange = {handleChange}
-      InputProps = {{
-        startAdornment: (
-          <InputAdornment position = "start">
-            <SearchIcon />
-          </InputAdornment>
-        )
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        },
       }}
       fullWidth
     />
