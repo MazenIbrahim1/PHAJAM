@@ -54,6 +54,7 @@ func main() {
 	connectToPeer(node, relay_node_addr) // connect to relay node
 	makeReservation(node)                // make reservation on relay node
 	go refreshReservation(node, 10*time.Minute)
+	connectToPeer(node, native_bootstrap)
 	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
 	connectToPeer(node, bootstrap_node_addr_2)
 	go handlePeerExchange(node)
