@@ -1,8 +1,28 @@
 import React, { useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { useTheme } from "../../ThemeContext"
+
+function CustomNoRowsOverlay() {
+  const { darkMode } = useTheme();
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        color: darkMode ? "#ffffff" : "gray",
+        fontSize: "16px",
+      }}
+    >
+      No files uploaded
+    </Box>
+  );
+}
 
 const DataTable = ({ rows, columns, search, onDelete }) => {
+  const { darkMode } = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
   const [file, setFile] = useState({ hash: "", filename: "" });
 
@@ -31,17 +51,25 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
   // Add a delete button column
   const deleteColumn = {
     field: "delete",
-    headerName: "Delete",
+    headerName: "",
     width: 100,
     renderCell: (params) => (
       <Button
         color="error"
         size="small"
         onClick={() => handleDeleteClick(params.row.hash, params.row.filename)}
+        sx={{
+          backgroundColor: "red",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#b83127",
+          }
+        }}
       >
         Delete
       </Button>
     ),
+    sortable: false
   };
 
   const updatedColumns = [...columns, deleteColumn]; // Add the delete column to the columns array
@@ -64,9 +92,22 @@ const DataTable = ({ rows, columns, search, onDelete }) => {
           disableColumnMenu
           disableColumnResize
           sx={{
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            borderRadius: "8px",
+            "& .MuiDataGrid-columnHeader": {
+              color: darkMode ? "#ffffff" : "#000000",
+              backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+            },
             "& .MuiDataGrid-cell:focus-within": {
               outline: "none",
             },
+            "& .MuiDataGrid-columnHeader:focus-within": {
+              outline: "none",
+            },
+          }}
+          slots={{
+            noRowsOverlay: CustomNoRowsOverlay
           }}
         />
       </Box>
