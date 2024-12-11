@@ -19,7 +19,7 @@ var (
 	passwordMutex sync.Mutex
 )
 
-// GetRoot returns a welcome message.
+// To test if API is live
 func GetRoot(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{"message": "API is live"}
 	w.Header().Set("Content-Type", "application/json")
@@ -27,6 +27,7 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 	log.Println("Root endpoint accessed.")
 }
 
+// Function to create wallet
 func CreateWallet(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Password string `json:"password"`
@@ -81,14 +82,14 @@ func CreateWallet(w http.ResponseWriter, r *http.Request) {
 
 // CheckWallet verifies if a wallet exists on the system.
 func CheckWallet(w http.ResponseWriter, r *http.Request) {
-	exists := manager.WalletExists() // Ensure this function is implemented in your manager package
+	exists := manager.WalletExists()
 	response := map[string]bool{"exists": exists}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 	log.Printf("Wallet existence check: %v", exists)
 }
 
-// Login logs in the user by unlocking the wallet.
+// Login logs in the user by checking password and unlocking wallet
 func Login(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Password string `json:"password"`
@@ -138,9 +139,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Println("Wallet unlocked successfully!")
 	}
-
-	// Simulate delay to mimic wallet unlocking (if needed)
-	time.Sleep(3 * time.Second)
+	// Unlock wallet
+	time.Sleep(2 * time.Second)
 
 	// Respond with success
 	w.WriteHeader(http.StatusOK)
@@ -187,7 +187,7 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 
-// DeleteWallet handles the deletion of an account
+// DeleteWallet handles the deletion of an account and stops the btcwallet server
 func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	if err := manager.DeleteWallet(); err != nil {
 		http.Error(w, "Failed to delete wallet: "+err.Error(), http.StatusInternalServerError)
@@ -205,7 +205,7 @@ func DeleteWallet(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Wallet deleted successfully!")
 }
 
-// Logout locks the wallet and stops services.
+// Logout stops the btcwallet server
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if err := manager.StopWallet(); err != nil {
 		http.Error(w, `{"error": "Failed to stop wallet service"}`, http.StatusInternalServerError)
@@ -214,10 +214,11 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Wallet locked and services stopped successfully!"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "Btcwallet stopped"})
 	log.Println("Wallet logout successful.")
 }
 
+// Getting the wallet address of the default account
 func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
 	defaultAddress, err := manager.BtcctlCommand("getaccountaddress default")
 	if err != nil {
@@ -231,7 +232,7 @@ func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
 	log.Println("Default address retrieved successfully.")
 }
 
-// GetBalance retrieves the wallet balance.
+// GetBalance retrieves the wallet balance
 func GetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := manager.BtcctlCommand("getbalance")
 	if err != nil {
@@ -245,7 +246,7 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet balance retrieved successfully.")
 }
 
-// Mine triggers mining of a specified number of blocks.
+// Mine triggers generate with num_blocks as arg
 func Mine(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		NumBlocks int `json:"num_blocks"`
@@ -331,13 +332,13 @@ func SendToAddress(w http.ResponseWriter, r *http.Request) {
 	// Respond with success
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Funds sent successfully!",
+		"message": "Funds sent to " + request.Address,
 		"txid":    txid,
 	})
 	log.Println("Funds sent successfully.")
 }
 
-// GetTransactionHistory retrieves the transaction history from btcwallet.
+// GetTransactionHistory retrieves the transaction history from btcwallet
 func GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// Extract query parameters
 	account := r.URL.Query().Get("account")

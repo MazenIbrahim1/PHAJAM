@@ -17,20 +17,7 @@ import (
 )
 
 var walletPID int
-
-// Initialize initializes the DolphinCoin backend services
-func Initialize() error {
-	log.Println("Initializing Dolphin Coin backend...")
-	// Add logic to initialize services like wallet and mining nodes
-	return nil
-}
-
-// StopServices gracefully stops the DolphinCoin backend services
-func StopServices() error {
-	log.Println("Stopping Dolphin Coin backend...")
-	// Add logic to gracefully stop services
-	return nil
-}
+var transactionDB = []map[string]interface{}{} 
 
 // CreateWallet creates a new wallet using the provided password.
 func CreateWallet(password string) (string, error) {
@@ -116,8 +103,7 @@ func CreateWallet(password string) (string, error) {
     return walletSeed, nil
 }
 
-
-// Delete wallet and account
+// Delete wallet.db and account
 func DeleteWallet() error {
 	// Determine the wallet path based on the operating system
 	log.Println("Checking wallet")
@@ -130,17 +116,15 @@ func DeleteWallet() error {
 	if runtime.GOOS == "windows" {
 		walletPath = filepath.Join(homeDir, "AppData", "Local", "Btcwallet", "mainnet", "wallet.db")
 	} else if runtime.GOOS == "darwin" {
-		log.Println("darwin")
 		walletPath = filepath.Join(homeDir, "Library", "Application Support", "Btcwallet", "mainnet", "wallet.db")
 	} else {
-		log.Println("cool")
 		walletPath = filepath.Join(homeDir, ".btcwallet", "mainnet", "wallet.db")
 	}
 
 	// check if it exists
 	_, err = os.Stat(walletPath)
 	if err != nil {
-		log.Println("Wallet doesn't exists...")
+		log.Println("Wallet doesn't exist...")
 	}
 
 	// Delete wallet
@@ -165,10 +149,8 @@ func WalletExists() bool {
 	if runtime.GOOS == "windows" {
 		walletPath = filepath.Join(homeDir, "AppData", "Local", "Btcwallet", "mainnet", "wallet.db")
 	} else if runtime.GOOS == "darwin" {
-		log.Println("darwin")
 		walletPath = filepath.Join(homeDir, "Library", "Application Support", "Btcwallet", "mainnet", "wallet.db")
 	} else {
-		log.Println("cool")
 		walletPath = filepath.Join(homeDir, ".btcwallet", "mainnet", "wallet.db")
 	}
 
@@ -212,7 +194,6 @@ func StartWalletServer() (error) {
 	// Log the success message
 	walletPID = cmd.Process.Pid
 	log.Printf("DolphinCoin wallet service started successfully with PID: %d", walletPID)
-	// log.Println("DolphinCoin wallet service started successfully.")
 	return nil
 }
 
@@ -231,8 +212,8 @@ func StopWallet() error {
 		return fmt.Errorf("failed to find wallet process with PID %d: %w", walletPID, err)
 	}
 
-	// Attempt to terminate the process gracefully
-	err = process.Kill()  // or process.Signal(syscall.SIGTERM) for a more graceful termination
+	// Kill process
+	err = process.Kill()
 	if err != nil {
 		return fmt.Errorf("failed to stop wallet service with PID %d: %w", walletPID, err)
 	}
@@ -241,7 +222,6 @@ func StopWallet() error {
 
 	// Reset walletPID after stopping the process to avoid accidental attempts to stop a non-existent process
 	walletPID = 0
-
 	return nil
 }
 
@@ -282,18 +262,11 @@ func BtcctlCommand(command string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error executing btcctl command: %s\nOutput: %s\nError: %v", strings.Join(params, " "), string(output), err)
 	}
+	output = []byte(strings.TrimSpace(string(output)))
+	log.Printf("Btcctl output: %s", output)
 
-	return strings.TrimSpace(string(output)), nil
+	return string(output), nil
 }
-
-// KillProcesses forces termination of backend services (if needed)
-func KillProcesses() error {
-	log.Println("Killing all DolphinCoin processes...")
-	// Example: Add logic to kill specific DolphinCoin-related processes
-	return nil
-}
-
-var transactionDB = []map[string]interface{}{} // Store transactions in memory
 
 // AddTransaction adds a transaction to the in-memory database
 func AddTransaction(transaction map[string]interface{}) error {

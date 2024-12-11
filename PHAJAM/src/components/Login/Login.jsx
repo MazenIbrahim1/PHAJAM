@@ -18,10 +18,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [walletExists, setWalletExists] = useState(null);
-  const [walletStatus, setWalletStatus] = useState("");
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false); // Track login loading state
+  const [loading, setLoading] = useState(false);
 
   const fetchWalletStatus = async () => {
     try {
@@ -45,6 +44,7 @@ export default function LoginPage() {
       setErrorMessage(
         "Cannot log in because no wallet could be found on your local device."
       );
+      setTimeout(() => setErrorMessage(""), 2000);
       return;
     }
 
@@ -60,24 +60,25 @@ export default function LoginPage() {
 
       if (response.ok) {
         if (data.value === true) {
-          console.log("CORRECT PASSWORD");
           navigate("/home");
         } else {
-          console.log("INCORRECT PASSWORD");
           setErrorMessage(
             data.message || "Login failed. Please check your password."
           );
+          setTimeout(() => setErrorMessage(""), 2000);
         }
       } else {
         setErrorMessage(
           data.message || "Login failed. Please check your password."
         );
+        setTimeout(() => setErrorMessage(""), 2000);
       }
     } catch (error) {
       console.error("Error during login:", error);
       setErrorMessage("An error occurred during login. Please try again.");
+      setTimeout(() => setErrorMessage(""), 2000);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -123,8 +124,21 @@ export default function LoginPage() {
           width: "300px",
           backgroundColor: "white",
         }}
-        disabled={walletExists === null || loading} // Disable during loading
+        disabled={walletExists === null || loading}
       />
+      {errorMessage && (
+        <Typography
+          variant="body2"
+          sx={{
+            color: "red",
+            textAlign: "center",
+            fontWeight: "bold",
+            marginBottom: 2,
+          }}
+        >
+          {errorMessage}
+        </Typography>
+      )}
       <Box sx={{ position: "relative", marginBottom: 2 }}>
         <Button
           variant="contained"
@@ -153,19 +167,6 @@ export default function LoginPage() {
           />
         )}
       </Box>
-      {errorMessage && (
-        <Typography
-          variant="body2"
-          sx={{
-            color: "red",
-            marginTop: 2,
-            textAlign: "center",
-            fontWeight: "bold",
-          }}
-        >
-          {errorMessage}
-        </Typography>
-      )}
       <Button
         variant="contained"
         color="secondary"

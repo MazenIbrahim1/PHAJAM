@@ -13,15 +13,9 @@ import (
 )
 
 func main() {
-	// Step 1: Initialize the DolphinCoin backend
-	if err := manager.Initialize(); err != nil {
-		log.Fatalf("Initialization failed: %v", err)
-	}
-
-	// Step 2: Set up HTTP routes for the API
+	log.Printf("BTC Server running...")
 	setupRoutes()
 
-	// Step 3: Handle graceful shutdown
 	handleGracefulShutdown()
 
 	corsOptions := cors.New(cors.Options{
@@ -33,7 +27,6 @@ func main() {
 
 	handler := corsOptions.Handler(http.DefaultServeMux)
 
-	// Step 4: Start the HTTP server
 	const serverAddr = ":18080"
 	log.Printf("Server is starting on %s...\n", serverAddr)
 	if err := http.ListenAndServe(serverAddr, handler); err != nil {
@@ -67,9 +60,9 @@ func handleGracefulShutdown() {
 		<-stopChan
 		log.Println("Shutdown signal received. Stopping services...")
 
-		// Stop backend services gracefully
-		if err := manager.StopServices(); err != nil {
-			log.Fatalf("Failed to stop services: %v", err)
+		// Stop btcwallet server when shutdown
+		if err := manager.StopWallet(); err != nil {
+			log.Fatalf("Failed to stop btcwallet: %v", err)
 		}
 
 		log.Println("Services stopped successfully. Exiting...")
