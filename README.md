@@ -52,5 +52,6 @@ A simple decentralized file-sharing application powered by DolphinCoin.
 
 3. To run the app:
    ```
+   cd PHAJAM
    npm run dev
    ```
