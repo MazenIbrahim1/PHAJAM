@@ -81,9 +81,9 @@ const createWindow = () => {
   });
 
   win.maximize();
-  win.setMenu(null);
 
   // Load React app based on environment
+  //win.setMenu(null);
   if (process.env.NODE_ENV === "development") {
     win.loadURL("http://localhost:5173");
   } else {

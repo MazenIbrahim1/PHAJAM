@@ -1,498 +1,354 @@
-import { useState, useEffect } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
   TextField,
-  InputAdornment,
   Typography,
+  InputAdornment,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
-import { Download, Help, Search } from "@mui/icons-material";
-import { useTheme } from "../../ThemeContext";
+import { useTheme } from "../../ThemeContext"; // Assuming useTheme is imported for dark mode context
 
-// Function to handle download of a file
-function handlePurchase(selectedFile) {
-  if (!selectedFile) {
-    return;
-  }
-
-  // Create a Blob from the file's data (assuming selectedFile.data contains raw data)
-  const fileBlob = new Blob([selectedFile.data], { type: selectedFile.type });
-
-  // Create a temporary download link and trigger it
-  const url = URL.createObjectURL(fileBlob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = selectedFile.name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// Function to render single files
-function RenderFileInfo({ selectedFile, func }) {
-  const { darkMode } = useTheme(); 
-  if (!selectedFile) {
-    return <Typography variant="h4">Select a file to view details</Typography>;
-  }
-
+function CustomNoRowsOverlay() {
+  const { darkMode } = useTheme();
   return (
-    <>
-      <Typography variant="h5">File Details</Typography>
-      <Box sx={{ padding: 2, backgroundColor: darkMode ? "#333333" : "#ffffff",}}>
-        <Typography variant="body1">
-          <strong>Name:</strong> {selectedFile.name}
-        </Typography>
-        <Typography variant="body1">
-          <strong>Size:</strong> {selectedFile.size}
-        </Typography>
-        <Typography variant="body1">
-          <strong>Type:</strong> {selectedFile.type}
-        </Typography>
-        <Typography variant="body1">
-          <strong>Date Posted:</strong> {selectedFile.date}
-        </Typography>
-        <Typography variant="body1">
-          <strong>Hash:</strong> {selectedFile.hash}
-        </Typography>
-        <Typography variant="body1" >
-          <strong>Price:</strong>{" "}
-          {selectedFile.price ? selectedFile.price + " DC" : "tbd"}
-        </Typography>
-      </Box>
-      <Button startIcon={<Download />} onClick={func} variant="contained">
-        Download
-      </Button>
-    </>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        color: darkMode ? "#ffffff" : "gray",
+        fontSize: "16px",
+      }}
+    >
+      No providers found
+    </Box>
   );
 }
 
 export default function Explore() {
+  const { darkMode } = useTheme();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [balance, setBalance] = useState(500);
+  const [rows, setRows] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [offerPrice, setOfferPrice] = useState("");
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState("");
+
   const columns = [
-    {
-      field: "name",
-      headerName: "Name",
-      width: 150,
-      resizable: false,
-    },
-    {
-      field: "size",
-      headerName: "Size",
-      width: 100,
-      resizable: false,
-    },
-    {
-      field: "hash",
-      headerName: "Hash",
-      width: 423,
-      resizable: false,
-    },
+    { field: "id", headerName: "Peer ID", flex: 2 },
+    { field: "cost", headerName: "Cost", flex: 1 },
   ];
 
-  const mockData = [
-    {
-      id: 1,
-      name: "file1.txt",
-      size: "10 KB",
-      type: "Text",
-      date: "2024-09-15",
-      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: 20,
-    },
-    {
-      id: 2,
-      name: "image1.png",
-      size: "2 MB",
-      type: "Image",
-      date: "2024-09-16",
-      hash: "Qmd3W5ty4UkFgP6AvjyzbdzFcfZy3KRfrbLVH5MNvSR1qy",
-      price: 50,
-    },
-    {
-      id: 3,
-      name: "video1.mp4",
-      size: "15 MB",
-      type: "Video",
-      date: "2024-09-17",
-      hash: "Qmc9shFA7RohHKDJYb6V2PSwiyV8XoL3vRU3nsi47hM6Rb",
-      price: 100,
-    },
-    {
-      id: 4,
-      name: "document.pdf",
-      size: "1 MB",
-      type: "PDF",
-      date: "2024-09-18",
-      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: 20,
-    },
-    {
-      id: 5,
-      name: "audio1.mp3",
-      size: "5 MB",
-      type: "Audio",
-      date: "2024-09-19",
-      hash: "QmeT4GfdwT5fZJfjsGaU1MPmX4r2KYbw8WjXxsyuKfmpwD",
-      price: 75,
-    },
-    {
-      id: 6,
-      name: "presentation.pptx",
-      size: "3 MB",
-      type: "Presentation",
-      date: "2024-09-20",
-      hash: "QmdTVqv8Uu64yZDS5KYsWfUbqTSqY6v3RhWE74ZdMka7vQ",
-      price: 35,
-    },
-    {
-      id: 7,
-      name: "spreadsheet.xlsx",
-      size: "2 MB",
-      type: "Spreadsheet",
-      date: "2024-09-21",
-      hash: "QmPKM6V4Swj7L8T1wVoWFAh5EuhwNz3avJ8MDphgdKFm2N",
-      price: 40,
-    },
-    {
-      id: 8,
-      name: "ebook.epub",
-      size: "6 MB",
-      type: "Ebook",
-      date: "2024-09-22",
-      hash: "QmS9D7djG9Fwmg9RC8nN9dkm6MC77Vi52JZpVjfZ4qxA4K",
-      price: 55,
-    },
-    {
-      id: 9,
-      name: "archive.zip",
-      size: "50 MB",
-      type: "Archive",
-      date: "2024-09-23",
-      hash: "QmRvZbWG56HdT9yqwfboEJdVjqAgcMG95R7jE8VfVFxmB5",
-      price: 150,
-    },
-    {
-      id: 10,
-      name: "research.docx",
-      size: "1.5 MB",
-      type: "Document",
-      date: "2024-09-24",
-      hash: "QmW2WQi7j6c7Ug1MdK7V5i1vCdrQESdjy8JPbn2gkzGTxM",
-      price: 20,
-    },
-    {
-      id: 11,
-      name: "image2.jpeg",
-      size: "4 MB",
-      type: "Image",
-      date: "2024-09-25",
-      hash: "QmN2TkfiXuwbyvYn4cJZ2dqPKFJXNg9i7VuCdYQwFw1XKP",
-      price: 60,
-    },
-    {
-      id: 12,
-      name: "backup.tar.gz",
-      size: "200 MB",
-      type: "Archive",
-      date: "2024-09-26",
-      hash: "QmRTdCB6gjq4Y1EdDZ8SaFZy5jNvnM7tLdPhmYGy7YRs5X",
-      price: 200,
-    },
-  ];
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter") {
+      try {
+        const response = await fetch("http://localhost:8080/getproviders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ hash: searchQuery }),
+        });
 
-  const { darkMode } = useTheme(); 
+        if (!response.ok) {
+          console.error("Failed to fetch providers");
+          return;
+        }
 
-  const [files, setFiles] = useState(mockData); // CHANGE TO REAL DATA LATER
-  const [balance, setBalance] = useState(500); // TEMP BALANCE
-  const [bid, setBid] = useState(null);
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(null);
-  // State for dialog visibility
-  const [openHash, setOpenHash] = useState(false);
-  const [openPurchase, setOpenPurchase] = useState(false);
-  const searchResults = mockData.filter((data) => data.hash === search);
+        const data = await response.json();
+        setRows(data);
+      } catch (error) {
+        console.error("Error fetching providers:", error);
+      }
+    }
+  };
 
-  // Function to select a file in the market
+  const isRowSelectable = (row) => {
+    return row.row.id !== "Me";
+  };
+
+  useEffect(() => {
+    if (!openDialog) {
+      setOfferPrice("");
+    }
+    // const fetchBalance = async () => {
+    //   try {
+    //     const response = await fetch("http://localhost:8080/wallet/balance");
+    //     if (response.ok) {
+    //       const data = await response.json();
+    //       setBalance(data.balance);
+    //     } else {
+    //       console.error("Error fetching balance");
+    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //   }
+    // };
+    // fetchBalance();
+  }, [openDialog]);
+
   const handleRowClick = (params) => {
-    setSelected(params.row);
+    const clickedRow = params.row;
+    if (clickedRow.id === "Me") {
+      return;
+    }
+    setSelectedRow(clickedRow);
+    setOpenDialog(true);
   };
 
-  // Open the dialog for hash results
-  const handleOpenDialogHash = () => {
-    setOpenHash(true);
-  };
-
-  // Close the hash results
-  const handleCloseDialogHash = () => {
-    setOpenHash(false);
-  };
-
-  // Open the dialog for hash results
-  const handleOpenDialogPurchase = () => {
-    setOpenPurchase(true);
-  };
-
-  // Close the hash results
-  const handleCloseDialogPurchase = () => {
-    setOpenPurchase(false);
+  const handlePurchase = async (id, hash) => {
+    try {
+      const response = await fetch("http://localhost:8080/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: id, hash: hash }),
+      });
+      if (!response.ok) {
+        if (response.status === 404) {
+          setErrorMessage("Purchase failed: Item not found.");
+        } else {
+          setErrorMessage("An unexpected error occurred.");
+        }
+        setErrorDialogOpen(true);
+        return;
+      }
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "download";
+      if (contentDisposition && contentDisposition.includes("filename=")) {
+        filename = contentDisposition
+          .split("filename=")[1]
+          .replace(/["']/g, "");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error purchasing: ", error);
+    } finally {
+      setOpenDialog(false);
+    }
   };
 
   return (
-    <>
-      {/* Pop up to show hash search results */}
-      <Dialog
-        open={openHash}
-        onClose={handleCloseDialogHash}
-        aria-labelledby="hash-search-result-title"
-        aria-describedby="hash-search-result-description"
+    <Box
+      sx={{
+        marginLeft: "14vw",
+        marginRight: "1vw",
+        marginTop: "2vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 2,
+        color: darkMode ? "#ffffff" : "#000000",
+        backgroundColor: darkMode ? "#18191e" : "#ffffff",
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
+        }}
       >
-        <DialogTitle alignSelf={"center"} id="hash-search-result-title">
-          {searchResults.length + " Results:"}
-        </DialogTitle>
-        <DialogContent>
-          {searchResults.length > 0 ? (
-            searchResults.map((result) => (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  bgcolor: darkMode ? "#333333" : "#ffffff",
-                  color: darkMode ? "#ffffff" : "#000000",
-                  gap: 1,
-                  padding: 2,
-                  margin: 2,
-                  borderRadius: "4px",
-                  boxShadow: 3,
-                }}
-              >
-                <Typography key={result.id} variant="body1">
-                  {"Name: " + result.name}
-                </Typography>
-                <Typography key={result.id} variant="body1">
-                  {"Hash: " + result.hash.substring(0, 20) + "..."}
-                </Typography>
-                <Typography key={result.id} variant="body1">
-                  {"Size: " + result.size}
-                </Typography>
-                <Typography key={result.id} variant="body1">
-                  {"Price: " + (result.price ? result.price : "tbd")}
-                </Typography>
-                <Button
-                  key={result.id}
-                  startIcon={<Download />}
-                  onClick={handleOpenDialogPurchase}
-                  variant="contained"
-                >
-                  Download
-                </Button>
-              </Box>
-            ))
-          ) : (
-            <Typography variant="body1">No results found.</Typography>
-          )}
-        </DialogContent>
-        <DialogActions
+        <TextField
+          variant="outlined"
+          placeholder="Search Hash..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: darkMode ? "#ffffff" : "#000000" }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+          fullWidth
           sx={{
-            display: "flex",
-            justifyContent: "center",
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
+            borderRadius: "4px",
+            input: {
+              color: darkMode ? "#ffffff" : "#000000",
+            },
+          }}
+        />
+        <Typography
+          variant="h5"
+          sx={{
+            width: "400px",
+            border: "1px solid black",
+            p: 1.3,
+            backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+            color: darkMode ? "#ffffff" : "#000000",
           }}
         >
-          <Button variant="contained" onClick={handleCloseDialogHash}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+          Wallet Balance: {balance} DC
+        </Typography>
+      </Box>
+      <Typography>Choose a provider to start a transaction</Typography>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: {
+              pageSize: 10,
+            },
+          },
+        }}
+        pageSizeOptions={[10]}
+        autoHeight
+        disableColumnMenu
+        disableColumnResize
+        sx={{
+          width: "100%",
+          color: darkMode ? "#ffffff" : "#000000",
+          backgroundColor: darkMode ? "#4a4a4a" : "#ffffff",
+          "& .MuiDataGrid-cell:focus-within": {
+            outline: "none",
+          },
+          "& .MuiDataGrid-columnHeader": {
+            color: darkMode ? "#ffffff" : "#000000",
+            backgroundColor: darkMode ? "#333333" : "#f0f0f0",
+          },
+          "& .MuiTablePagination-caption": {
+            color: darkMode ? "#ffffff" : "#000000", // Pagination text color
+          },
+        }}
+        getRowId={(row) => row.id}
+        slots={{
+          noRowsOverlay: CustomNoRowsOverlay,
+        }}
+        isRowSelectable={isRowSelectable} // Make rows unselectable if cost is "N/A"
+        sortModel={[
+          {
+            field: "cost", // The column to sort by
+            sort: "asc", // "desc" for descending order
+          },
+        ]}
+        onRowClick={handleRowClick} // Handle row click
+      />
 
-      {/* Pop up to confirm purchase */}
-      <Dialog
-        open={openPurchase}
-        onClose={handleCloseDialogPurchase}
-        aria-labelledby="purchase-title"
-        aria-describedby="purchase-description"
-      >
-        <DialogTitle id="purchase-title">{"Confirm Purchase"}</DialogTitle>
-        <DialogContent>
-          {selected ? (
-            <>
-              <Typography>
-                Price: {selected.price ? selected.price + " DC" : "tbd"}
-              </Typography>
-              <Typography>
-                Balance After: {balance - selected.price} DC
-              </Typography>
-            </>
-          ) : (
-            <Typography>No file selected</Typography>
-          )}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>
+          Confirm Purchase
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography>
+            Price: {selectedRow ? selectedRow.cost : "Loading..."} DC
+          </Typography>
+          <Typography>Balance After: 480 DC</Typography>
+          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+            <TextField
+              margin="dense"
+              label="Set Offer Price"
+              type="text"
+              fullWidth
+              variant="outlined"
+              sx={{ flex: 1 }}
+              value={offerPrice} // Controlled input
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numbers, decimal points, and limit to one decimal point
+                if (/^\d*\.?\d*$/.test(value)) {
+                  setOfferPrice(value); // Update state only with valid input
+                }
+              }}
+              slotProps={{
+                input: {
+                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
+                },
+              }}
+              required
+            />
+            <Button
+              color="primary"
+              sx={{
+                backgroundColor: offerPrice ? "black" : "gray", // Dynamic color
+                color: "white",
+                ":hover": { backgroundColor: offerPrice ? "#3d3d3d" : "gray" },
+              }}
+              disabled={!offerPrice} // Disable if no value is inputted
+            >
+              Request
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions
           sx={{
-            display: "flex",
             justifyContent: "center",
-          }}
-        >
-          <TextField
-            variant="outlined"
-            placeholder="Set Offer Price"
-            autoComplete="off"
-            value={bid}
-            onChange={(event) => setBid(event.target.value)}
-          />
-          <Button
-            variant="contained"
-            onClick={() => console.log("Requesting...")}
-          >
-            Request
-          </Button>
-        </DialogActions>
-        <DialogActions
-          sx={{
-            display: "flex",
-            justifyContent: "center",
+            padding: "16px",
+            backgroundColor: darkMode ? "#333333" : "#ffffff",
           }}
         >
           <Button
-            variant="contained"
+            onClick={() => setOpenDialog(false)}
             color="error"
-            onClick={handleCloseDialogPurchase}
+            sx={{
+              backgroundColor: "red",
+              color: "white",
+              ":hover": { backgroundColor: "#b83127" },
+            }}
           >
             Cancel
           </Button>
           <Button
-            variant="contained"
-            onClick={() => {
-              handlePurchase(selected);
-              setBalance(balance - selected.price);
-              handleCloseDialogPurchase();
+            onClick={() => handlePurchase(selectedRow.id, searchQuery)}
+            color="primary"
+            sx={{
+              backgroundColor: darkMode ? "#000000" : "black",
+              color: "white",
+              ":hover": { backgroundColor: "#3d3d3d" },
             }}
           >
             Purchase
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Box
-        sx={{
-          marginLeft: "14vw",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 1,
-        }}
-      >
-        <TextField
-            variant="outlined"
-            placeholder="Search by Hash..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            sx={{
-                width: "47vw",
-                backgroundColor: darkMode ? "#333333" : "#f0f4f8",
-                borderRadius: "4px",
-            }}
-            InputProps={{
-                startAdornment: (
-                    <InputAdornment position="start">
-                        <Search />
-                    </InputAdornment>
-                ),
-                // Set input styling here
-                sx: {
-                    color: darkMode ? "#ffffff" : "#000000",
-                    '& .MuiInputBase-input': { 
-                        color: darkMode ? "#ffffff" : "#000000",
-                    },
-                    '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: darkMode ? "#ffffff" : "#000000", 
-                    },
-                },
-            }}
-            fullWidth
-            autoComplete="off"
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    handleOpenDialogHash();
-                }
-            }}
-        />
-        <Box
-          sx={{
-            width: "37vw",
-            height: "55px",
-            color: darkMode ? "#ffffff" : "#000000",
-            backgroundColor: darkMode ? "#333333" :  "#f0f4f8",
-            borderRadius: "4px",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px solid #bdc3c9",
-          }}
-        >
-          <Typography variant="h4">Wallet Balance: {balance} DC</Typography>
-        </Box>
-      </Box>
-      <Box
-        sx={{
-          height: "85vh",
-          marginLeft: "13vw",
-          display: "flex",
-          flexDirection: { sm: "column", md: "row" },
-          gap: 1,
-          
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "flex-start",
-            padding: 2,
-            paddingRight: 0,
-            height: "100%",
-          }}
-        >
-          <DataGrid
-            rows={mockData}
-            columns={columns}
-            onRowClick={handleRowClick}
-            sx={{
-              border: "1px solid #bdc3c9",
-              width: "47vw",
-              backgroundColor: darkMode ? "#4a4a4a" : "#f0f4f8",
-              color: darkMode ? "#ffffff" : "#000000",
-            }}
-          />
-        </Box>
-        <Box
-          sx={{
-            width: { xs: "87vw", md: "37vw" },
-            height: "100%",
-            display: "flex",
-            flexDirection: selected ? "column" : "center",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: darkMode ? "#333333" : "#f0f4f8",
-            color: darkMode ? "#ffffff" : "#000000",
-            borderRadius: "4px",
-            marginTop: 2,
-            border: "1px solid #bdc3c9",
-          }}
-        >
-          <RenderFileInfo
-            selectedFile={selected}
-            func={handleOpenDialogPurchase}
-          />
-        </Box>
-      </Box>
-    </>
+      <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)}>
+        <DialogTitle sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>Error</DialogTitle>
+        <DialogContent sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
+          <Typography sx={{ color: darkMode ? "#ffffff" : "#000000" }}>{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: darkMode ? "#333333" : "#ffffff" }}>
+          <Button
+            onClick={() => setErrorDialogOpen(false)}
+            color="primary"
+            sx={{ color: darkMode ? "#ffffff" : "#000000" }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

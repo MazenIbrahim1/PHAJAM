@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import {
   Settings,
+  Home,
   Description,
   People,
   TravelExplore,
@@ -80,6 +81,34 @@ export default function Nav() {
       >
         {/* Top List Section */}
         <List>
+
+        <ListItem disablePadding>
+            <ListItemButton
+              component={Link}
+              to="/home"
+              sx={{
+                height: "10vh",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                bgcolor: isActive("/home") ? "#7a99d9" : "transparent", 
+                "&:hover": {
+                  backgroundColor: "#7a99d9", 
+                },
+                color: "white",
+              }}
+              divider
+            >
+              <ListItemIcon>
+                <Home sx={{ color: "white", fontSize: "2rem" }} />
+              </ListItemIcon>
+              <ListItemText
+                primary="HOME"
+                primaryTypographyProps={{ fontSize: "0.9rem" }}
+              />
+            </ListItemButton>
+          </ListItem>
+
           <ListItem disablePadding>
             <ListItemButton
               component={Link}

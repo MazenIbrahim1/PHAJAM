@@ -5,6 +5,8 @@ import { useTheme } from "../../ThemeContext";
 const ProxyBox = ({ proxies, setCurrentProxy }) => {
     const { darkMode } = useTheme(); 
 
+    console.log(proxies)
+
     return (
         <Box
             sx={{
@@ -33,17 +35,19 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                 }
             }}
         >
-            <Grid container spacing={4}>
+            <Grid container spacing={2}>
                 {proxies.map((proxy, index) => (
                     <Grid item xs={3} key={index}>
                         <Box
                             sx={{
                                 flex: 1,
                                 backgroundColor: darkMode ? "#333333" : "#f0f0f0", 
-                                marginTop: 2,
+                                marginTop: index < 4 ? 2 : 0,  // Apply margin top for first row
+                                marginBottom: index >= proxies.length - 4 ? 2 : 0, // Apply margin bottom for last row
                                 marginRight: 1,
+                                marginLeft: 1,
                                 borderRadius: 2,
-                                boxShadow: 1,
+                                boxShadow: 5,
                                 display: "flex",
                                 flexDirection: "row",
                             }}
@@ -59,16 +63,16 @@ const ProxyBox = ({ proxies, setCurrentProxy }) => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ marginBottom: 1, fontWeight: "bold", color: darkMode ? "#fff" : "#000" }}>
-                                    {proxy.name.toUpperCase()}
-                                </Typography>
-                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    IP: {proxy.ip}
+                                    {proxy.name}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
                                     Location: {proxy.location}
                                 </Typography>
                                 <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
-                                    Price: {proxy.price} DC/MB
+                                    Initial Fee: {proxy.initialFee} DC
+                                </Typography>
+                                <Typography variant="body2" sx={{ marginBottom: 1, color: darkMode ? "#fff" : "#000" }}>
+                                    Rate: {proxy.price} DC/MB
                                 </Typography>
                                 <Button
                                     variant="contained"
