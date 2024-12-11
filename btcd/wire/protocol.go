@@ -176,10 +176,10 @@ const (
 
 	// TestNet represents the regression test network.
 	TestNet BitcoinNet = 0xdab5bffa
-	//TestNet BitcoinNet = 0x04021f0f
 
 	// TestNet3 represents the test network (version 3).
-	TestNet3 BitcoinNet = 0x0709110b
+	//TestNet3 BitcoinNet = 0x0709110b
+	TestNet3 BitcoinNet = 0x04021f0f
 
 	// SimNet represents the simulation test network.
 	SimNet BitcoinNet = 0x12141c16

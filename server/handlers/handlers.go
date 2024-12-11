@@ -21,7 +21,7 @@ var (
 
 // GetRoot returns a welcome message.
 func GetRoot(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{"message": "Welcome to the DolphinCoin API!"}
+	response := map[string]string{"message": "API is live"}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 	log.Println("Root endpoint accessed.")
@@ -218,21 +218,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	log.Println("Wallet logout successful.")
 }
 
-// GetNewAddress generates a new wallet address.
-func GetNewAddress(w http.ResponseWriter, r *http.Request) {
-	newAddress, err := manager.CallDolphinCmd("getnewaddress")
-	if err != nil {
-		http.Error(w, `{"error": "Failed to generate new address"}`, http.StatusInternalServerError)
-		log.Printf("Error generating new address: %v", err)
-		return
-	}
-
-	response := map[string]string{"newAddress": newAddress}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-	log.Println("New wallet address generated successfully.")
-}
-
 func GetDefaultAddress(w http.ResponseWriter, r *http.Request) {
 	defaultAddress, err := manager.BtcctlCommand("getaccountaddress default")
 	if err != nil {
@@ -279,7 +264,7 @@ func Mine(w http.ResponseWriter, r *http.Request) {
 
 	// Start mining
 	cmd := fmt.Sprintf("generate %d", request.NumBlocks)
-	output, err := manager.CallDolphinCmd(cmd)
+	output, err := manager.BtcctlCommand(cmd)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -444,21 +429,3 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	})
 	log.Println("Transaction added successfully:", transaction)
 }
-
-// func GetPrivateKey(w http.ResponseWriter, r *http.Request) {
-// 	address := r.URL.Query().Get("address")
-// 	if address == "" {
-// 		http.Error(w, `{"error": "Missing wallet address"}`, http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	privateKey, err := manager.DumpPrivateKey(address)
-// 	if err != nil {
-// 		http.Error(w, `{"error": "Failed to retrieve private key"}`, http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	response := map[string]string{"privateKey": privateKey}
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(response)
-// }

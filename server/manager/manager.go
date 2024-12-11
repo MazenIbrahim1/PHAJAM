@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,26 +30,6 @@ func StopServices() error {
 	log.Println("Stopping Dolphin Coin backend...")
 	// Add logic to gracefully stop services
 	return nil
-}
-
-// CallDolphinCmd executes a DolphinCoin CLI command and returns the output
-func CallDolphinCmd(cmd string) (string, error) {
-	args := strings.Split(cmd, " ")
-	command := exec.Command("dolphin-cli", args...)
-
-	// Capture the output
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	command.Stdout = &out
-	command.Stderr = &stderr
-
-	// Execute the command
-	if err := command.Run(); err != nil {
-		log.Printf("Command execution failed: %s", stderr.String())
-		return "", fmt.Errorf("command execution failed: %w", err)
-	}
-
-	return out.String(), nil
 }
 
 // CreateWallet creates a new wallet using the provided password.
@@ -264,34 +243,6 @@ func StopWallet() error {
 	walletPID = 0
 
 	return nil
-}
-
-
-// ConfigureMiningAddress configures the given address as the mining address
-func ConfigureMiningAddress(address string) error {
-	log.Printf("Configuring mining address: %s", address)
-	_, err := CallDolphinCmd(fmt.Sprintf("setminingaddress %s", address))
-	if err != nil {
-		return fmt.Errorf("failed to configure mining address: %w", err)
-	}
-	return nil
-}
-
-// GetWalletBalance retrieves the current wallet balance
-func GetWalletBalance() (float64, error) {
-	log.Println("Retrieving wallet balance...")
-	output, err := CallDolphinCmd("getbalance")
-	if err != nil {
-		return 0, fmt.Errorf("failed to retrieve wallet balance: %w", err)
-	}
-
-	// Parse the balance into a float
-	var balance float64
-	_, parseErr := fmt.Sscanf(output, "%f", &balance)
-	if parseErr != nil {
-		return 0, errors.New("failed to parse wallet balance")
-	}
-	return balance, nil
 }
 
 // ValidateAddress checks if a given address is valid
