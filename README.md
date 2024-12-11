@@ -50,7 +50,7 @@ A simple decentralized file-sharing application powered by DolphinCoin.
 
 ### Running the App on Electron & Web Browser
 
-3. To run the app:
+4. To run the app:
    ```
    cd PHAJAM
    npm run dev
