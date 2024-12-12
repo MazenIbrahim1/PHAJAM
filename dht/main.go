@@ -87,7 +87,7 @@ func main() {
 		Name       string `json:"name"`
 		InitialFee string `json:"initialFee"`
 		Price      string `json:"price"`
-		WalletAddress string `json:"walletAddress"`
+		// WalletAddress string `json:"walletAddress"`
 	}
 	mux.HandleFunc("/registerProxy", func(w http.ResponseWriter, r *http.Request) {
 		var req ProxyRequest
@@ -99,10 +99,10 @@ func main() {
 		// Call registerProxyAsService based on the action (register or deregister)
 		if req.Action == "deregister" {
 			// Deregister the proxy by passing an empty string for the IP
-			registerProxyAsService(ctx, dhtRoute, "", "", "", "", "", "", node)
+			registerProxyAsService(ctx, dhtRoute, "", "", "", "", "", node)
 		} else if req.Action == "register" {
 			// Register the proxy by passing the IP address
-			registerProxyAsService(ctx, dhtRoute, location, ip, req.WalletAddress, req.Name, req.InitialFee, req.Price, node)
+			registerProxyAsService(ctx, dhtRoute, location, ip, req.Name, req.InitialFee, req.Price, node)
 		} else {
 			http.Error(w, "Invalid action", http.StatusBadRequest)
 			return

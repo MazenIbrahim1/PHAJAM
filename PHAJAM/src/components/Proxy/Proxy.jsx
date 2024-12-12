@@ -17,9 +17,6 @@ export default function Proxy() {
   // List of available proxies
   const [proxyInfoList, setProxyInfoList] = useState([]);
 
-  // Wallet address
-  const [address, setAddress] = useState(null);
-
   useEffect(() => {
 
     // Check if I am a proxy
@@ -51,23 +48,8 @@ export default function Proxy() {
         }
     }
 
-    // Fetch wallet address
-    const fetchAddress = async () => {
-        try {
-          const request = await fetch("http://localhost:18080/wallet/address");
-          if (!request.ok) {
-            throw new Error(`HTTP error! Status: ${request.status}`);
-          }
-          const response = await request.json();
-          setAddress(response.address);
-        } catch (err) {
-          console.error("Error fetching address:", err);
-        }
-      };
-
     fetchProxyStatus();
     fetchProxyList();
-    fetchAddress();
 
     // Set interval to fetch proxy list every 5 seconds
     const intervalId = setInterval(fetchProxyList, 5000);
@@ -143,7 +125,6 @@ export default function Proxy() {
             name: name,
             initialFee: initialFee,
             price: price,
-            walletAddress: address
         };
         const response = await fetch("http://localhost:8080/registerProxy", {
             method: "POST",
@@ -173,7 +154,6 @@ export default function Proxy() {
                 alert("Failed to start the proxy server!");
             } else {
                 setIsProxy(true);
-
             }
         }
         setPriceOpened(false);
@@ -208,6 +188,19 @@ export default function Proxy() {
     
     closePrice();
   }
+
+  const mockProxies = [
+    { ip: "192.0.2.146", location: "New York, USA", name: "Proxy A", price: 10 },
+    { ip: "1.2.3.4", location: "Beijing, China", name: "Proxy B", price: 15 },
+    { ip: "01.102.103.104", location: "Taipei, Taiwan", name: "Proxy C", price: 20 },    
+    { ip: "192.0.2.146", location: "New York, USA", name: "Proxy D", price: 10 },
+    { ip: "1.2.3.4", location: "Beijing, China", name: "Proxy E", price: 15 },
+    { ip: "01.102.103.104", location: "Taipei, Taiwan", name: "Proxy F", price: 20 },    
+    { ip: "192.0.2.146", location: "New York, USA", name: "Proxy G", price: 10 },
+    { ip: "1.2.3.4", location: "Beijing, China", name: "Proxy H", price: 15 },
+    { ip: "01.102.103.104", location: "Taipei, Taiwan", name: "Proxy I", price: 20 },    
+    { ip: "192.0.2.146", location: "New York, USA", name: "Proxy J", price: 10 },
+  ]
 
   return (
     <Box
@@ -331,32 +324,11 @@ export default function Proxy() {
                 <Button 
                     variant = "contained"
                     backgroundColor = "black"
-                    onClick = {async () => {
+                    onClick = {() => {
+                        setCurrentProxy(selectedProxy);
                         setIsProxy(false);
-
-                        // Pay proxy
-                        const data = {
-                            address: selectedProxy.wallet,
-                            amount: selectedProxy.initialFee
-                        }
-
-                        const response = await fetch("http://localhost:18080/wallet/send", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify(data),
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            // Success
-                            console.log("Transaction successful: ", result.txid)
-                            setCurrentProxy(selectedProxy);
-                            setConfirmProxyOpened(false);
-                            setProxyInstructionsOpened(true);
-                        }
+                        setConfirmProxyOpened(false);
+                        setProxyInstructionsOpened(true);
                     }}
                     sx={{ paddingTop: 1, marginBottom: 1 }}
                     fullWidth

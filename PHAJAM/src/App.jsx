@@ -22,10 +22,9 @@ function App() {
   return (
     <AppThemeProvider> 
       <ThemeProvider theme={oceanTheme}>
-        {/* {!hideNavPaths.includes(location.pathname) && <Nav />} */}
-        <Nav />
+        {!hideNavPaths.includes(location.pathname) && <Nav />}
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Login />} />
           <Route path="/learn-more" element={<LearnMore />} />
           <Route path="/generate-keys" element={<GenerateKeys />} />
           <Route path="/proxy" element={<Proxy />} />
