@@ -26,10 +26,16 @@ A simple decentralized file-sharing application powered by DolphinCoin.
    npm install
    ```
 
+go back to the /PHAJAM directory after.
+    ```
+    cd ..
+    ```
+
 3. Running Servers:
+(Each server gets its own terminal, starting from /PHAJAM)
+
    - BTCD
      ```
-     cd ..
      btcd --configfile=btcd/btcd.conf
      ```
    - Wallet API Server
@@ -52,6 +58,6 @@ A simple decentralized file-sharing application powered by DolphinCoin.
 
 4. To run the app:
    ```
-   cd PHAJAM
+   cd PHAJAM (/PHAJAM/PHAJAM)
    npm run dev
    ```
