@@ -59,7 +59,7 @@ go back to the /PHAJAM directory after.
 
 ### Running the App on Electron & Web Browser
 
-4. To run the app:
+5. To run the app:
    ```
    cd PHAJAM #(.../PHAJAM/PHAJAM)
    npm run dev
