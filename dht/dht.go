@@ -33,7 +33,7 @@ var (
 	relay_node_addr       = "/ip4/130.245.173.221/tcp/4001/p2p/12D3KooWDpJ7As7BWAwRMfu1VU2WCqNjvq387JEYKDBj4kx6nXTN"
 	bootstrap_node_addr_1 = "/ip4/130.245.173.221/tcp/6001/p2p/12D3KooWE1xpVccUXZJWZLVWPxXzUJQ7kMqN8UQ2WLn9uQVytmdA"
 	bootstrap_node_addr_2 = "/ip4/130.245.173.222/tcp/61020/p2p/12D3KooWM8uovScE5NPihSCKhXe8sbgdJAi88i2aXT2MmwjGWoSX"
-	native_bootstrap      = "/ip4/172.25.233.106/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
+	native_bootstrap      = "/ip4/172.25.238.10/tcp/61000/p2p/12D3KooWQtwuAfGY2LKHjN7nK4xjbvCYUTt3sUyxj4cwyR2bg31e"
 	globalCtx             context.Context
 	dataChannel           = make(chan []byte)
 )
@@ -368,13 +368,13 @@ type ProxyInfo struct {
 	Name       string `json:"name"`
 	Location   string `json:"location"`
 	IPAddress  string `json:"ip_address"`
-	Wallet     string `json:"wallet"`
+	// Wallet     string `json:"wallet"`
 	InitialFee string `json:"initialFee"`
 	Price      string `json:"price"`
 	Port       int    `json:"port"`
 }
 
-func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location string, ipAddress string, wallet string, name string, initialFee string, price string, node host.Host) {
+func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location string, ipAddress string, name string, initialFee string, price string, node host.Host) {
 	// 1. Create a unique proxy key
 	proxyKey := "/orcanet/proxy/" + node.ID().String()
 
@@ -387,7 +387,7 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location stri
 			Name:       name,
 			Location:   location,
 			IPAddress:  ipAddress,
-			Wallet:		wallet,
+			// Wallet:		wallet,
 			InitialFee: initialFee,
 			Price:      price,
 			Port:       50000,
@@ -441,7 +441,7 @@ func registerProxyAsService(ctx context.Context, dht *dht.IpfsDHT, location stri
 	}
 
 	if proxyInfo != nil {
-		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n Name: %s\n PeerID: %s\n IP Address: %s\n Wallet Address: %s\n Initial Fee: %s DC\n Rate: %s DC/MB\n Port: %d", node_id, name, node.ID().String(), ipAddress, wallet, proxyInfo.InitialFee, proxyInfo.Price, proxyInfo.Port)
+		fmt.Printf("Proxy registered successfully!\n NodeID: %s\n Name: %s\n PeerID: %s\n IP Address: %s\n Initial Fee: %s DC\n Rate: %s DC/MB\n Port: %d", node_id, name, node.ID().String(), ipAddress, proxyInfo.InitialFee, proxyInfo.Price, proxyInfo.Port)
 	} else {
 		fmt.Printf("Proxy deregistered successfully!\n NodeID: %s\n PeerID: %s\n", node_id, node.ID().String())
 	}

@@ -17,9 +17,6 @@ export default function Proxy() {
   // List of available proxies
   const [proxyInfoList, setProxyInfoList] = useState([]);
 
-  // Wallet address
-  const [address, setAddress] = useState(null);
-
   useEffect(() => {
 
     // Check if I am a proxy
@@ -51,23 +48,8 @@ export default function Proxy() {
         }
     }
 
-    // Fetch wallet address
-    const fetchAddress = async () => {
-        try {
-          const request = await fetch("http://localhost:18080/wallet/address");
-          if (!request.ok) {
-            throw new Error(`HTTP error! Status: ${request.status}`);
-          }
-          const response = await request.json();
-          setAddress(response.address);
-        } catch (err) {
-          console.error("Error fetching address:", err);
-        }
-      };
-
     fetchProxyStatus();
     fetchProxyList();
-    fetchAddress();
 
     // Set interval to fetch proxy list every 5 seconds
     const intervalId = setInterval(fetchProxyList, 5000);
@@ -143,7 +125,6 @@ export default function Proxy() {
             name: name,
             initialFee: initialFee,
             price: price,
-            walletAddress: address
         };
         const response = await fetch("http://localhost:8080/registerProxy", {
             method: "POST",
@@ -173,7 +154,6 @@ export default function Proxy() {
                 alert("Failed to start the proxy server!");
             } else {
                 setIsProxy(true);
-
             }
         }
         setPriceOpened(false);
