@@ -216,11 +216,12 @@ export default function Profile() {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center", // Align content vertically
+            alignItems: "center",
           }}
         >
-          <Typography variant="h6">Wallet Address</Typography>
+          <Typography variant="h5">Wallet Address</Typography>
           <Typography
-            variant="body2"
+            variant="body1"
             sx={{
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -249,7 +250,7 @@ export default function Profile() {
             justifyContent: "center", // Align content vertically
           }}
         >
-          <Typography variant="h6">Send Money</Typography>
+          <Typography variant="h6" textAlign="center">Send Money</Typography>
           <TextField
             label="Recipient Wallet Address"
             variant="outlined"
