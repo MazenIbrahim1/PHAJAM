@@ -285,42 +285,6 @@ export default function Explore() {
           <Typography>
             Price: {selectedRow ? selectedRow.cost : "Loading..."} DC
           </Typography>
-          <Typography>Balance After: 480 DC</Typography>
-          <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
-            <TextField
-              margin="dense"
-              label="Set Offer Price"
-              type="text"
-              fullWidth
-              variant="outlined"
-              sx={{ flex: 1 }}
-              value={offerPrice} // Controlled input
-              onChange={(e) => {
-                const value = e.target.value;
-                // Allow only numbers, decimal points, and limit to one decimal point
-                if (/^\d*\.?\d*$/.test(value)) {
-                  setOfferPrice(value); // Update state only with valid input
-                }
-              }}
-              slotProps={{
-                input: {
-                  inputMode: "decimal", // For mobile keyboards to show decimal keypad
-                },
-              }}
-              required
-            />
-            <Button
-              color="primary"
-              sx={{
-                backgroundColor: offerPrice ? "black" : "gray", // Dynamic color
-                color: "white",
-                ":hover": { backgroundColor: offerPrice ? "#3d3d3d" : "gray" },
-              }}
-              disabled={!offerPrice} // Disable if no value is inputted
-            >
-              Request
-            </Button>
-          </Box>
         </DialogContent>
         <DialogActions
           sx={{

@@ -71,8 +71,8 @@ func main() {
 	go refreshReservation(node, 10*time.Minute)
 
 	connectToPeer(node, native_bootstrap)
-	// connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
-	// connectToPeer(node, bootstrap_node_addr_2)
+	connectToPeer(node, bootstrap_node_addr_1) // connect to bootstrap node
+	connectToPeer(node, bootstrap_node_addr_2)
 
 	go handlePeerExchange(node)
 	go receiveDataFromPeer(node)
@@ -138,21 +138,21 @@ func main() {
 		var requestBody struct {
 			WalletAddress string `json:"walletAddress"`
 		}
-	
+
 		err := json.NewDecoder(r.Body).Decode(&requestBody)
 		if err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
-	
+
 		if requestBody.WalletAddress == "" {
 			http.Error(w, "Wallet address is required", http.StatusBadRequest)
 			return
 		}
-	
+
 		// Call mapPeerIDtoWallet function
 		mapPeerIDtoWallet(ctx, dhtRoute, requestBody.WalletAddress, node)
-	
+
 		// Respond with success
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -166,7 +166,7 @@ func main() {
 		var requestBody struct {
 			PeerID string `json:"peerID"`
 		}
-		
+
 		err := json.NewDecoder(r.Body).Decode(&requestBody)
 		if err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -192,7 +192,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
-			"peerID":      requestBody.PeerID,
+			"peerID": requestBody.PeerID,
 			// "wallet":      proxyInfo.Wallet,
 		})
 	})
@@ -254,7 +254,7 @@ func enableCORS(next http.Handler) http.Handler {
 }
 
 type GeolocationResponse struct {
-	Region string `json:"region"`
+	Region  string `json:"region"`
 	Country string `json:"country"`
 }
 
@@ -306,9 +306,9 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var request struct {
-		Id   string `json:"id"`
-		Hash string `json:"hash"`
-		Cost int `json:"cost"`
+		Id      string `json:"id"`
+		Hash    string `json:"hash"`
+		Cost    int    `json:"cost"`
 		Address string `json:"address"`
 	}
 	err = json.Unmarshal(body, &request)
@@ -338,11 +338,12 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	w.Header().Set("Content-Type", "application/octet-stream")                                // Indicate raw binary data
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename)) // Send filename
-	w.WriteHeader(http.StatusOK)
-
+	if _, err := w.Write(data); err != nil {
+		http.Error(w, "Error writing raw data to response", http.StatusInternalServerError)
+	}
 	// SEND MONEY
 	recipientAddress := request.Address
-	cost := request.Cost                                   
+	cost := request.Cost
 
 	walletServerURL := "http://localhost:18080/wallet/send"
 	paymentRequest := fmt.Sprintf(`{"address": "%s", "amount": "%d"}`, recipientAddress, cost)
@@ -360,11 +361,6 @@ func handlePurchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Payment successful to wallet:", recipientAddress, "Amount:", cost)
-
-	// Write the raw file data to the response body
-	if _, err := w.Write(data); err != nil {
-		http.Error(w, "Error writing raw data to response", http.StatusInternalServerError)
-	}
 }
 
 func getProviders(w http.ResponseWriter, r *http.Request) {
