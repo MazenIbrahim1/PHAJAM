@@ -7,6 +7,7 @@ A simple decentralized file-sharing application powered by DolphinCoin.
 - [Go](http://golang.org) 1.17 or newer
 - Linux-like terminal environment to run the servers in
 - Adding btcd, btcwallet, and btcctl to your PATH environment variable
+- MongoDB
 
 ## Getting Started
 
@@ -17,7 +18,7 @@ A simple decentralized file-sharing application powered by DolphinCoin.
    git clone git@github.com:MazenIbrahim1/PHAJAM.git
    ```
 
-### Installing Dependencies (in order)
+### Installing Dependencies (in order) (You should already be in the repo)
 
 2. Install dependencies:
 
