@@ -31,6 +31,7 @@ go back to the /PHAJAM directory after.
     ```
     cd ..
     ```
+    
 3. Edit the `node_id` variable in dht/dht.go to be your SBU ID
 
 4. Running Servers:
