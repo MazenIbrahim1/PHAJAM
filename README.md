@@ -31,8 +31,9 @@ go back to the /PHAJAM directory after.
     ```
     cd ..
     ```
+3. Edit the `node_id` variable in dht/dht.go to be your SBU ID
 
-3. Running Servers:
+4. Running Servers:
 (Each server gets its own terminal, starting from /PHAJAM)
 
    - BTCD
