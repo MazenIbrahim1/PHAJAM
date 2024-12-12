@@ -59,6 +59,6 @@ go back to the /PHAJAM directory after.
 
 4. To run the app:
    ```
-   cd PHAJAM (/PHAJAM/PHAJAM)
+   cd PHAJAM #(.../PHAJAM/PHAJAM)
    npm run dev
    ```
