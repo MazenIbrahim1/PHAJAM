@@ -78,6 +78,7 @@ const createWindow = () => {
       nodeIntegration: false, // Disable direct Node.js access
       enableRemoteModule: false,
     },
+    autoHideMenuBar: true,
   });
 
   win.maximize();
