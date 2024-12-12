@@ -310,7 +310,7 @@ export default function Home() {
         )}
       </Box>
   
-      {/* Outlined Box for Transaction History */}
+      {/* Outlined Box for Transaction History
       <Box
         sx={{
           mt: 4,
@@ -362,7 +362,7 @@ export default function Home() {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
+      </Box> */}
     </Box>
   );
   
