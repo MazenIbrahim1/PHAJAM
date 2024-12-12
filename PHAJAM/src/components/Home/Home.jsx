@@ -311,7 +311,7 @@ export default function Home() {
       </Box>
   
       {/* Outlined Box for Transaction History */}
-      <Box
+      {/* <Box
         sx={{
           mt: 4,
           width: '80vw',
@@ -362,7 +362,7 @@ export default function Home() {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
+      </Box> */}
     </Box>
   );
   
