@@ -192,7 +192,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"peerID":      requestBody.PeerID,
-			"wallet":      proxyInfo.Wallet,
+			// "wallet":      proxyInfo.Wallet,
 		})
 	})
 	mux.HandleFunc("/fetchProxyList", func(w http.ResponseWriter, r *http.Request) {
